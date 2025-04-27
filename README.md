@@ -1,6 +1,10 @@
 # FlareCred – AI-Assisted Talent Verification on Flare
 
-FlareCred is a full-stack Next.js 14 SaaS that brings candidates, issuers, recruiters and administrators together to mint, verify and explore on-chain credentials secured by Flare’s DID, FDC, FTSO and RNG protocols.
+FlareCred is an AI-powered talent-verification SaaS built on Flare that lets candidates, issuers, recruiters and admins meet in a single Next.js 14 dashboard to mint deterministic Flare DIDs, anchor Verifiable Credentials as ERC-721 NFTs, and settle Base or Plus subscriptions in FLR with live USD pricing from the FTSO oracle.
+
+Credentials flow UNVERIFIED → PENDING → VERIFIED through an issuer approval pipeline that replays EVM, JSON-API or payment proofs via the on-chain FlareCred Verifier (FDC), while candidates can trigger RNG-seeded Skill-Check quizzes whose passing hashes are minted straight to CredentialNFT and deep-linked to Flarescan for instant proof.
+
+Recruiters explore full-text talent search, skill sliders and Kanban pipelines fed by real-time credential status, and administrators oversee issuers, users, plan prices and the platform DID—so every action, from team invite to payment, emits an on-chain or logged event that gives users cryptographic trust without exposing them to blockchain complexity.
 
 ## 1. Platform Architecture Overview
 
