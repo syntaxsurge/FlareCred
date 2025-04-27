@@ -29,8 +29,8 @@ import { useState } from 'react'
 /*                               Constants                                    */
 /* -------------------------------------------------------------------------- */
 
-const SUBSCRIPTION_MANAGER_ADDRESS = process.env
-  .SUBSCRIPTION_MANAGER_ADDRESS as `0x${string}` | undefined
+const NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS = process.env
+  .NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS as `0x${string}` | undefined
 
 const TARGET_CHAIN_ID = Number(process.env.NEXT_PUBLIC_FLARE_CHAIN_ID ?? '114')
 
@@ -80,7 +80,7 @@ function RenewSubscriptionButton({ planName }: { planName: 'base' | 'plus' }) {
 
   async function renew() {
     if (pending) return
-    if (!SUBSCRIPTION_MANAGER_ADDRESS) {
+    if (!NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS) {
       toast.error('Subscription manager address missing.')
       return
     }
@@ -102,7 +102,7 @@ function RenewSubscriptionButton({ planName }: { planName: 'base' | 'plus' }) {
       /* Contract call */
       toast.loading('Awaiting wallet signature…', { id: toastId })
       const txHash = await walletClient.writeContract({
-        address: SUBSCRIPTION_MANAGER_ADDRESS,
+        address: NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS,
         abi: SUBSCRIPTION_MANAGER_ABI,
         functionName: 'paySubscription',
         args: [address, planKey],

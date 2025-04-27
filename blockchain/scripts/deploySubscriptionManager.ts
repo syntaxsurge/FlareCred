@@ -1,9 +1,3 @@
-/// Deploys SubscriptionManager, verifies it, and grants ADMIN_ROLE to the
-/// platform wallet.
-///
-/// Usage:
-///   pnpm hardhat run blockchain/scripts/deploySubscriptionManager.ts --network <net>
-
 import { network, run, ethers } from 'hardhat'
 import { adminAddress, platformAddress } from './config'
 

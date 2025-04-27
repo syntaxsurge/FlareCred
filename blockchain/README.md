@@ -16,3 +16,8 @@ pnpm hardhat run scripts/deployDIDRegistry.ts --network coston2
 ```bash
 pnpm hardhat run scripts/deployCredentialNFT.ts --network coston2
 ```
+
+# Deploys SubscriptionManager, verifies it, and grants ADMIN_ROLE to the platform wallet.
+```bash
+pnpm hardhat run scripts/deploySubscriptionManager.ts --network coston2
+```
