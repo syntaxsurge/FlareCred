@@ -38,7 +38,7 @@ export default async function RequestsPage({
   const params = (await searchParams) as Query
 
   const user = await getUser()
-  if (!user) redirect('/sign-in')
+  if (!user) redirect('/connect-wallet')
 
   /* --------------------- Validate issuer ownership ----------------------- */
   const [issuer] = await db.select().from(issuers).where(eq(issuers.ownerUserId, user.id)).limit(1)

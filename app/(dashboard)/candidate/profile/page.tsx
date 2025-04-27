@@ -15,7 +15,7 @@ export const revalidate = 0
 
 export default async function ProfilePage() {
   const user = await getUser()
-  if (!user) redirect('/sign-in')
+  if (!user) redirect('/connect-wallet')
 
   const [candidate] = await db
     .select()

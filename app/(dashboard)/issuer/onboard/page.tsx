@@ -95,7 +95,7 @@ function Detail({
 
 export default async function IssuerOnboardPage() {
   const user = await getUser()
-  if (!user) redirect('/sign-in')
+  if (!user) redirect('/connect-wallet')
 
   const [issuer] = await db
     .select()

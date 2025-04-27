@@ -30,7 +30,7 @@ export default async function CredentialsPage({
 
   /* -------------------------- Auth -------------------------- */
   const user = await getUser()
-  if (!user) redirect('/sign-in')
+  if (!user) redirect('/connect-wallet')
 
   /* ----------------------- DID Check ------------------------ */
   const [{ did } = {}] = await db

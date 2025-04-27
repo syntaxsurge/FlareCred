@@ -39,7 +39,7 @@ export const revalidate = 0
 
 export default async function DashboardPage() {
   const user = await getUser()
-  if (!user) redirect('/sign-in')
+  if (!user) redirect('/connect-wallet')
 
   /* ------------------------------------------------------------------ */
   /* Candidate metrics & datasets                                       */

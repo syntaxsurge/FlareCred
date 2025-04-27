@@ -24,7 +24,7 @@ const MAX_DISPLAY = 5
 
 export default async function CreateDIDPage() {
   const user = await getUser()
-  if (!user) redirect('/sign-in')
+  if (!user) redirect('/connect-wallet')
 
   /* ---------------- Membership & team ---------------- */
   const [membership] = await db

@@ -34,7 +34,7 @@ export default async function TeamSettingsPage({
   const params = (await searchParams) as Query
 
   const user = await getUser()
-  if (!user) redirect('/sign-in')
+  if (!user) redirect('/connect-wallet')
 
   /* --------------------------- Locate team -------------------------------- */
   const [membership] = await db

@@ -58,7 +58,7 @@ export default async function CredentialDetailPage({
   const credentialId = Number(id)
 
   const user = await getUser()
-  if (!user) redirect('/sign-in')
+  if (!user) redirect('/connect-wallet')
 
   /* Validate issuer ownership */
   const [issuer] = await db.select().from(issuers).where(eq(issuers.ownerUserId, user.id)).limit(1)

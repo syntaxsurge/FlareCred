@@ -34,7 +34,7 @@ export default async function TalentSearchPage({
   const params = (await searchParams) as Query
 
   const user = await getUser()
-  if (!user) redirect('/sign-in')
+  if (!user) redirect('/connect-wallet')
   if (user.role !== 'recruiter') redirect('/')
 
   /* --------------------------- Query params ------------------------------ */

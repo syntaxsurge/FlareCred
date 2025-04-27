@@ -25,7 +25,7 @@ export default async function PipelineBoardPage({ params }: { params: Promise<{ 
 
   /* --------------------------- auth guard --------------------------- */
   const user = await getUser()
-  if (!user) redirect('/sign-in')
+  if (!user) redirect('/connect-wallet')
   if (user.role !== 'recruiter') redirect('/')
 
   /* --------------------- load pipeline & verify --------------------- */

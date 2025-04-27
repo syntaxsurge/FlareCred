@@ -29,7 +29,7 @@ export default async function InvitationsPage({
   const params = (await searchParams) as Query
 
   const user = await getUser()
-  if (!user) redirect('/sign-in')
+  if (!user) redirect('/connect-wallet')
 
   /* --------------------------- Query params ------------------------------ */
   const page = Math.max(1, Number(first(params, 'page') ?? '1'))

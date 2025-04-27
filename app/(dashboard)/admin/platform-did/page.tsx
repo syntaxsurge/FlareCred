@@ -9,7 +9,7 @@ export const revalidate = 0
 
 export default async function PlatformDidPage() {
   const user = await getUser()
-  if (!user) redirect('/sign-in')
+  if (!user) redirect('/connect-wallet')
   if (user.role !== 'admin') redirect('/dashboard')
 
   const existingDid = process.env.PLATFORM_ISSUER_DID ?? null

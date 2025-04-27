@@ -26,7 +26,7 @@ export default async function ActivityPage({
   const params = (await searchParams) as Query
 
   const user = await getUser()
-  if (!user) redirect('/sign-in')
+  if (!user) redirect('/connect-wallet')
 
   /* ---------------------- Query parameters ---------------------- */
   const page = Math.max(1, Number(getParam(params, 'page') ?? '1'))
@@ -71,7 +71,7 @@ export default async function ActivityPage({
     <PageCard
       icon={ActivityIcon}
       title='Activity Log'
-      description='Review your recent account activity and sign-ins.'
+      description='Review your recent account activity and connect-wallets.'
     >
       <div className='space-y-4 overflow-x-auto'>
         <ActivityLogsTable

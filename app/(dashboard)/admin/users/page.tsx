@@ -34,7 +34,7 @@ export default async function AdminUsersPage({
   const params = (await searchParams) as Query
 
   const currentUser = await getUser()
-  if (!currentUser) redirect('/sign-in')
+  if (!currentUser) redirect('/connect-wallet')
   if (currentUser.role !== 'admin') redirect('/dashboard')
 
   /* --------------------------- Query params ------------------------------ */

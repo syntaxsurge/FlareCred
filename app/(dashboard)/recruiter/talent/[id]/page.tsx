@@ -44,7 +44,7 @@ export default async function RecruiterCandidateProfile({
   const q = (await searchParams) as Query
 
   const user = await getUser()
-  if (!user) redirect('/sign-in')
+  if (!user) redirect('/connect-wallet')
   if (user.role !== 'recruiter') redirect('/')
 
   const [row] = await db

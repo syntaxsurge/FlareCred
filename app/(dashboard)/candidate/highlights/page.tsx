@@ -24,7 +24,7 @@ export const revalidate = 0
 export default async function CandidateHighlightsSettings() {
   /* ------------------------- Auth ------------------------- */
   const user = await getUser()
-  if (!user) redirect('/sign-in')
+  if (!user) redirect('/connect-wallet')
 
   const [candRow] = await db
     .select({ id: candidates.id, bio: candidates.bio })

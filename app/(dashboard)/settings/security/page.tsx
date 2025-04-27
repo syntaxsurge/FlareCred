@@ -18,7 +18,7 @@ export default function SecurityPage() {
   /* Redirect unauthenticated viewers */
   useEffect(() => {
     userPromise.then((u) => {
-      if (!u) router.replace('/sign-in')
+      if (!u) router.replace('/connect-wallet')
     })
   }, [userPromise, router])
 
