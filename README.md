@@ -1,3 +1,7 @@
+# FlareCred – AI-Assisted Talent Verification on Flare
+
+FlareCred is a full-stack Next.js 14 SaaS that brings candidates, issuers, recruiters and administrators together to mint, verify and explore on-chain credentials secured by Flare’s DID, FDC, FTSO and RNG protocols.
+
 ## 1. Platform Architecture Overview
 
 A quick-scan map of **where code lives** and **how a request moves** through the stack.
@@ -155,7 +159,7 @@ FlareCred’s backend is _verifiability-first_: every critical byte is either fe
 
 **4.1 Relational Schema & Migrations**
 
-*   New columns (`proofType`, `proofData`, `seed`) added in `0014_lean_freak.sql` are **NOT NULL** to eliminate “pending nulls”.
+*   Columns (`proofType`, `proofData`, `seed`) are **NOT NULL** to eliminate “pending nulls”.
 *   `lib/db/setup.ts` runs outstanding SQL inside a transaction and snapshots the schema for deterministic CI.
 
 **4.2 Server Action → Query Pattern**
