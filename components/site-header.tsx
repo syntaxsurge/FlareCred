@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 
 import { ChevronDown } from 'lucide-react'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
@@ -46,9 +46,7 @@ export default function SiteHeader() {
   /* Wallet connection state */
   const { isConnected } = useAccount({
     onDisconnect() {
-      /* Clear session cookie on the server whenever the user disconnects
-         the wallet, then refresh the page so SSR picks up the logged-out
-         state. */
+      /* Explicit user-triggered disconnect: clear server session then refresh */
       fetch('/api/auth/signout', { method: 'POST' }).finally(() => {
         router.refresh()
       })
@@ -62,11 +60,7 @@ export default function SiteHeader() {
   useEffect(() => {
     let mounted = true
     const maybe = userPromise as unknown
-    if (
-      maybe &&
-      typeof maybe === 'object' &&
-      typeof (maybe as any).then === 'function'
-    ) {
+    if (maybe && typeof maybe === 'object' && typeof (maybe as any).then === 'function') {
       ;(maybe as Promise<any>).then(
         (u) => mounted && setUser(u),
         () => mounted && setUser(null),
@@ -79,8 +73,24 @@ export default function SiteHeader() {
     }
   }, [userPromise])
 
-  /* Wallet controls: always show RainbowKit ConnectButton
-     (includes built-in Disconnect in its UI). */
+  /* ---------------------------------------------------------------------- */
+  /*        Auto-logout when cookie session exists but wallet is gone       */
+  /* ---------------------------------------------------------------------- */
+
+  const signoutAttemptedRef = useRef(false)
+
+  useEffect(() => {
+    /* If a user session exists yet the wallet is not connected, invalidate it */
+    if (!isConnected && user && !signoutAttemptedRef.current) {
+      signoutAttemptedRef.current = true
+      fetch('/api/auth/signout', { method: 'POST' }).finally(() => {
+        router.refresh()
+        signoutAttemptedRef.current = false
+      })
+    }
+  }, [isConnected, user, router])
+
+  /* Wallet controls: always show RainbowKit ConnectButton (includes built-in Disconnect). */
   function WalletControls() {
     return (
       <ConnectButton accountStatus='avatar' chainStatus='icon' showBalance={false} />
