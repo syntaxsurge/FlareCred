@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { ethers } from 'ethers'
@@ -5,9 +6,10 @@ import { eq } from 'drizzle-orm'
 
 import { db } from '@/lib/db/drizzle'
 import { users } from '@/lib/db/schema'
+import { setSession } from '@/lib/auth/session'
 
 /* -------------------------------------------------------------------------- */
-/*                                 SCHEMA                                     */
+/*                                   SCHEMA                                   */
 /* -------------------------------------------------------------------------- */
 
 const paramsSchema = z.object({
@@ -15,7 +17,7 @@ const paramsSchema = z.object({
 })
 
 /* -------------------------------------------------------------------------- */
-/*                                   GET                                      */
+/*                                    GET                                     */
 /* -------------------------------------------------------------------------- */
 
 export async function GET(req: Request) {
@@ -28,20 +30,25 @@ export async function GET(req: Request) {
 
     const address = ethers.getAddress(parsed.data.address)
 
-    const [row] = await db
-      .select({
-        name: users.name,
-        email: users.email,
-        role: users.role,
-      })
+    /* Fetch full user record so we can initialise a session */
+    const [user] = await db
+      .select()
       .from(users)
       .where(eq(users.walletAddress, address))
       .limit(1)
 
-    const exists =
-      !!row && row.name.trim().length > 0 && row.email.trim().length > 0 && row.role.trim().length > 0
+    const profileComplete =
+      !!user &&
+      String(user.name ?? '').trim().length > 0 &&
+      String(user.email ?? '').trim().length > 0 &&
+      String(user.role ?? '').trim().length > 0
 
-    return NextResponse.json({ exists })
+    /* If profile is complete, create/refresh the session cookie */
+    if (profileComplete) {
+      await setSession(user as any)
+    }
+
+    return NextResponse.json({ exists: profileComplete })
   } catch (err) {
     console.error('wallet-status error:', err)
     return NextResponse.json({ error: 'Internal server error.' }, { status: 500 })
