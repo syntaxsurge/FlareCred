@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { z } from 'zod'
@@ -21,6 +22,10 @@ const payloadSchema = z.object({
 /*                                    POST                                    */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Permanently deletes (soft-deletes) the user account that owns the supplied
+ * EVM address after verifying the signed confirmation message.
+ */
 export async function POST(req: Request) {
   try {
     const body = await req.json()

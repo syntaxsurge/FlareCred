@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button'
 
 /**
  * Prompts the user to sign a message with their wallet and, on success,
- * calls the backend delete route to permanently delete the account.
+ * calls the backend delete-account route to permanently delete the account.
  */
 export default function DeleteAccountForm() {
   const { address, isConnected } = useAccount()
@@ -35,7 +35,7 @@ export default function DeleteAccountForm() {
 
         toast.loading('Deleting account…', { id: toastId })
 
-        const res = await fetch('/api/auth/delete', {
+        const res = await fetch('/api/auth/delete-account', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ address, message, signature }),
