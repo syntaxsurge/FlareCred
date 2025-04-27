@@ -16,6 +16,7 @@ import {
   SelectItem,
   SelectValue,
 } from '@/components/ui/select'
+import { PROOF_TYPES, type ProofType } from '@/lib/constants/credential'
 
 /* -------------------------------------------------------------------------- */
 /*                                    CONS                                    */
@@ -29,8 +30,6 @@ const CATEGORIES = [
   'CERTIFICATION',
   'OTHER',
 ] as const
-
-const PROOF_TYPES = ['EVM', 'JSON', 'PAYMENT', 'ADDRESS'] as const
 
 /* -------------------------------------------------------------------------- */
 /*                                   PROPS                                    */
@@ -46,7 +45,7 @@ interface Props {
 
 export default function AddCredentialForm({ addCredentialAction }: Props) {
   const [isPending, startTransition] = useTransition()
-  const [proofType, setProofType] = useState<(typeof PROOF_TYPES)[number]>('EVM')
+  const [proofType, setProofType] = useState<ProofType>('EVM')
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -129,7 +128,7 @@ export default function AddCredentialForm({ addCredentialAction }: Props) {
             name='proofType'
             required
             value={proofType}
-            onValueChange={(val) => setProofType(val as (typeof PROOF_TYPES)[number])}
+            onValueChange={(val) => setProofType(val as ProofType)}
           >
             <SelectTrigger id='proofType'>
               <SelectValue placeholder='Select proof type' />

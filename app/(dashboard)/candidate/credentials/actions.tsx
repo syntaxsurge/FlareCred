@@ -15,13 +15,14 @@ import {
 } from '@/lib/db/schema/candidate'
 import { teams, teamMembers } from '@/lib/db/schema/core'
 import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
+import { PROOF_TYPES } from '@/lib/constants/credential'
 
 /* -------------------------------------------------------------------------- */
 /*                               A D D  C R E D                               */
 /* -------------------------------------------------------------------------- */
 
 const CategoryEnum = z.nativeEnum(CredentialCategory)
-const ProofTypeEnum = z.enum(['EVM', 'JSON', 'PAYMENT', 'ADDRESS'])
+const ProofTypeEnum = z.enum([...PROOF_TYPES] as [string, ...string[]])
 
 export const addCredential = validatedActionWithUser(
   z.object({
