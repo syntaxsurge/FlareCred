@@ -4,18 +4,12 @@ import React, { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { useAccount } from 'wagmi'
-import { Loader2 } from 'lucide-react'
+import { Loader2, UserPlus } from 'lucide-react'
 
+import { RequiredModal } from '@/components/ui/required-modal'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 
 /* -------------------------------------------------------------------------- */
@@ -44,7 +38,7 @@ export default function WalletOnboardModal({ isConnected, user }: Props) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
 
-  /* When a wallet connects and no session user exists, open the modal */
+  /* Show modal when wallet connected but no user session */
   useEffect(() => {
     if (isConnected && !user) setOpen(true)
   }, [isConnected, user])
@@ -88,7 +82,6 @@ export default function WalletOnboardModal({ isConnected, user }: Props) {
         }
 
         toast.success('Account created!', { id: toastId })
-        /* allow programmatic close only after successful creation */
         setOpen(false)
         router.refresh()
       } catch (err: any) {
@@ -101,74 +94,60 @@ export default function WalletOnboardModal({ isConnected, user }: Props) {
   /*                                   UI                                   */
   /* ---------------------------------------------------------------------- */
 
+  if (!open) return null
+
   return (
-    <Dialog
-      open={open}
-      /* ignore external close attempts */
-      onOpenChange={() => {}}
+    <RequiredModal
+      icon={UserPlus}
+      title='Complete your FlareCred profile'
+      description='Just a few details and you’re ready to go.'
     >
-      <DialogContent
-        className='sm:max-w-md'
-        /* block outside-click and ESC key dismissals */
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
-      >
-        <DialogHeader>
-          <DialogTitle className='text-xl font-semibold'>
-            Complete your FlareCred profile
-          </DialogTitle>
-          <DialogDescription>
-            Just a few details and you’re ready to go.
-          </DialogDescription>
-        </DialogHeader>
+      <form onSubmit={handleSubmit} className='space-y-6'>
+        {/* Name */}
+        <div className='space-y-2'>
+          <Label htmlFor='name'>Full name</Label>
+          <Input id='name' name='name' placeholder='Jane Doe' required />
+        </div>
 
-        <form onSubmit={handleSubmit} className='space-y-6'>
-          {/* Name */}
-          <div className='space-y-2'>
-            <Label htmlFor='name'>Full name</Label>
-            <Input id='name' name='name' placeholder='Jane Doe' required />
-          </div>
+        {/* Email */}
+        <div className='space-y-2'>
+          <Label htmlFor='email'>Email</Label>
+          <Input
+            id='email'
+            name='email'
+            type='email'
+            placeholder='you@example.com'
+            required
+          />
+        </div>
 
-          {/* Email */}
-          <div className='space-y-2'>
-            <Label htmlFor='email'>Email</Label>
-            <Input
-              id='email'
-              name='email'
-              type='email'
-              placeholder='you@example.com'
-              required
-            />
-          </div>
+        {/* Role */}
+        <div className='space-y-2'>
+          <Label>I am signing up as</Label>
+          <RadioGroup name='role' defaultValue='candidate' className='flex gap-6'>
+            {ROLES.map((r) => (
+              <div key={r.value} className='flex items-center gap-2'>
+                <RadioGroupItem id={r.value} value={r.value} />
+                <Label htmlFor={r.value} className='cursor-pointer select-none'>
+                  {r.label}
+                </Label>
+              </div>
+            ))}
+          </RadioGroup>
+        </div>
 
-          {/* Role */}
-          <div className='space-y-2'>
-            <Label>I am signing up as</Label>
-            <RadioGroup name='role' defaultValue='candidate' className='flex gap-6'>
-              {ROLES.map((r) => (
-                <div key={r.value} className='flex items-center gap-2'>
-                  <RadioGroupItem id={r.value} value={r.value} />
-                  <Label htmlFor={r.value} className='cursor-pointer select-none'>
-                    {r.label}
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
-          </div>
-
-          {/* Submit */}
-          <Button type='submit' disabled={isPending} className='w-full'>
-            {isPending ? (
-              <>
-                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                Saving…
-              </>
-            ) : (
-              'Continue'
-            )}
-          </Button>
-        </form>
-      </DialogContent>
-    </Dialog>
+        {/* Submit */}
+        <Button type='submit' disabled={isPending} className='w-full'>
+          {isPending ? (
+            <>
+              <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+              Saving…
+            </>
+          ) : (
+            'Continue'
+          )}
+        </Button>
+      </form>
+    </RequiredModal>
   )
 }
