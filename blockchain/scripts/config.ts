@@ -9,6 +9,7 @@
  *   ADMIN_ADDRESS       → receives DEFAULT_ADMIN_ROLE and ADMIN_ROLE
  *   ISSUER_ADDRESSES    → comma-separated list that will be granted ISSUER_ROLE
  *   PLATFORM_ADDRESS    → account that obtains PLATFORM_ROLE
+ *   VERIFIER_ADDRESS    → deployed FlareCredVerifier delegate address
  * ────────────────────────────────────────────────────────────────────────────
  */
 
@@ -67,3 +68,12 @@ export const issuerAddresses: string[] = uniq(
     .filter((s) => s.length > 0)
     .map(normalise),
 ).filter((a) => a !== adminAddress && a !== platformAddress)
+
+/* -------------------------------------------------------------------------- */
+/*                      F D C   V E R I F I E R   D E L E G A T E             */
+/* -------------------------------------------------------------------------- */
+
+/** Address of the deployed FlareCredVerifier contract (empty string for local dev). */
+export const verifierAddress = env.VERIFIER_ADDRESS
+  ? normalise(env.VERIFIER_ADDRESS)
+  : ''
