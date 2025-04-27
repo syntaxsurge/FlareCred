@@ -13,6 +13,10 @@ interface Props {
   defaultEmail: string
 }
 
+/**
+ * Account information form — wallet-only auth means users
+ * can edit just their display name and email address.
+ */
 export default function GeneralForm({ defaultName, defaultEmail }: Props) {
   const router = useRouter()
   const [name, setName] = useState(defaultName)
@@ -20,8 +24,8 @@ export default function GeneralForm({ defaultName, defaultEmail }: Props) {
 
   async function handleSave() {
     const fd = new FormData()
-    fd.append('name', name)
-    fd.append('email', email)
+    fd.append('name', name.trim())
+    fd.append('email', email.trim().toLowerCase())
     const res = await updateAccount({}, fd)
     if (res?.success) router.refresh()
     return res
@@ -29,6 +33,7 @@ export default function GeneralForm({ defaultName, defaultEmail }: Props) {
 
   return (
     <form onSubmit={(e) => e.preventDefault()} className='space-y-4'>
+      {/* Name */}
       <div>
         <Label htmlFor='name'>Name</Label>
         <Input
@@ -40,6 +45,7 @@ export default function GeneralForm({ defaultName, defaultEmail }: Props) {
         />
       </div>
 
+      {/* Email */}
       <div>
         <Label htmlFor='email'>Email</Label>
         <Input
@@ -52,6 +58,7 @@ export default function GeneralForm({ defaultName, defaultEmail }: Props) {
         />
       </div>
 
+      {/* Save */}
       <ActionButton onAction={handleSave} pendingLabel='Saving…'>
         Save Changes
       </ActionButton>
