@@ -1,17 +1,20 @@
 'use server'
 
-import { redirect } from 'next/navigation'
-
 import { withTeam } from '@/lib/auth/middleware'
 
-import { createCheckoutSession, createCustomerPortalSession } from './stripe'
-
-export const checkoutAction = withTeam(async (formData, team) => {
-  const priceId = formData.get('priceId') as string
-  await createCheckoutSession({ team: team, priceId })
-})
-
-export const customerPortalAction = withTeam(async (_, team) => {
-  const portalSession = await createCustomerPortalSession(team)
-  redirect(portalSession.url)
+/**
+ * Starts the on-chain subscription checkout flow.
+ *
+ * This server-action simply ensures the caller is authenticated and
+ * belongs to a team; the actual contract interaction is performed
+ * client-side (see Section 2 – Crypto subscription integration).
+ *
+ * @returns an object with the caller’s `teamId` so the front-end can
+ *          pass it as context to `SubscriptionManager.paySubscription`.
+ */
+export const cryptoCheckoutAction = withTeam(async (_formData, team) => {
+  if (!team) {
+    throw new Error('Team not found for current user.')
+  }
+  return { teamId: team.id }
 })

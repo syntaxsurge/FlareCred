@@ -7,6 +7,10 @@ import { verifyToken } from '@/lib/auth/session'
 import { db } from '../drizzle'
 import { activityLogs, teamMembers, teams, users } from '../schema'
 
+/* -------------------------------------------------------------------------- */
+/*                              U S E R  H E L P E R                          */
+/* -------------------------------------------------------------------------- */
+
 export async function getUser() {
   const sessionCookie = (await cookies()).get('session')
   if (!sessionCookie || !sessionCookie.value) {
@@ -35,33 +39,35 @@ export async function getUser() {
   return user[0]
 }
 
-export async function getTeamByStripeCustomerId(customerId: string) {
-  const result = await db
-    .select()
-    .from(teams)
-    .where(eq(teams.stripeCustomerId, customerId))
-    .limit(1)
+/* -------------------------------------------------------------------------- */
+/*                    C R Y P T O  S U B S C R I P T I O N                     */
+/* -------------------------------------------------------------------------- */
 
-  return result.length > 0 ? result[0] : null
-}
-
-export async function updateTeamSubscription(
+/**
+ * Persist an on-chain subscription payment for the given team.
+ *
+ * @param teamId   ID of the team that just paid on-chain
+ * @param planKey  Internal pricing key (‘free’ | ‘base’ | ‘plus’)
+ * @param paidUntil  Expiry timestamp returned by the SubscriptionManager
+ */
+export async function updateTeamCryptoSubscription(
   teamId: number,
-  subscriptionData: {
-    stripeSubscriptionId: string | null
-    stripeProductId: string | null
-    planName: string | null
-    subscriptionStatus: string
-  },
+  planKey: 'free' | 'base' | 'plus',
+  paidUntil: Date,
 ) {
   await db
     .update(teams)
     .set({
-      ...subscriptionData,
+      planName: planKey === 'free' ? null : planKey,
+      subscriptionPaidUntil: paidUntil,
       updatedAt: new Date(),
     })
     .where(eq(teams.id, teamId))
 }
+
+/* -------------------------------------------------------------------------- */
+/*                              U S E R  &  T E A M                           */
+/* -------------------------------------------------------------------------- */
 
 export async function getUserWithTeam(userId: number) {
   const result = await db

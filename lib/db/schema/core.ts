@@ -31,12 +31,11 @@ export const teams = pgTable('teams', {
   name: varchar('name', { length: 100 }).notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
-  stripeCustomerId: text('stripe_customer_id').unique(),
-  stripeSubscriptionId: text('stripe_subscription_id').unique(),
-  stripeProductId: text('stripe_product_id'),
+  /** Active plan key (‘base’, ‘plus’) — null indicates Free tier */
   planName: varchar('plan_name', { length: 50 }),
-  subscriptionStatus: varchar('subscription_status', { length: 20 }),
-  // Optional Flare DID for VC signing
+  /** Timestamp until which the subscription is paid */
+  subscriptionPaidUntil: timestamp('subscription_paid_until'),
+  /** Optional Flare DID for VC signing */
   did: text('did'),
 })
 
