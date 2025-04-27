@@ -102,7 +102,7 @@ pnpm hardhat run blockchain/scripts/deployFlareCredVerifier.ts
 Scripts auto-verify on Routescan and seed roles from `.env`.
 
 
-## 3\. Application Flows by Role & UI Pages
+## 3. Application Flows by Role & UI Pages
 
 FlareCred revolves around four personas—Candidate, Recruiter, Hiring Manager and Administrator. The table below shows _where_ each persona begins and the primary UI surfaces they touch. Expand a row for a step-by-step walk-through with file references.
 
@@ -141,74 +141,69 @@ FlareCred revolves around four personas—Candidate, Recruiter, Hiring Manager 
 3.  **Configuration** — `settings.tsx` toggles feature flags persisted in FeatureFlag Service.
 
 
-## 4. Data Layer, Proof Pipelines & Backend Services
+## 4. Data Layer, Proof Pipelines & Backend Services
 
-Beneath FlareCred’s sleek React façade runs a carefully tiered backend whose prime directive is _verifiability_: every byte that matters either originates on-chain or is immutably reproduced from chain events, while the surrounding Postgres database exists only to accelerate queries and cache derived metrics. This section walks through that architecture layer-by-layer—schema, migrations, server actions, helper libraries, external workers, and security middleware—so that maintainers understand exactly how a click in the dashboard ends up as a row in the activity log or a hash inside an ERC-721 token.
+FlareCred’s backend is _verifiability-first_: every critical byte is either fetched directly from a Flare contract or deterministically reproduced from an on-chain event. PostgreSQL is purely a cache for queries and derived metrics. The diagram below shows how a dashboard click turns into a DB row & an ERC-721 hash:
 
-### 4.1 Relational Schema & Migrations
+| Step | Artefact | Purpose |
+| --- | --- | --- |
+| 1 Schema | `lib/db/schema/*` | Drizzle DSL → typed rows, auto-migrations |
+| 2 Server Action | `validatedActionWithUser()` | Zod + JWT guard → Drizzle insert/update |
+| 3 On-chain Call | `lib/flare.*()` | Read/write via ethers → Solidity helper libs |
+| 4 Worker / Hook | `workers/* \| useFlareUsdPrice` | External data or oracle polling |
+| 5 UI | `components/dashboard/**` | Tables & toasts render the final state |
 
-Database tables live in `lib/db/schema` and are expressed with Drizzle’s [SQL-tagged](https://orm.drizzle.team) DSL so the same TypeScript source generates `CREATE TABLE` DDL, typed row interfaces, and typed `db.select()` helpers. A recent migration—visible in `migrations/0014_lean_freak.sql` and its snapshot—introduced three new columns that feature prominently across the codebase:
+**4.1 Relational Schema & Migrations**
 
-```
-candidate_credentials.proofType  VARCHAR(30) NOT NULL
-candidate_credentials.proofData  TEXT        NOT NULL
-quiz_attempts.seed               VARCHAR(66) NOT NULL DEFAULT ''
-```
+*   New columns (`proofType`, `proofData`, `seed`) added in `0014_lean_freak.sql` are **NOT NULL** to eliminate “pending nulls”.
+*   `lib/db/setup.ts` runs outstanding SQL inside a transaction and snapshots the schema for deterministic CI.
 
-The first two fields capture the raw Flare Data Connector proof that justifies a credential (`EVM`, `JSON`, `PAYMENT`, or `ADDRESS`) plus its opaque payload; the third stores the hex-encoded random-seed that bounded the candidate’s quiz shuffle. By design none of these columns are nullable, forcing every server action to supply a value and thereby eliminating "pending nulls” that could break the issuer approval flow later.
+**4.2 Server Action → Query Pattern**
 
-At bootstrap `lib/db/setup.ts` reads `drizzle.config.ts`, runs any outstanding SQL files inside a transactional block, then persists a _snapshot JSON_ for deterministic CI runs. Local developers therefore execute pnpm drizzle:migrate once and enjoy instant parity with the staging database.
+client form
+  └─✅ zod.validate()
+      └─✅ getUser() → role/JWT
+          └─✅ Drizzle query
+              └─📬 toast | redirect
+    
 
-### 4.2 Server Action → Query Pattern
+Explicit `select({…})` lists keep TypeScript in lock-step with the schema so drift won’t compile.
 
-All mutations travel through the `validatedActionWithUser()` wrapper (see `app/(auth)/actions.ts`). The chain looks like this:
+**4.3 Proof Verification Pipeline**
 
-client form submission
-  ↳ zod schema validates → rejects 400 on error
-      ↳ getUser() guarantees JWT + role
-          ↳ Drizzle insert/update inside try/catch
-              ↳ Toast / redirect
+1.  **Submit** – candidate posts `proofType + proofData`
+2.  **Review** – issuer calls `flare.verifyFdcProof()` → `FlareCredVerifier.verify*`
+3.  **Mint** – VC hashed, `CredentialNFT.mintCredential()`
+4.  **Deep-link** – UI shows [Verify on Flare](https://flarescan.com)
 
-Because every action file imports its corresponding table types from `schema/*.ts`, TypeScript throws a compile-time error if the schema and query drift—e.g. forgetting to include `proofType` in an `insert` after the migration. Read paths mirror the same rigour: functions such as `getCandidateCredentialsPage()` _select {…}_ exact column lists so that AutoComplete reveals `proofData` and `seed` wherever available.
+Verification happens _before_ minting: a credential cannot be VERIFIED unless its proof passes on-chain.
 
-### 4.3 Proof Verification Pipeline
+**4.4 GitHub Metrics Worker (Bonus Track)**
 
-The flagship backend innovation is the asymmetric verification loop that turns an off-chain JSON blob into an on-chain assertion the recruiter can trust:
+*   `workers/githubMetrics.ts` → Octokit → JSON-API proof → IPFS CID.
+*   Endpoint: `/api/tools/github-metrics?repo=<owner/repo>`
+*   Issuer approves via `verifyJson()`; credential gets “Open-Source Contribution” badge.
 
-1.  **Candidate Submits →** `add-credential-form.tsx` captures `proofType` + `proofData`, then posts to `candidate/credentials/actions.tsx`.
-2.  **Issuer Reviews →** the server action inside `issuer/credentials/actions.ts` hydrates that credential, calls `lib/flare.verifyFdcProof()`, _awaits the result_ from the on-chain `FlareCredVerifier` delegate (`verifyEVM`|`verifyJson`|…)
-3.  **Mint & Record →** upon success the action hashes the VC, invokes `CredentialNFT.mintCredential()`, persists `{tokenId, txHash, proofTx}` back into the JSON, and finally updates `candidate_credentials.status → VERIFIED`.
-4.  **UI Deep-link →** tables such as `components/dashboard/issuer/requests-table.tsx` render "Verify on Flare” anchors that point at `https://flarescan.com/tx/{proofTx}`.
+**4.5 Random Number Seed Service (RNG)**
 
-Failure anywhere in the chain—verifier returns `false` or reverts—bubbles a precise revert reason up to the client toast so the issuer understands why a signature or JSON schema was malformed. Because verification happens _before_ the NFT is minted, the system guarantees that no credential can enter a VERIFIED state without a chain-confirmed proof.
+*   `/api/rng-seed?max=n` → `RngHelper.randomMod()`
+*   Seed stored in `quizAttempts.seed`; auditors can replay shuffle.
 
-### 4.4 External Data – GitHub Metrics Worker
+**4.6 Live Price Feed Hook (FTSO)**
 
-The `workers/githubMetrics.ts` script demonstrates how FlareCred wraps web2 data in an `IJsonApi.Proof` on demand. Executed via CI or by hitting `api/tools/github-metrics?repo=owner/repo`, it:
+`useFlareUsdPrice` polls `FtsoHelper.flrUsdPriceWei()` every 60 s.  
+Buttons disable & toast if data > 1 h old.
 
-1.  Fetches `stargazers_count`, `forks_count`, `pushed_at` through the Octokit REST v3 client.
-2.  Packages that payload plus an ISO timestamp (helper `utils/time.ts::formatIso()`) into the canonical JSON-API proof schema.
-3.  Uploads the JSON to IPFS via `ipfs-http-client` and returns a CID that the candidate form stores inside `proofData`.
+**4.7 Security Middleware & Route Fences**
 
-When an issuer later clicks "Sign Open-Source Contribution” the previously described proof verification path kicks in, calling `FlareCredVerifier.verifyJson()` which in turn uses Flare’s on-chain JSON-API verifier implementation. This flow is the platform’s entry in the Hackathon “Best External Data Source Connected to Flare” track and is fully reproducible because the worker is deterministic given a GitHub token and repository slug.
+*   Edge `middleware.ts` blocks unauthorised roles at URL level.
+*   Server actions double-check ownership via Drizzle joins.
 
-### 4.5 Random Number Seed Service
+**4.8 Utility Libraries & Extension Points**
 
-Provable randomness backs every AI Skill-Check. The `api/rng-seed/route.ts` endpoint receives a `max` query param, calls `lib/flare.randomMod(max)` (read-only contract invocation), and returns `{ seed: '0x…' }`. Client code in `start-quiz-form.tsx` stores that seed in a hidden input, runs a Fisher–Yates shuffle, and finally inserts it into `quizAttempts.seed`. Recruiter views show the seed so any auditor can recompute the question order with a single script, meeting Flare’s “verifiable RNG” promise.
-
-### 4.6 Live Price Feed Hook (FTSO)
-
-`lib/hooks/useFlareUsdPrice.ts` polls `FtsoHelper.flrUsdPriceWei()` every sixty seconds via `ethers.js provider.call`. It returns `{ usd, stale, loading }`; `stale` flips true if the on-chain timestamp is older than 3 600 s. Components importing the hook (`pricing/submit-button.tsx`, `settings/team/settings.tsx`, `auth/wallet-onboard-modal.tsx`) disable all FLR payment buttons under staleness and surface a red toast. This guard prevents undersold subscriptions and wins Hackathon points for "ensuring oracle freshness.”
-
-### 4.7 Security Middleware & Route Fences
-
-Edge-runtime `middleware.ts` intercepts every navigation under `/dashboard` and checks the JWT-derived user role. Special routes (e.g. `/api/tools/github-metrics`) are whitelisted only for candidates via `lib/auth/middleware.ts`; other roles receive 403 instantly. For server actions that modify team members (`settings/team/actions.ts`) or pipelines (`recruiter/pipelines/actions.ts`), additional Drizzle joins confirm the current user’s ownership before any insert/update executes, stopping privilege escalation at the database level as well.
-
-### 4.8 Utility Libraries & Extension Points
-
-Reusable helpers—address checksums (`utils/address.ts`), human-readable time (`utils/time.ts`), avatar generation (`utils/avatar.ts`)—sit beneath `lib/utils/`. None make network calls, keeping them pure and testable. Email notifications are currently stubbed in `lib/utils`; comments inside the files explain how to wire Postmark or SendGrid without touching the contract layer, preserving the deterministic nature of on-chain proofs.
-
-Collectively these services ensure that a candidate’s action is **provably anchored** → back-tested on-chain → surfaced to UI tables with zero hidden joins. The result is a transparent, tamper-evident backend that new contributors can reason about by following file paths rather than tribal knowledge.
+*   Pure helpers in `lib/utils/**` (checksum, time, avatars).
+*   Email stubs document how to plug Postmark/SendGrid without touching contracts.
+*   
 
 ## 5. Deployment & Operational Playbook
 
