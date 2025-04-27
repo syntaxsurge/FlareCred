@@ -1,22 +1,32 @@
+/**
+ * Pricing metadata shared by frontend UI and server-side logic.
+ * All amounts are expressed in wei and **must** match the on-chain
+ * SubscriptionManager configuration.
+ */
+
+export const PLAN_KEYS = ['free', 'base', 'plus'] as const
+
+/** Union type for plan keys (`'free' | 'base' | 'plus'`). */
+export type PlanKey = typeof PLAN_KEYS[number]
+
 export interface PlanMeta {
-  /** Unique key used internally */
-  key: 'free' | 'base' | 'plus'
-  /** Human-friendly label */
+  /** Unique key used internally and on-chain (`planKey` param). */
+  key: PlanKey
+  /** Human-readable label. */
   name: string
-  /** Marketing feature bullets */
+  /** Bullet-point feature list for marketing copy. */
   features: string[]
-  /** Highlight this card in marketing pages */
+  /** Optional flag to visually highlight this tier in UI. */
   highlight?: boolean
-  /** On-chain price in wei (0 for free tier) */
+  /** On-chain price in wei (0 wei = free tier). */
   priceWei: bigint
 }
 
 /**
- * Static copy for each pricing tier.
- * Prices are denominated in wei and should match the on-chain
- * SubscriptionManager contract configuration.
+ * Immutable price & feature table.
+ * ⚠️  Keep this array **sorted** in display order for the pricing grid.
  */
-export const PLAN_META: PlanMeta[] = [
+export const PLAN_META: readonly PlanMeta[] = [
   {
     key: 'free',
     name: 'Free',
@@ -56,4 +66,15 @@ export const PLAN_META: PlanMeta[] = [
       'Priority Issuer Application Review',
     ],
   },
-]
+] as const
+
+/**
+ * Helper: return strongly-typed plan metadata.
+ *
+ * @param key  Plan identifier (`'free' | 'base' | 'plus'`)
+ */
+export function getPlanMeta(key: PlanKey): PlanMeta {
+  const meta = PLAN_META.find((p) => p.key === key)
+  if (!meta) throw new Error(`Unknown plan key: ${key}`)
+  return meta
+}
