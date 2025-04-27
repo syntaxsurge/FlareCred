@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 import { z } from 'zod'
 import { eq } from 'drizzle-orm'
 import { ethers } from 'ethers'
@@ -11,9 +10,6 @@ import {
   teamMembers,
   activityLogs,
   ActivityType,
-  type NewUser,
-  type NewTeam,
-  type NewTeamMember,
 } from '@/lib/db/schema'
 import { setSession } from '@/lib/auth/session'
 
@@ -74,16 +70,16 @@ export async function POST(req: Request) {
     /* Create user --------------------------------------------------------- */
     const [user] = await db
       .insert(users)
-      .values<NewUser>({ name, email, role, walletAddress })
+      .values({ name, email, role, walletAddress })
       .returning()
 
     /* Personal placeholder team ------------------------------------------ */
     const [team] = await db
       .insert(teams)
-      .values<NewTeam>({ name: `${email}'s Team`, creatorUserId: user.id })
+      .values({ name: `${email}'s Team`, creatorUserId: user.id })
       .returning()
 
-    await db.insert(teamMembers).values<NewTeamMember>({
+    await db.insert(teamMembers).values({
       userId: user.id,
       teamId: team.id,
       role: 'owner',
