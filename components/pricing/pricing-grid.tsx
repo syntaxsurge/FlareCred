@@ -1,29 +1,49 @@
+import { Suspense } from 'react'
 import Link from 'next/link'
-
+import { cache } from 'react'
 import { Check } from 'lucide-react'
 
 import { SubmitButton } from '@/app/(dashboard)/pricing/submit-button'
 import { Button } from '@/components/ui/button'
 import { PLAN_META } from '@/lib/constants/pricing'
-import { getUser, getTeamForUser } from '@/lib/db/queries/queries'
-import { checkoutAction } from '@/lib/payments/actions'
-import { getStripePrices, getStripeProducts } from '@/lib/payments/stripe'
+import { getTeamForUser, getUser } from '@/lib/db/queries/queries'
+
+/* -------------------------------------------------------------------------- */
+/*                        F L R   /   U S D   P R I C E                       */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Fetches the latest FLR/USD price (18-decimals) from Coingecko.
+ * We cache the result for 5 minutes to avoid rate-limits.
+ */
+const getFlrUsdPrice = cache(async (): Promise<number | null> => {
+  try {
+    const res = await fetch(
+      'https://api.coingecko.com/api/v3/simple/price?ids=flare-networks&vs_currencies=usd',
+      { next: { revalidate: 300 } },
+    )
+    const json = (await res.json()) as any
+    return json['flare-networks']?.usd ?? null
+  } catch {
+    return null
+  }
+})
 
 /* -------------------------------------------------------------------------- */
 /*                               P U B L I C  A P I                           */
 /* -------------------------------------------------------------------------- */
 
 interface PricingGridProps {
+  /** Team’s current plan name (`Free`|`Base`|`Plus`) or null if anonymous. */
   currentPlanName?: string | null
 }
 
 /**
- * PricingGrid renders the canonical pricing cards.
- * If `currentPlanName` isn’t provided, we detect the signed-in user’s team plan
- * so both the landing and in-app pages exhibit identical behaviour.
+ * Renders pricing cards for each plan tier, highlighting the active one
+ * and enabling on-chain subscription via the wallet button.
  */
 export async function PricingGrid({ currentPlanName }: PricingGridProps) {
-  /* Detect active plan when omitted */
+  /* Resolve current plan if not provided (server-only) */
   if (currentPlanName === undefined) {
     const user = await getUser()
     if (user) {
@@ -34,34 +54,31 @@ export async function PricingGrid({ currentPlanName }: PricingGridProps) {
     }
   }
 
-  /* Stripe metadata */
-  const [prices, products] = await Promise.all([getStripePrices(), getStripeProducts()])
-
-  const resolveStripe = (planName: string) => {
-    const product = products.find((p) => p.name === planName)
-    const price = prices.find((pr) => pr.productId === product?.id)
-    return { price }
-  }
+  const usdPerFlr = await getFlrUsdPrice()
 
   return (
     <div className='grid gap-10 md:grid-cols-3'>
       {PLAN_META.map((meta) => {
-        const { price } = resolveStripe(meta.name)
-        const amount = ((price?.unitAmount ?? 0) / 100).toFixed(0)
-        const interval = price?.interval ?? 'month'
-        const trialDays = price?.trialPeriodDays ?? 0
+        const priceFlr = Number(meta.priceWei) / 1e18
+        const usdLabel =
+          usdPerFlr && meta.priceWei > 0n
+            ? ` (~$${(priceFlr * usdPerFlr).toFixed(0)})`
+            : ''
+
         const isCurrent =
           !!currentPlanName && currentPlanName.toLowerCase() === meta.name.toLowerCase()
+
+        const planKey: 0 | 1 | 2 =
+          meta.key === 'base' ? 1 : meta.key === 'plus' ? 2 : 0
 
         return (
           <PricingCard
             key={meta.key}
             meta={meta}
-            price={Number(amount)}
-            interval={interval}
-            trialDays={trialDays}
-            priceId={price?.id}
+            priceFlr={priceFlr}
+            usdLabel={usdLabel}
             isCurrent={isCurrent}
+            planKey={planKey}
           />
         )
       })}
@@ -70,23 +87,21 @@ export async function PricingGrid({ currentPlanName }: PricingGridProps) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                               P R I C I N G  C A R D                       */
+/*                              P R I C I N G  C A R D                        */
 /* -------------------------------------------------------------------------- */
 
 function PricingCard({
   meta,
-  price,
-  interval,
-  trialDays,
-  priceId,
+  priceFlr,
+  usdLabel,
   isCurrent,
+  planKey,
 }: {
   meta: (typeof PLAN_META)[number]
-  price: number
-  interval: string
-  trialDays: number
-  priceId?: string
+  priceFlr: number
+  usdLabel: string
   isCurrent: boolean
+  planKey: 0 | 1 | 2
 }) {
   return (
     <div
@@ -96,16 +111,12 @@ function PricingCard({
     >
       <h3 className='text-foreground mb-2 text-2xl font-semibold'>{meta.name}</h3>
 
-      {trialDays > 0 && meta.key !== 'free' && (
-        <p className='text-muted-foreground mb-4 text-sm'>{trialDays}-day free trial</p>
-      )}
-
       {meta.key === 'free' ? (
         <p className='text-foreground mb-6 text-3xl font-extrabold'>Forever Free</p>
       ) : (
         <p className='text-foreground mb-6 text-4xl font-extrabold'>
-          ${price}
-          <span className='text-muted-foreground ml-1 text-xl font-medium'>/ {interval}</span>
+          {priceFlr}
+          <span className='text-muted-foreground ml-1 text-xl font-medium'>FLR{usdLabel}</span>
         </p>
       )}
 
@@ -118,6 +129,7 @@ function PricingCard({
         ))}
       </ul>
 
+      {/* Action button */}
       {isCurrent ? (
         <Button
           variant='secondary'
@@ -130,12 +142,11 @@ function PricingCard({
         <Button asChild variant='secondary' className='w-full rounded-full'>
           <Link href='/sign-up'>Get Started</Link>
         </Button>
-      ) : priceId ? (
-        <form action={checkoutAction}>
-          <input type='hidden' name='priceId' value={priceId} />
-          <SubmitButton />
-        </form>
-      ) : null}
+      ) : (
+        <Suspense fallback={<Button className='w-full'>Loading…</Button>}>
+          <SubmitButton planKey={planKey} priceWei={meta.priceWei} />
+        </Suspense>
+      )}
     </div>
   )
 }
