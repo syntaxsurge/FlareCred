@@ -21,6 +21,7 @@ import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
 /* -------------------------------------------------------------------------- */
 
 const CategoryEnum = z.nativeEnum(CredentialCategory)
+const ProofTypeEnum = z.enum(['EVM', 'JSON', 'PAYMENT', 'ADDRESS'])
 
 export const addCredential = validatedActionWithUser(
   z.object({
@@ -28,9 +29,15 @@ export const addCredential = validatedActionWithUser(
     category: CategoryEnum,
     type: z.string().min(1).max(50),
     fileUrl: z.string().url('Invalid URL'),
+    proofType: ProofTypeEnum,
+    proofData: z.string().min(1, 'Proof is required'),
     issuerId: z.coerce.number().optional(),
   }),
-  async ({ title, category, type, fileUrl, issuerId }, _formData, user) => {
+  async (
+    { title, category, type, fileUrl, proofType, proofData, issuerId },
+    _formData,
+    user,
+  ) => {
     /* --------------------------- issuer lookup -------------------------- */
     let linkedIssuerId: number | undefined
     let status: CredentialStatus = CredentialStatus.UNVERIFIED
@@ -80,6 +87,8 @@ export const addCredential = validatedActionWithUser(
       category,
       type,
       fileUrl,
+      proofType,
+      proofData,
       issuerId: linkedIssuerId,
       status,
     })

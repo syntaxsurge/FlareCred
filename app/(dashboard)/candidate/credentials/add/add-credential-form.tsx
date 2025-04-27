@@ -1,6 +1,6 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useState, useTransition } from 'react'
 
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -30,6 +30,8 @@ const CATEGORIES = [
   'OTHER',
 ] as const
 
+const PROOF_TYPES = ['EVM', 'JSON', 'PAYMENT', 'ADDRESS'] as const
+
 /* -------------------------------------------------------------------------- */
 /*                                   PROPS                                    */
 /* -------------------------------------------------------------------------- */
@@ -44,6 +46,7 @@ interface Props {
 
 export default function AddCredentialForm({ addCredentialAction }: Props) {
   const [isPending, startTransition] = useTransition()
+  const [proofType, setProofType] = useState<(typeof PROOF_TYPES)[number]>('EVM')
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -68,6 +71,9 @@ export default function AddCredentialForm({ addCredentialAction }: Props) {
       }
     })
   }
+
+  /* ------------------------------ UI ----------------------------------- */
+  const isJson = proofType === 'JSON'
 
   return (
     <form onSubmit={handleSubmit} className='space-y-8'>
@@ -114,6 +120,58 @@ export default function AddCredentialForm({ addCredentialAction }: Props) {
             required
             placeholder='https://example.com/credential.pdf'
           />
+        </div>
+
+        {/* Proof type */}
+        <div className='space-y-2'>
+          <Label htmlFor='proofType'>Proof Type</Label>
+          <Select
+            name='proofType'
+            required
+            value={proofType}
+            onValueChange={(val) => setProofType(val as (typeof PROOF_TYPES)[number])}
+          >
+            <SelectTrigger id='proofType'>
+              <SelectValue placeholder='Select proof type' />
+            </SelectTrigger>
+            <SelectContent>
+              {PROOF_TYPES.map((pt) => (
+                <SelectItem key={pt} value={pt}>
+                  {pt}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Proof data */}
+        <div className='space-y-2 sm:col-span-2'>
+          <Label htmlFor='proofData'>Proof Data / URL / Tx-hash</Label>
+          {isJson ? (
+            <textarea
+              id='proofData'
+              name='proofData'
+              rows={4}
+              required
+              className='border-border w-full rounded-md border p-2 text-sm'
+              placeholder='Paste raw JSON proof object here…'
+            />
+          ) : (
+            <Input
+              id='proofData'
+              name='proofData'
+              required
+              placeholder={
+                proofType === 'EVM'
+                  ? '0x… (transaction hash)'
+                  : proofType === 'PAYMENT'
+                    ? 'Payment tx-hash'
+                    : proofType === 'ADDRESS'
+                      ? '0x… (wallet address)'
+                      : 'Enter proof'
+              }
+            />
+          )}
         </div>
       </div>
 
