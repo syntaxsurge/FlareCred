@@ -45,17 +45,10 @@ export default function SiteHeader() {
 
   /* Wallet connection state */
   const { isConnected, address } = useAccount({
-    /* When the user disconnects, clear the session then redirect
-       to the wallet-connect screen so the UI resets cleanly. */
-    onDisconnect() {
-      fetch('/api/auth/signout', { method: 'POST' }).finally(() => {
-        router.replace('/connect-wallet')
-      })
-    },
     /* When the wallet (re)connects, ensure the backend refreshes the
        session cookie, then navigate to the dashboard which forces the
        server to re-evaluate role-based layouts without a manual reload. */
-    async onConnect({ address }) {
+    async onConnect({ address }: { address?: string }) {
       if (!address) {
         router.replace('/connect-wallet')
         return
@@ -70,6 +63,17 @@ export default function SiteHeader() {
       }
     },
   })
+
+  /* Detect wallet disconnect (wagmi no longer exposes onDisconnect) */
+  const prevConnectedRef = useRef<boolean>(isConnected)
+  useEffect(() => {
+    if (prevConnectedRef.current && !isConnected) {
+      fetch('/api/auth/signout', { method: 'POST' }).finally(() => {
+        router.replace('/connect-wallet')
+      })
+    }
+    prevConnectedRef.current = isConnected
+  }, [isConnected, router])
 
   /* User promise required by downstream components */
   const { userPromise } = useUser()
