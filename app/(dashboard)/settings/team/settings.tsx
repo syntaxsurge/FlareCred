@@ -23,6 +23,7 @@ import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { PLAN_META } from '@/lib/constants/pricing'
 
 import { InviteTeamMember } from './invite-team'
+import { useState } from 'react'
 
 /* -------------------------------------------------------------------------- */
 /*                               Constants                                    */
