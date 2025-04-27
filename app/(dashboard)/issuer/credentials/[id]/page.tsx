@@ -1,17 +1,29 @@
 import { redirect } from 'next/navigation'
 
 import { eq, and } from 'drizzle-orm'
-import { BadgeCheck, Clock, XCircle, FileText } from 'lucide-react'
+import { BadgeCheck, Clock, XCircle, FileText, Github } from 'lucide-react'
 
 import { CredentialActions } from '@/components/dashboard/issuer/credential-actions'
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import PageCard from '@/components/ui/page-card'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
-import { candidateCredentials, CredentialStatus, candidates } from '@/lib/db/schema/candidate'
+import {
+  candidateCredentials,
+  CredentialStatus,
+  candidates,
+} from '@/lib/db/schema/candidate'
 import { users } from '@/lib/db/schema/core'
 import { issuers } from '@/lib/db/schema/issuer'
 import { cn } from '@/lib/utils'
+import { isGithubRepoCredential } from '@/lib/constants/credential'
 
 export const revalidate = 0
 
@@ -20,13 +32,15 @@ export const revalidate = 0
 /* -------------------------------------------------------------------------- */
 
 function StatusBadge({ status }: { status: CredentialStatus }) {
-  const cls = 'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize'
+  const cls =
+    'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize'
   const map: Record<CredentialStatus, string> = {
     [CredentialStatus.VERIFIED]:
       'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
     [CredentialStatus.PENDING]:
       'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-    [CredentialStatus.REJECTED]: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
+    [CredentialStatus.REJECTED]:
+      'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
     [CredentialStatus.UNVERIFIED]: 'bg-muted text-foreground/80',
   }
   return <span className={cn(cls, map[status])}>{status.toLowerCase()}</span>
@@ -45,13 +59,44 @@ function StatusIcon({ status }: { status: CredentialStatus }) {
 }
 
 /* -------------------------------------------------------------------------- */
+/*                               P R O O F  UI                               */
+/* -------------------------------------------------------------------------- */
+
+function GithubProofDialog({ proofJson }: { proofJson: string }) {
+  'use client'
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <button
+          className='text-primary inline-flex items-center gap-2 font-medium underline-offset-2 hover:underline'
+          type='button'
+        >
+          <Github className='h-4 w-4' />
+          View GitHub Proof
+        </button>
+      </DialogTrigger>
+      <DialogContent className='max-w-2xl'>
+        <DialogHeader>
+          <DialogTitle className='flex items-center gap-2'>
+            <Github className='h-5 w-5' />
+            GitHub Proof JSON
+          </DialogTitle>
+        </DialogHeader>
+        <pre className='max-h-[70vh] overflow-auto whitespace-pre-wrap rounded-md bg-muted p-4 text-xs leading-relaxed'>
+          {proofJson}
+        </pre>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
 /*                                   P A G E                                  */
 /* -------------------------------------------------------------------------- */
 
 export default async function CredentialDetailPage({
   params,
 }: {
-  /** Next 15 passes <code>params</code> as a Promise - await it first. */
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
@@ -61,7 +106,11 @@ export default async function CredentialDetailPage({
   if (!user) redirect('/connect-wallet')
 
   /* Validate issuer ownership */
-  const [issuer] = await db.select().from(issuers).where(eq(issuers.ownerUserId, user.id)).limit(1)
+  const [issuer] = await db
+    .select()
+    .from(issuers)
+    .where(eq(issuers.ownerUserId, user.id))
+    .limit(1)
   if (!issuer) redirect('/issuer/onboard')
 
   /* Load credential & candidate */
@@ -79,6 +128,17 @@ export default async function CredentialDetailPage({
 
   const { cred, candUser } = data
   const status = cred.status as CredentialStatus
+  const isGithub = isGithubRepoCredential(cred.type)
+
+  /* Prettify proof JSON if possible */
+  let proofPretty = cred.proofData
+  if (isGithub) {
+    try {
+      proofPretty = JSON.stringify(JSON.parse(cred.proofData), null, 2)
+    } catch {
+      /* leave raw */
+    }
+  }
 
   /* ----------------------------- UI ----------------------------- */
   return (
@@ -93,7 +153,9 @@ export default async function CredentialDetailPage({
           <div className='flex items-center gap-4'>
             <StatusIcon status={status} />
             <div className='flex-1'>
-              <h2 className='text-3xl leading-tight font-extrabold tracking-tight'>{cred.title}</h2>
+              <h2 className='text-3xl font-extrabold leading-tight tracking-tight'>
+                {cred.title}
+              </h2>
               <p className='text-muted-foreground text-sm'>
                 Submitted by{' '}
                 <span className='font-medium'>
@@ -125,7 +187,7 @@ export default async function CredentialDetailPage({
                 </p>
               </div>
 
-              {cred.fileUrl && (
+              {cred.fileUrl && !isGithub && (
                 <div className='sm:col-span-2'>
                   <p className='text-muted-foreground mb-1 text-xs font-medium uppercase'>
                     Attached File
@@ -141,9 +203,19 @@ export default async function CredentialDetailPage({
                   </a>
                 </div>
               )}
+
+              {/* GitHub proof viewer */}
+              {isGithub && (
+                <div className='sm:col-span-2'>
+                  <p className='text-muted-foreground mb-1 text-xs font-medium uppercase'>
+                    GitHub Proof
+                  </p>
+                  <GithubProofDialog proofJson={proofPretty} />
+                </div>
+              )}
             </CardContent>
 
-            {/* Action buttons for editable statuses */}
+            {/* Action buttons */}
             {[
               CredentialStatus.PENDING,
               CredentialStatus.REJECTED,
@@ -152,7 +224,11 @@ export default async function CredentialDetailPage({
             ].includes(status) && (
               <CardFooter className='bg-muted/50 border-t py-4'>
                 <div className='ml-auto'>
-                  <CredentialActions credentialId={cred.id} status={status} />
+                  <CredentialActions
+                    credentialId={cred.id}
+                    status={status}
+                    isGithub={isGithub}
+                  />
                 </div>
               </CardFooter>
             )}

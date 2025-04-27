@@ -20,12 +20,14 @@ type ActionState = { error?: string; success?: string }
 interface Props {
   credentialId: number
   status: CredentialStatus
+  /** True when credential.type === 'github_repo' */
+  isGithub: boolean
 }
 
-export function CredentialActions({ credentialId, status }: Props) {
+export function CredentialActions({ credentialId, status, isGithub }: Props) {
   const router = useRouter()
 
-  /* ------------------ approve ------------------ */
+  /* ------------------ approve ------------------ */
   const [approveState, approve, approving] = useActionState<ActionState, FormData>(
     approveCredentialAction,
     { error: '', success: '' },
@@ -69,6 +71,9 @@ export function CredentialActions({ credentialId, status }: Props) {
     startTransition(() => fn(fd))
   }
 
+  /* Label helper */
+  const approveLabel = isGithub ? 'Sign Open-Source Contribution' : 'Approve & Sign VC'
+
   /* ---------------- UI blocks ------------------ */
   /* Pending — approve & reject */
   if (status === CredentialStatus.PENDING || status === CredentialStatus.UNVERIFIED) {
@@ -83,7 +88,7 @@ export function CredentialActions({ credentialId, status }: Props) {
                 Processing…
               </>
             ) : (
-              'Approve & Sign VC'
+              approveLabel
             )}
           </Button>
         </form>
@@ -116,7 +121,7 @@ export function CredentialActions({ credentialId, status }: Props) {
               Processing…
             </>
           ) : (
-            'Approve & Sign VC'
+            approveLabel
           )}
         </Button>
       </form>
