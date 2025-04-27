@@ -1,61 +1,110 @@
-## 1\. Platform Architecture Overview
+## 1. Platform Architecture Overview
 
-**FlareCred** is deliberately organised so that every directory maps to a concrete concern: the `app/` tree contains route handlers and React Server/Client Components, `components/` holds reusable UI atoms and domain-specific tables or boards, `lib/` encapsulates shared business logic (auth middleware, database queries, typed on-chain helpers), while `blockchain/` keeps Hardhat-compiled Solidity contracts plus deterministic deployment scripts. Walking through the root you will therefore see that an inbound HTTP request flows "file-system → Next 14 App Router → server action → drizzle query → optional contract call” and finally renders back through a shadcn/ui component that already knows its role guard and tailwind styles.
+A quick-scan map of **where code lives** and **how a request moves** through the stack.
 
-The first actor touching the codebase is _any visitor_ who lands on `/`. They receive a purely static marketing shell rendered from `components/landing/*`; no session is required. The instant they select a persona—candidate, issuer, recruiter, or admin—the UI calls from `components/auth/wallet-onboard-modal.tsx`. That client component reads the Wagmi config prepared in `lib/wallet.tsx`, prompts for a browser wallet, and posts the address to `app/api/auth/wallet-onboard/route.ts`. A JWT stored in `auth.session.ts` is returned, which the edge `middleware.ts` then inspects on every navigation; this is how the role-based gates sprinkled across `app/(dashboard)` routes are enforced without duplicating logic.
+| Layer | Responsibility | Key Paths |
+|-------|---------------|-----------|
+| **Presentation** | React Server-/Client-Components driven by the Next .js 14 **App Router** | `app/` |
+| **UI Atoms** | shadcn/ui primitives & feature-specific boards/tables/dialogs | `components/` |
+| **Domain Logic** | Auth, Drizzle queries, typed on-chain helpers, React hooks | `lib/` |
+| **Smart Contracts** | Solidity libraries & Hardhat scripts | `blockchain/` |
 
-Immediately after onboarding the user lands inside their role-scoped dashboard segment (`/candidate`, `/issuer`, `/recruiter`, or `/admin`). Each segment is a folder in `app/(dashboard)` that only imports hooks and components resident under the same namespace—e.g. `candidate/profile/page.tsx` pulls `…/profile-detailed-view.tsx` and `lib/db/queries/candidate-details.ts`—making the coupling explicit. The `layout.tsx` shared at the dashboard root injects the left-hand navigation (`components/dashboard/sidebar-nav.tsx`) which renders menu items conditionally based on the `role` stored in React context, ensuring that a recruiter never sees admin pages and so on. These guards are double-checked server-side with early `redirect()` calls, as shown in `recruiter/page.tsx` and dozens of similar files.
+<details>
+<summary>📡 Request lifecycle (click)</summary>
 
-The very first mission for a **candidate** is minting a deterministic decentralized identifier. When they click "Create Flare DID” the client component in `candidate/create-did/create-did-button.tsx` calls → `DIDRegistry.createDID()` on Coston 2, waits for the receipt, and then persists the resulting `did:flare:0x…` string back to the Postgres `teams` table. All follow-up credential flows pivot around that DID: every experience highlight, project, or skill-check VC ultimately embeds it as `credentialSubject.id`. The wallet signature required to submit the DID transaction anchors the user’s identity to a private key they already control, meaning there is no central password store in the whole repository.
+1. **File-system routing** → App Router  
+2. **Server Action** (Zod-validated)  
+3. **Drizzle query** and/or **ethers.js** on-chain call  
+4. Render via **shadcn/ui** component (role-guarded, tailwind-styled)
 
-Billing is handled by the **SubscriptionManager** contract in `blockchain/contracts/SubscriptionManager.sol`. The React hook `lib/hooks/useFlareUsdPrice.ts` executes a read-only call → `FtsoHelper.flrUsdPriceWei()` every sixty seconds; the tuple `{priceWei, timestamp}` is decoded in `lib/flare.ts` so that UI buttons such as `pricing/submit-button.tsx` can simultaneously show "5 FLR ≈ $1.23” and disable themselves when `Date.now()/1000 – timestamp > 3600`. When the user proceeds, the button composes a `paySubscription(team, planKey)` transaction targeting the chain id injected via `NEXT_PUBLIC_FLARE_CHAIN_ID`; the Solidity logic automatically extends `paidUntil` by one `30 days` period. The corresponding `SubscriptionPaid` event is parsed by a server action and streamed into `settings/activity` so that owners can audit who topped up, when, and using which plan.
+</details>
 
-The platform leans heavily on **helper libraries** hosted under `blockchain/contracts/lib`. `FtsoHelper.sol` wraps `getFeedByIdInWei` so the front-end never speaks to the oracle directly; `RngHelper.sol` exposes `randomMod(bound)` which seeds the candidate skill-check shuffle through the `api/rng-seed/route.ts` endpoint; and `FdcHelper.sol` or, more specifically, the `FlareCredVerifier` delegate contract, gives issuers a one-liner to call `verifyJson`/`verifyEVM` etc. Because every helper’s address is exported from `lib/flare.ts` as an `ethers.Contract` instance, any server action can invoke on-chain verification without re-importing ABIs or worrying about providers—resulting in tiny, readable files such as `issuer/credentials/actions.ts`.
+### Authentication & Role Guards
+* Static marketing shell (`components/landing/*`) served to all visitors.
+* **Wallet Onboard Modal** posts the wallet address to `/api/auth/wallet-onboard` → issues JWT.
+* Edge **middleware.ts** inspects the JWT on every navigation to enforce route-level guards.
 
-On the client side `lib/db` holds Drizzle-generated TypeScript models so that data returned from queries remains strongly typed end-to-end. When a server component inside `app/(dashboard)/candidate` calls `db.select()` the resulting row shape mirrors the TypeScript interfaces compiled from `lib/db/schema/*.ts`. This arrangement means that if a migration adds a column—e.g. `proofType`—the compiler forces a revisit of every place that was destructuring `candidateCredentials`; hence runtime drift is virtually impossible.
+### Dashboard Segments
+* Users land on a role-scoped root: `/candidate`, `/issuer`, `/recruiter`, `/admin`.
+* Each namespace imports **only** its own hooks/components – coupling is obvious.
+* Sidebar navigation is driven by a React `RoleContext` and double‑checked server‑side with early `redirect()`.
 
-Finally, a note on **visual cohesion**. All buttons, cards, modals, and badges you see across the app are powered by shadcn/ui primitives located in `components/ui`. The `components/ui/button.tsx` file defines the cva-based variant map that sandboxes spacing, rounded-corner rules, focus rings, and motion transitions (`transition-all hover:scale-[1.02]`) in one location. Therefore as new blazor routes are added the contributor only has to import Button, Card, or Badge; design consistency is preserved automatically. Dark-mode support is handled by `components/theme-provider.tsx`, which toggles Tailwind’s `dark:` classes in lock-step with `localStorage.theme` and the OS preference.
+### Key Flows
+* **Deterministic DID** — `CreateDidButton` → `DIDRegistry.createDID()` (Coston 2) → store `did:flare:…` in Postgres and reference it as `credentialSubject.id`.
+* **Billing** — `useFlareUsdPrice` polls `FtsoHelper.flrUsdPriceWei()` every 60 s; buttons disable if data is > 1 h old. Calling `paySubscription(team, planKey)` on `SubscriptionManager` adds **30 days** to `paidUntil`.
+* **Helper Libraries** — `FtsoHelper` (oracle), `RngHelper` (randomness), `FlareCredVerifier` (FDC). All exposed once via `lib/flare.ts`.
 
-## 2\. Smart Contracts & On-Chain Integrations
+### Type‑Safety Pipeline
+Drizzle‑generated types mean a DB migration (e.g. adding `proofType`) **fails compilation** wherever the old shape is referenced—preventing silent runtime drift.
 
-**FlareCred’s on-chain layer** is compact enough that a newcomer can audit every line in one sitting yet powerful enough to express a full credential-issuance life-cycle without hidden off-chain assumptions. Six Solidity compilation units live under `blockchain/contracts/`: three state-bearing root contracts (`DIDRegistry.sol`, `CredentialNFT.sol`, `SubscriptionManager.sol`), one thin delegate (`FlareCredVerifier.sol`), and two helper libraries (`lib/FtsoHelper.sol` and `lib/RngHelper.sol`). Each of these artefacts is surfaced to the TypeScript codebase through `lib/flare.ts`; that file performs _single-source-of-truth_ address assertions, exposes read-only `ethers.Contract` instances, and ships convenience wrappers such as `issueFlareCredential()` or `readFlrUsdPriceWei()`. Because both the server actions and the React client-side hooks import from exactly that module, address drift between server and browser is impossible.
+### Design System
+Visual coherence comes from central shadcn/ui variants (`components/ui/**`). Dark‑mode is toggled by `components/theme-provider.tsx`, keeping Tailwind’s `dark:` utilities in sync with `localStorage.theme` *and* the OS preference.
 
-The first contract a user interacts with is `DIDRegistry`. When a candidate clicks the “Create Flare DID” button the client component in `app/(dashboard)/candidate/create-did/create-did-button.tsx` performs the following linear path: wagmi.writeContract → DIDRegistry.createDID(bytes32 docHash). The registry derives the identifier by concatenating the constant prefix `"did:flare:"` with a 20-byte, zero-padded hexadecimal representation of `msg.sender`. The result is stored in `mapping(address ⇒ string) didOf`, and an event `DIDCreated` is emitted; that hash is never re-computable for a second address, so DID collisions are provably impossible. Candidates can later update their DID document pointer through `setDocument(uri, docHash)`, while admins hold an `adminSetDocument()` override for moderated corrections. No function is `payable` and the registry holds no funds, which eliminates any re-entrancy vector in that piece of code.
 
-Once identity is minted the next touchpoint is `CredentialNFT`. Unlike designs that merely emit events, FlareCred permanently anchors the keccak-256 hash of every Verifiable Credential inside an ERC-721 token. The issuance flow looks like this:
+## 2. Smart Contracts & On-Chain Integrations
 
-issuer dashboard Approve click
-   → server action `issuer/credentials/actions.ts`
-        ├─💾 fetch cred + issuer row via Drizzle
-        ├─🔒 call `verifyFdcProof(proofType, proofData)` (see below)
-        ├─🧮 compute vcHash = keccak256(vcJson)
-        └─⛓️  `issueFlareCredential({ to, vcHash, uri: '' })`
-                ↳ `credentialNftSigner.write.mintCredential(to, vcHash, uri)`
+### ✨ One-screen overview
 
-The minting function is `onlyRole(ISSUER_ROLE)`; roles are granted immediately after deployment by `blockchain/scripts/deployCredentialNFT.ts` which reads a comma-separated `ISSUER_ADDRESSES` env var. Every successful mint triggers `event CredentialMinted(address to,uint256 tokenId,bytes32 vcHash,string uri)`, and the server action persists both the `tokenId` and the transaction hash into the `vcJson` blob so that UI tables can deep-link to Flarescan.
+| Layer | Solidity artefact | Purpose | Key security notes |
+| --- | --- | --- | --- |
+| **Identity** | `DIDRegistry.sol` | Mint deterministic `did:flare:0x…` per wallet & update doc pointer | No funds, non-payable ⇒ re-entrancy-proof |
+| **Credentials** | `CredentialNFT.sol` | Hash + anchor every Verifiable Credential in an ERC-721 | Role-gated `mintCredential`, immutable admin |
+| **Billing** | `SubscriptionManager.sol` | 30-day SaaS plans paid in FLR | Single payable fn, no outward calls |
+| **Proofs** | `FlareCredVerifier.sol` | Stateless proxy to FDC verifier | View-only, hot-swappable via env var |
+| **Oracle helper** | `lib/FtsoHelper.sol` | Read FLR/USD feed (wei precision) | Pure _view_ lib |
+| **RNG helper** | `lib/RngHelper.sol` | Provable random `uint256` for quizzes | Pure _view_ lib |
 
-`SubscriptionManager` underpins SaaS billing. It stores a `mapping(address ⇒ uint256) paidUntil` plus a dynamic `planPriceWei` lookup, both guarded by `ADMIN_ROLE`. The payable `paySubscription(team, planKey)` function verifies that `msg.value == planPriceWei[planKey]`, then rolls the active window forward in 30-day increments. No re-entrancy hazards exist because the contract does not call external addresses, and role administration is locked down in the constructor. On the UI side, all FLR amounts are first translated to USD using the oracle helper described below and buttons remain disabled whenever the oracle timestamp is older than one hour, guaranteeing price freshness.
+- - -
 
-Data-integrity of external attestations is enforced by `FlareCredVerifier`, a **stateless delegate** that caches `IFdcVerification` from Flare’s `ContractRegistry`. Its four wrapper functions—`verifyEVM`, `verifyJson`, `verifyPayment`, and `verifyAddress`—are all `view` calls that bubble up whatever boolean the canonical verifier returns. Because the delegate itself never stores anything it can be replaced by deploying a new instance and updating `NEXT_PUBLIC_FDC_VERIFIER_ADDRESS` without touching live NFTs or DIDs. Server-side enforcement resides in `issuer/credentials/actions.ts`; that file parses `proofData`, chooses the correct wrapper, and aborts the approval if the verifier flips `false` or reverts.
+### 🔗 Core flow (identity → attestation → payment)
 
-Two helper libraries round off the stack. `FtsoHelper.sol` decorates `TestFtsoV2Interface.getFeedByIdInWei` so the front end can call a simple `flrUsdPriceWei()` method that already returns a 256-bit price and its oracle timestamp. The Hook `useFlareUsdPrice.ts` pulls that value every sixty seconds, converts it to a floating USD amount inside `formatUsd()`, and sets a `stale` flag once the feed exceeds the 3600-second threshold. Buttons inside `pricing`, `settings/team`, and `wallet-onboard-modal` bail out early with a red toast (→ “Oracle data stale – retry later”) whenever `stale === true`, thereby satisfying hackathon requirements for oracle integrity.
+1.  **Create DID**  
+    `wagmi.writeContract → DIDRegistry.createDID(docHash)`  
+    ⇒ emits `DIDCreated`
+2.  **Issue credential**
+    
+    issuer/credentials/actions.ts
+    ├ verifyFdcProof(proofType, proofData)   // on-chain
+    ├ vcHash = keccak256(vcJson)
+    └ credentialNftSigner.mintCredential(to, vcHash, '')
+    
+3.  **Pay subscription**  
+    `SubscriptionManager.paySubscription(team, planKey, { value: priceWei })`  
+    _priceWei_ comes from `FtsoHelper.flrUsdPriceWei()`; UI blocks if oracle data > 1 h old.
 
-`RngHelper.sol` plugs Flare’s Random Number Generator into candidate quizzes. The public `randomMod(uint256 modulus)` divides a cryptographically random uint256 by the provided modulus, returning a bounded result in a single `view` call. That function is invoked by the `api/rng-seed/route.ts` endpoint; the returned hex seed is stored alongside the quiz attempt in Postgres (`quizAttempts.seed` column) and displayed back to recruiters so anyone can recompute the original Fisher–Yates shuffle. Because the helper stores no state, its presence cannot introduce miner-extractable value or replay attacks.
+🎛 ABI access in `lib/flare.ts`
 
-Every contract exposes its own `supportsInterface` override in accordance with ERC-165, enabling future composability (e.g., credential revocation registries) and on-chain discovery. The Hardhat config uses Solidity 0.8.25 for global arithmetic overflow checks, and the `.solhint.json` file enforces “no wildcard re-entrancy” and “no inline assembly” rules across the repository.
+*   Centralised address assertions (`assertAddress`)
+*   Shared read-only `ethers.Contract` instances for server & client
+*   Helper wrappers: `createFlareDID()` ・ `issueFlareCredential()` ・ `readFlrUsdPriceWei()` ・ `randomMod()`
 
-Deployment scripts under `blockchain/scripts/` guide developers through:
+- - -
 
-1.  `deployDIDRegistry.ts` – emits address & verifies on Routescan;
-2.  `deployCredentialNFT.ts` – grants ISSUER\_ROLE & PLATFORM\_ROLE;
-3.  `deploySubscriptionManager.ts` – seeds plan prices via env and grants ADMIN\_ROLE to the platform wallet;
-4.  `deployFlareCredVerifier.ts` – prints `VERIFIER_ADDRESS=…` reminder.
+### 🛡 Security at a glance
 
-Security conscious readers will note that none of the contracts perform _delegatecall_s, that all mapping writes follow `checks-effects-interactions`, and that the sole `payable` function (`paySubscription`) transfers no ether outwards, making re-entrancy technically impossible. Role administrators are immutable once the constructor exits, reducing governance overhead to a single spare multisig wallet that holds the `ADMIN_ROLE` on testnets and main-net. For the hackathon scope this strikes a pragmatic balance between auditability and upgradability; future iterations could wrap `SubscriptionManager` in a transparent proxy without touching front-end hooks because `lib/flare.ts` centralises the ABI references.
+*   **Checks-Effects-Interactions** everywhere
+*   No `delegatecall`; upgrades = redeploy + env-var swap
+*   Global overflow checks (Solidity 0.8.25)
+*   `.solhint.json` bans inline assembly & wildcard re-entrancy
+*   Only one `payable` function—and it never sends FLR out
 
-In essence, FlareCred’s contract suite encodes _identity → attestation → payment_ as three orthogonal layers, joined together by a stateless verifier and two data-access helpers. This deliberate separation keeps the codebase readable, reduces the audit surface, and lets each React screen wire itself to the exact on-chain primitive it needs with zero duplicate ABIs or scattered address constants.
+- - -
 
-## 3\. Application Flows by Role & UI Pages
+### 🚀 One-command deployment
+
+```
+pnpm hardhat run blockchain/scripts/deployDIDRegistry.ts
+pnpm hardhat run blockchain/scripts/deployCredentialNFT.ts
+pnpm hardhat run blockchain/scripts/deploySubscriptionManager.ts
+pnpm hardhat run blockchain/scripts/deployFlareCredVerifier.ts
+```
+
+Scripts auto-verify on Routescan and seed roles from `.env`.
+
+> **Bottom line** — Three orthogonal contracts (plus two helpers and one delegate) cover _identity → credentials → billing_ in ≈700 LoC that a first-time auditor can read before lunch.
+
+
+## 3. Application Flows by Role & UI Pages
 
 _FlareCred_ exposes four first-class personas—**candidates, issuers, recruiters** and an **administrator**—each confined to a namespaced folder under `app/(dashboard)`. This section maps, with file-level precision, how a page load for every role fans out across Server Components, server actions, Drizzle queries, React client components, and ultimately Solidity methods. All references correspond exactly to the repository tree shipped with the platform; no speculative modules are introduced.
 
@@ -138,7 +187,7 @@ All proof deep-links are built from the `vcJson.proofTx` persisted at verificati
 
 Through these interconnected pages the repository demonstrates an unbroken chain: wallet handshake → profile data → DID mint → credential submission → on-chain verification & anchoring → recruiter consumption, all realised with strongly-typed Drizzle queries, React Server Components and Solidity contracts. No hidden APIs, no placeholders—just production-grade TypeScript and smart-contract code stitched together by clear file-system boundaries.
 
-## 4\. Data Layer, Proof Pipelines & Backend Services
+## 4. Data Layer, Proof Pipelines & Backend Services
 
 Beneath FlareCred’s sleek React façade runs a carefully tiered backend whose prime directive is _verifiability_: every byte that matters either originates on-chain or is immutably reproduced from chain events, while the surrounding Postgres database exists only to accelerate queries and cache derived metrics. This section walks through that architecture layer-by-layer—schema, migrations, server actions, helper libraries, external workers, and security middleware—so that maintainers understand exactly how a click in the dashboard ends up as a row in the activity log or a hash inside an ERC-721 token.
 
@@ -207,7 +256,7 @@ Reusable helpers—address checksums (`utils/address.ts`), human-readable time (
 
 Collectively these services ensure that a candidate’s action is **provably anchored** → back-tested on-chain → surfaced to UI tables with zero hidden joins. The result is a transparent, tamper-evident backend that new contributors can reason about by following file paths rather than tribal knowledge.
 
-## 5\. Deployment & Operational Playbook
+## 5. Deployment & Operational Playbook
 
 **This final section provides a step-by-step blueprint for turning a fresh clone of FlareCred into a production-grade SaaS running on Coston 2 (or main-net) — using nothing more exotic than `pnpm`, Docker Compose and the Hardhat CLI already present in `devDependencies`. Everything listed below maps directly to files inside `./docker-compose.yml`, `blockchain/scripts/*.ts`, `.env.example`, `blockchain/.env.example` and the build scripts in `package.json`; no imaginary tooling is introduced.**
 
