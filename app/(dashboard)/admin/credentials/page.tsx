@@ -57,6 +57,8 @@ export default async function AdminCredentialsPage({
     candidate: c.candidate,
     issuer: c.issuer,
     status: c.status as any,
+    proofType: c.proofType,
+    vcJson: c.proofData, // keep existing prop for proofTx column
   }))
 
   /* ------------------------ Build initialParams -------------------------- */

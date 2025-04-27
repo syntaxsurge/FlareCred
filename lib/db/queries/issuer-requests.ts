@@ -10,10 +10,11 @@ export interface IssuerRequestRow {
   type: string
   candidate: string
   status: CredentialStatus
+  proofType: string | null
 }
 
 /**
- * Fetch a paginated, searchable list of credential‑verification requests
+ * Fetch a paginated, searchable list of credential-verification requests
  * for a given issuer.
  */
 export async function getIssuerRequestsPage(
@@ -26,7 +27,7 @@ export async function getIssuerRequestsPage(
 ): Promise<{ requests: IssuerRequestRow[]; hasNext: boolean }> {
   const offset = (page - 1) * pageSize
 
-  /* --------------------------- ORDER BY helper --------------------------- */
+  /* --------------------------- ORDER BY helper --------------------------- */
   const sortMap = {
     title: candidateCredentials.title,
     type: candidateCredentials.type,
@@ -36,7 +37,7 @@ export async function getIssuerRequestsPage(
 
   const orderExpr = order === 'asc' ? asc(sortMap[sortBy]) : desc(sortMap[sortBy])
 
-  /* --------------------------- WHERE clause ------------------------------ */
+  /* --------------------------- WHERE clause ------------------------------ */
   const baseWhere = eq(candidateCredentials.issuerId, issuerId)
 
   const whereClause =
@@ -52,7 +53,7 @@ export async function getIssuerRequestsPage(
           ),
         )
 
-  /* --------------------------- Query ------------------------------------ */
+  /* --------------------------- Query ------------------------------------ */
   const rows = await db
     .select({
       id: candidateCredentials.id,
@@ -61,6 +62,7 @@ export async function getIssuerRequestsPage(
       status: candidateCredentials.status,
       candidateName: users.name,
       candidateEmail: users.email,
+      proofType: candidateCredentials.proofType,
     })
     .from(candidateCredentials)
     .leftJoin(candidates, eq(candidateCredentials.candidateId, candidates.id))
@@ -79,6 +81,7 @@ export async function getIssuerRequestsPage(
     type: r.type,
     candidate: r.candidateName ?? r.candidateEmail ?? 'Unknown',
     status: r.status as CredentialStatus,
+    proofType: r.proofType,
   }))
 
   return { requests, hasNext }

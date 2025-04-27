@@ -30,6 +30,7 @@ export interface RowType {
   candidate: string
   issuer: string | null
   status: string
+  proofType: string | null
   vcJson?: string | null
 }
 
@@ -196,7 +197,16 @@ export default function AdminCredentialsTable({
         key: 'title',
         header: sortableHeader('Title', 'title'),
         sortable: false,
-        render: (v) => (v ? String(v) : '—'),
+        render: (v, row) => (
+          <span className='flex items-center gap-2 font-medium'>
+            {String(v)}
+            {row.proofType && (
+              <span className='bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-[10px] uppercase'>
+                {row.proofType}
+              </span>
+            )}
+          </span>
+        ),
       },
       {
         key: 'candidate',
