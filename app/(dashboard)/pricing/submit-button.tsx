@@ -13,6 +13,7 @@ import { toast } from 'sonner'
 import { ArrowRight, Loader2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import { useFlareUsdPrice } from '@/hooks/useFlareUsdPrice'
 
 /* -------------------------------------------------------------------------- */
 /*                                 CONSTANTS                                  */
@@ -36,6 +37,8 @@ interface Props {
   planKey: 1 | 2
   /** Plan price (wei) — passed to `value` parameter */
   priceWei: bigint
+  /** Legacy prop forwarded by PricingGrid (ignored internally) */
+  stale?: boolean
 }
 
 /* -------------------------------------------------------------------------- */
@@ -49,10 +52,22 @@ export function SubmitButton({ planKey, priceWei }: Props) {
   const publicClient = usePublicClient()
   const router = useRouter()
 
+  const { usd, stale } = useFlareUsdPrice()
+
   const [pending, setPending] = useState(false)
 
+  /* ------------------------- USD label ---------------------------------- */
+  const priceFlr = Number(priceWei) / 1e18
+  const usdLabel = usd ? `≈ $${(priceFlr * usd).toFixed(2)}` : null
+
+  /* -------------------------- Click handler ----------------------------- */
   async function handleClick() {
     if (pending) return
+    if (stale) {
+      toast.error('Oracle data stale – retry later')
+      return
+    }
+
     if (!NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS) {
       toast.error('Subscription manager address missing.')
       return
@@ -95,23 +110,27 @@ export function SubmitButton({ planKey, priceWei }: Props) {
     }
   }
 
+  /* ---------------------------- UI -------------------------------------- */
   return (
-    <Button
-      onClick={handleClick}
-      disabled={pending}
-      className='flex w-full items-center justify-center rounded-full'
-    >
-      {pending ? (
-        <>
-          <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-          Processing…
-        </>
-      ) : (
-        <>
-          Get Started
-          <ArrowRight className='ml-2 h-4 w-4' />
-        </>
-      )}
-    </Button>
+    <div className='flex flex-col items-center gap-1'>
+      <Button
+        onClick={handleClick}
+        disabled={pending || stale}
+        className='flex w-full items-center justify-center rounded-full'
+      >
+        {pending ? (
+          <>
+            <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+            Processing…
+          </>
+        ) : (
+          <>
+            Get Started
+            <ArrowRight className='ml-2 h-4 w-4' />
+          </>
+        )}
+      </Button>
+      {usdLabel && <span className='text-muted-foreground text-xs'>{usdLabel}</span>}
+    </div>
   )
 }

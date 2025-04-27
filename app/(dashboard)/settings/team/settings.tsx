@@ -14,6 +14,7 @@ import {
 } from 'wagmi'
 import { parseAbi } from 'viem'
 import { toast } from 'sonner'
+import { useState } from 'react'
 
 import MembersTable, { RowType } from '@/components/dashboard/settings/members-table'
 import { Button } from '@/components/ui/button'
@@ -21,9 +22,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { PLAN_META } from '@/lib/constants/pricing'
+import { useFlareUsdPrice } from '@/hooks/useFlareUsdPrice'
 
 import { InviteTeamMember } from './invite-team'
-import { useState } from 'react'
 
 /* -------------------------------------------------------------------------- */
 /*                               Constants                                    */
@@ -74,12 +75,22 @@ function RenewSubscriptionButton({ planName }: { planName: 'base' | 'plus' }) {
 
   const [pending, setPending] = useState(false)
 
+  const { usd, stale } = useFlareUsdPrice()
+
   const meta = PLAN_META.find((p) => p.key === planName)
   const planKey: 1 | 2 = planName === 'base' ? 1 : 2
   const priceWei = meta?.priceWei ?? 0n
 
+  const priceFlr = Number(priceWei) / 1e18
+  const usdLabel = usd ? `≈ $${(priceFlr * usd).toFixed(2)}` : null
+
   async function renew() {
     if (pending) return
+    if (stale) {
+      toast.error('Oracle data stale – retry later')
+      return
+    }
+
     if (!NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS) {
       toast.error('Subscription manager address missing.')
       return
@@ -121,19 +132,27 @@ function RenewSubscriptionButton({ planName }: { planName: 'base' | 'plus' }) {
   }
 
   return (
-    <Button onClick={renew} disabled={pending} variant='outline'>
-      {pending ? (
-        <>
-          <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-          Processing…
-        </>
-      ) : (
-        <>
-          Renew Subscription
-          <RotateCcw className='ml-2 h-4 w-4' />
-        </>
-      )}
-    </Button>
+    <div className='flex flex-col items-center gap-1'>
+      <Button
+        onClick={renew}
+        disabled={pending || stale}
+        variant='outline'
+        className='flex items-center gap-2'
+      >
+        {pending ? (
+          <>
+            <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+            Processing…
+          </>
+        ) : (
+          <>
+            Renew Subscription
+            <RotateCcw className='h-4 w-4' />
+          </>
+        )}
+      </Button>
+      {usdLabel && <span className='text-muted-foreground text-xs'>{usdLabel}</span>}
+    </div>
   )
 }
 
@@ -159,7 +178,9 @@ export function Settings({
   const now = new Date()
   const isActive = paidUntilDate && paidUntilDate > now
 
-  const planLabel = team.planName ? team.planName.charAt(0).toUpperCase() + team.planName.slice(1) : 'Free'
+  const planLabel = team.planName
+    ? team.planName.charAt(0).toUpperCase() + team.planName.slice(1)
+    : 'Free'
 
   return (
     <PageCard
