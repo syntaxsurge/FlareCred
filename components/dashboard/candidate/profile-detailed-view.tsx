@@ -5,16 +5,18 @@ import { useMemo, useState } from 'react'
 
 import { format, formatDistanceToNow } from 'date-fns'
 import {
-  BookOpen,
-  Briefcase,
   Award,
   BarChart4,
+  BookOpen,
+  Briefcase,
   ChevronDown,
   ChevronUp,
+  Copy,
   Download,
-  Globe2,
   ExternalLink,
+  Globe2,
 } from 'lucide-react'
+import { toast } from 'sonner'
 import { FaTwitter } from 'react-icons/fa'
 import { SiGithub, SiLinkedin } from 'react-icons/si'
 
@@ -29,7 +31,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import StatusBadge from '@/components/ui/status-badge'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 import ProfileHeader from './profile-header'
 
@@ -73,6 +80,7 @@ export interface QuizAttempt {
   score: number | null
   maxScore: number | null
   createdAt: Date
+  seed: string
 }
 
 export interface Experience {
@@ -148,6 +156,17 @@ function usePrettyDate(d?: Date | null) {
     const threeDays = 1000 * 60 * 60 * 24 * 3
     return diff < threeDays ? formatDistanceToNow(d, { addSuffix: true }) : format(d, 'PPP')
   }, [d])
+}
+
+function shortenSeed(seed: string) {
+  return seed.length <= 10 ? seed : `${seed.slice(0, 6)}…${seed.slice(-4)}`
+}
+
+function copyToClipboard(text: string) {
+  navigator.clipboard
+    .writeText(text)
+    .then(() => toast.success('Seed copied to clipboard.'))
+    .catch(() => toast.error('Failed to copy seed.'))
 }
 
 /* -------------------------------------------------------------------------- */
@@ -322,6 +341,7 @@ export default function CandidateDetailedProfileView({
             </Card>
           )}
 
+          {/* Experience & Projects */}
           <Tabs defaultValue='experience' className='space-y-6'>
             <TabsList className='w-full'>
               <TabsTrigger value='experience' className='gap-2'>
@@ -334,6 +354,7 @@ export default function CandidateDetailedProfileView({
               </TabsTrigger>
             </TabsList>
 
+            {/* Experience */}
             <TabsContent value='experience' className='space-y-4'>
               {experiences.length === 0 ? (
                 <p className='text-muted-foreground'>No experience highlights yet.</p>
@@ -381,6 +402,7 @@ export default function CandidateDetailedProfileView({
               )}
             </TabsContent>
 
+            {/* Projects */}
             <TabsContent value='projects' className='space-y-4'>
               {projects.length === 0 ? (
                 <p className='text-muted-foreground'>No project highlights yet.</p>
@@ -425,6 +447,7 @@ export default function CandidateDetailedProfileView({
             </TabsContent>
           </Tabs>
 
+          {/* Credentials */}
           <Card id='credentials'>
             <CardHeader>
               <CardTitle className='flex flex-wrap items-center gap-2'>
@@ -454,6 +477,7 @@ export default function CandidateDetailedProfileView({
             </CardContent>
           </Card>
 
+          {/* Pipeline entries */}
           {pipeline && (
             <Card id='pipeline-entries'>
               <CardHeader className='flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between'>
@@ -480,6 +504,7 @@ export default function CandidateDetailedProfileView({
             </Card>
           )}
 
+          {/* Skill passes */}
           <Card id='skill-passes'>
             <CardHeader>
               <CardTitle className='flex items-center gap-2'>
@@ -500,9 +525,37 @@ export default function CandidateDetailedProfileView({
                       <span className='font-medium'>
                         Quiz #{p.quizId} • Score {p.score ?? '—'}
                       </span>
-                      <span className='text-muted-foreground text-xs'>
-                        {usePrettyDate(p.createdAt)}
-                      </span>
+
+                      <div className='flex items-center gap-3'>
+                        {p.seed && (
+                          <div className='flex items-center gap-1'>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className='font-mono text-xs cursor-help'>
+                                  {shortenSeed(p.seed)}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent side='top'>
+                                <span className='font-mono text-xs break-all'>{p.seed}</span>
+                              </TooltipContent>
+                            </Tooltip>
+
+                            <Button
+                              variant='ghost'
+                              size='icon'
+                              onClick={() => copyToClipboard(p.seed)}
+                              className='h-6 w-6'
+                            >
+                              <Copy className='h-3.5 w-3.5' />
+                              <span className='sr-only'>Copy seed</span>
+                            </Button>
+                          </div>
+                        )}
+
+                        <span className='text-muted-foreground text-xs'>
+                          {usePrettyDate(p.createdAt)}
+                        </span>
+                      </div>
                     </li>
                   ))}
                 </ul>
