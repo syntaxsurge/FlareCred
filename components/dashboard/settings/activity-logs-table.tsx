@@ -14,6 +14,7 @@ import {
   Mail,
   CheckCircle,
   ArrowUpDown,
+  Coins,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -22,7 +23,7 @@ import { ActivityType } from '@/lib/db/schema'
 import { relativeTime } from '@/lib/utils/time'
 
 /* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
+/*                                   Types                                    */
 /* -------------------------------------------------------------------------- */
 
 export interface RowType {
@@ -43,7 +44,7 @@ interface Props {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                Icons Map                                   */
+/*                                Icons Map                                   */
 /* -------------------------------------------------------------------------- */
 
 const iconMap: Record<ActivityType, LucideIcon> = {
@@ -57,13 +58,18 @@ const iconMap: Record<ActivityType, LucideIcon> = {
   [ActivityType.REMOVE_TEAM_MEMBER]: UserMinus,
   [ActivityType.INVITE_TEAM_MEMBER]: Mail,
   [ActivityType.ACCEPT_INVITATION]: CheckCircle,
+  [ActivityType.SUBSCRIPTION_PAID]: Coins,
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                    Util                                    */
+/*                                    Util                                    */
 /* -------------------------------------------------------------------------- */
 
-function buildLink(basePath: string, init: Record<string, string>, overrides: Record<string, any>) {
+function buildLink(
+  basePath: string,
+  init: Record<string, string>,
+  overrides: Record<string, any>,
+) {
   const sp = new URLSearchParams(init)
   Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
   Array.from(sp.entries()).forEach(([k, v]) => {
@@ -95,6 +101,8 @@ function formatAction(action: ActivityType): string {
       return 'You invited a team member'
     case ActivityType.ACCEPT_INVITATION:
       return 'You accepted an invitation'
+    case ActivityType.SUBSCRIPTION_PAID:
+      return 'Team subscription paid'
     default:
       return 'Unknown action'
   }
@@ -116,7 +124,7 @@ export default function ActivityLogsTable({
   const [search, setSearch] = React.useState<string>(searchQuery)
   const debounceRef = React.useRef<NodeJS.Timeout | null>(null)
 
-  /* Trigger navigation (server‑side search) */
+  /* Trigger navigation (server-side search) */
   function handleSearchChange(value: string) {
     setSearch(value)
     if (debounceRef.current) clearTimeout(debounceRef.current)
@@ -184,7 +192,7 @@ export default function ActivityLogsTable({
     ]
   }, [tsHeader])
 
-  /* All rows fit on one client page; real paging handled server‑side */
+  /* All rows fit on one client page; real paging handled server-side */
   return (
     <DataTable
       columns={columns}
