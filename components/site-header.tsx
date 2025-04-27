@@ -62,7 +62,11 @@ export default function SiteHeader() {
   useEffect(() => {
     let mounted = true
     const maybePromise = userPromise as unknown
-    if (maybePromise && typeof maybePromise === 'object' && typeof (maybePromise as any).then === 'function') {
+    if (
+      maybePromise &&
+      typeof maybePromise === 'object' &&
+      typeof (maybePromise as any).then === 'function'
+    ) {
       ;(maybePromise as Promise<any>).then(
         (u) => mounted && setUser(u),
         () => mounted && setUser(null),
@@ -88,6 +92,101 @@ export default function SiteHeader() {
   /* ---------------------------------------------------------------------- */
   /*                                   UI                                   */
   /* ---------------------------------------------------------------------- */
+
+  function WalletControls() {
+    // Show ConnectButton when not connected OR when connected but no user yet
+    if (!isConnected || (isConnected && !user)) {
+      return (
+        <ConnectButton accountStatus='avatar' chainStatus='icon' showBalance={false} />
+      )
+    }
+
+    /* Connected + onboarded user → avatar dropdown */
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <UserAvatar
+            src={(user as any)?.image ?? undefined}
+            name={(user as any)?.name ?? null}
+            email={(user as any)?.email ?? null}
+            className='cursor-pointer'
+          />
+        </DropdownMenuTrigger>
+
+        <DropdownMenuContent
+          align='end'
+          className='data-[state=open]:animate-in data-[state=closed]:animate-out w-56 max-w-[90vw] rounded-lg p-1 shadow-lg sm:w-64'
+        >
+          {/* User card */}
+          <DropdownMenuItem
+            asChild
+            className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex flex-col items-start gap-1 select-none rounded-md px-3 py-2 text-left'
+          >
+            <Link href='/settings/general' className='w-full'>
+              <p className='truncate text-sm font-medium'>
+                {user?.name || user?.email || 'Unnamed User'}
+              </p>
+              {user?.email && (
+                <p className='text-muted-foreground truncate text-xs break-all'>
+                  {user.email}
+                </p>
+              )}
+              <span className='bg-muted text-muted-foreground inline-block rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider'>
+                {user?.role}
+              </span>
+            </Link>
+          </DropdownMenuItem>
+
+          <DropdownMenuSeparator />
+
+          {/* Profile */}
+          <DropdownMenuItem
+            asChild
+            className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex items-center gap-2 rounded-md px-3 py-2'
+          >
+            <Link href='/settings/general' className='flex items-center gap-2'>
+              <UserIcon className='h-4 w-4' />
+              <span className='text-sm'>Profile</span>
+            </Link>
+          </DropdownMenuItem>
+
+          {/* Dashboard */}
+          <DropdownMenuItem
+            asChild
+            className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex items-center gap-2 rounded-md px-3 py-2'
+          >
+            <Link href='/dashboard' className='flex items-center gap-2'>
+              <LayoutDashboard className='h-4 w-4' />
+              <span className='text-sm'>Dashboard</span>
+            </Link>
+          </DropdownMenuItem>
+
+          {/* Team settings */}
+          <DropdownMenuItem
+            asChild
+            className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex items-center gap-2 rounded-md px-3 py-2'
+          >
+            <Link href='/settings/team' className='flex items-center gap-2'>
+              <Cog className='h-4 w-4' />
+              <span className='text-sm'>Team Settings</span>
+            </Link>
+          </DropdownMenuItem>
+
+          <DropdownMenuSeparator />
+
+          {/* Sign out */}
+          <form action={handleSignOut} className='w-full'>
+            <button type='submit' className='w-full'>
+              <DropdownMenuItem className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex items-center gap-2 rounded-md px-3 py-2'>
+                <LogOut className='h-4 w-4' />
+                <span className='text-sm'>Sign out</span>
+              </DropdownMenuItem>
+            </button>
+          </form>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    )
+  }
 
   return (
     <>
@@ -184,95 +283,7 @@ export default function SiteHeader() {
           {/* Right-aligned controls */}
           <div className='flex items-center justify-end gap-3'>
             <ModeToggle />
-
-            {!isConnected && (
-              <ConnectButton accountStatus='avatar' chainStatus='icon' showBalance={false} />
-            )}
-
-            {isConnected && user && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <UserAvatar
-                    src={(user as any)?.image ?? undefined}
-                    name={(user as any)?.name ?? null}
-                    email={(user as any)?.email ?? null}
-                    className='cursor-pointer'
-                  />
-                </DropdownMenuTrigger>
-
-                <DropdownMenuContent
-                  align='end'
-                  className='data-[state=open]:animate-in data-[state=closed]:animate-out w-56 max-w-[90vw] rounded-lg p-1 shadow-lg sm:w-64'
-                >
-                  {/* User card */}
-                  <DropdownMenuItem
-                    asChild
-                    className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex flex-col items-start gap-1 select-none rounded-md px-3 py-2 text-left'
-                  >
-                    <Link href='/settings/general' className='w-full'>
-                      <p className='truncate text-sm font-medium'>
-                        {user.name || user.email || 'Unnamed User'}
-                      </p>
-                      {user.email && (
-                        <p className='text-muted-foreground truncate text-xs break-all'>
-                          {user.email}
-                        </p>
-                      )}
-                      <span className='bg-muted text-muted-foreground inline-block rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider'>
-                        {user.role}
-                      </span>
-                    </Link>
-                  </DropdownMenuItem>
-
-                  <DropdownMenuSeparator />
-
-                  {/* Profile */}
-                  <DropdownMenuItem
-                    asChild
-                    className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex items-center gap-2 rounded-md px-3 py-2'
-                  >
-                    <Link href='/settings/general' className='flex items-center gap-2'>
-                      <UserIcon className='h-4 w-4' />
-                      <span className='text-sm'>Profile</span>
-                    </Link>
-                  </DropdownMenuItem>
-
-                  {/* Dashboard */}
-                  <DropdownMenuItem
-                    asChild
-                    className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex items-center gap-2 rounded-md px-3 py-2'
-                  >
-                    <Link href='/dashboard' className='flex items-center gap-2'>
-                      <LayoutDashboard className='h-4 w-4' />
-                      <span className='text-sm'>Dashboard</span>
-                    </Link>
-                  </DropdownMenuItem>
-
-                  {/* Team settings */}
-                  <DropdownMenuItem
-                    asChild
-                    className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex items-center gap-2 rounded-md px-3 py-2'
-                  >
-                    <Link href='/settings/team' className='flex items-center gap-2'>
-                      <Cog className='h-4 w-4' />
-                      <span className='text-sm'>Team Settings</span>
-                    </Link>
-                  </DropdownMenuItem>
-
-                  <DropdownMenuSeparator />
-
-                  {/* Sign out */}
-                  <form action={handleSignOut} className='w-full'>
-                    <button type='submit' className='w-full'>
-                      <DropdownMenuItem className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex items-center gap-2 rounded-md px-3 py-2'>
-                        <LogOut className='h-4 w-4' />
-                        <span className='text-sm'>Sign out</span>
-                      </DropdownMenuItem>
-                    </button>
-                  </form>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+            <WalletControls />
           </div>
         </div>
       </header>
