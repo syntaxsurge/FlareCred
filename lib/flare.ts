@@ -25,6 +25,7 @@ const {
   NEXT_PUBLIC_FLARE_CHAIN_ID,
   NEXT_PUBLIC_DID_REGISTRY_ADDRESS: _NEXT_PUBLIC_DID_REGISTRY_ADDRESS,
   NEXT_PUBLIC_CREDENTIAL_NFT_ADDRESS: _NEXT_PUBLIC_CREDENTIAL_NFT_ADDRESS,
+  SUBSCRIPTION_MANAGER_ADDRESS: _SUBSCRIPTION_MANAGER_ADDRESS,
   PRIVATE_KEY,
 } = process.env as Record<string, string | undefined>
 
@@ -37,6 +38,10 @@ const NEXT_PUBLIC_DID_REGISTRY_ADDRESS = assertAddress(
 const NEXT_PUBLIC_CREDENTIAL_NFT_ADDRESS = assertAddress(
   'NEXT_PUBLIC_CREDENTIAL_NFT_ADDRESS',
   _NEXT_PUBLIC_CREDENTIAL_NFT_ADDRESS,
+)
+const SUBSCRIPTION_MANAGER_ADDRESS = assertAddress(
+  'SUBSCRIPTION_MANAGER_ADDRESS',
+  _SUBSCRIPTION_MANAGER_ADDRESS,
 )
 const CHAIN_ID = Number(NEXT_PUBLIC_FLARE_CHAIN_ID ?? '114')
 
@@ -70,6 +75,13 @@ const CREDENTIAL_NFT_ABI = [
   'function getVcHash(uint256 tokenId) external view returns (bytes32)',
 ] as const
 
+const SUBSCRIPTION_MANAGER_ABI = [
+  'function paySubscription(address team,uint8 planKey) payable',
+  'function paidUntil(address team) view returns (uint256)',
+  'function planPriceWei(uint8) view returns (uint256)',
+  'event SubscriptionPaid(address indexed team,uint8 planKey,uint256 paidUntil)',
+] as const
+
 /* -------------------------------------------------------------------------- */
 /*                            R E A D  C O N T R A C T S                      */
 /* -------------------------------------------------------------------------- */
@@ -82,6 +94,11 @@ const didRegistryRead = new ethers.Contract(
 const credentialNftRead = new ethers.Contract(
   NEXT_PUBLIC_CREDENTIAL_NFT_ADDRESS,
   CREDENTIAL_NFT_ABI,
+  provider,
+)
+const subscriptionManagerRead = new ethers.Contract(
+  SUBSCRIPTION_MANAGER_ADDRESS,
+  SUBSCRIPTION_MANAGER_ABI,
   provider,
 )
 
@@ -111,6 +128,7 @@ function resolveSigner(args?: SignerArgs): ethers.Signer {
 /*                               P U B L I C  API                             */
 /* -------------------------------------------------------------------------- */
 
+/* ---------- DID ---------- */
 export async function createFlareDID(args?: SignerArgs & { docHash?: string }) {
   const signer = resolveSigner(args)
   const writable = new ethers.Contract(
@@ -129,6 +147,7 @@ export async function createFlareDID(args?: SignerArgs & { docHash?: string }) {
   return { did, txHash: receipt.hash }
 }
 
+/* ---------- Credential NFT ---------- */
 export async function issueFlareCredential(
   args: SignerArgs & { to: string; vcHash: string; uri: string },
 ) {
@@ -167,4 +186,45 @@ export async function issueFlareCredential(
 export async function verifyFlareCredential(tokenId: bigint, expectedVcHash: string) {
   const stored = await credentialNftRead.getVcHash(tokenId)
   return stored.toLowerCase() === toBytes32(expectedVcHash).toLowerCase()
+}
+
+/* ---------- Subscription ---------- */
+
+/**
+ * Pay for (or renew) a subscription by calling the on-chain manager.
+ *
+ * The signer’s address is used as the team wallet; value is taken from the
+ * contract’s `planPriceWei(planKey)` storage, ensuring client-side tampering
+ * cannot underpay.
+ */
+export async function paySubscription(
+  args: SignerArgs & { planKey: number },
+): Promise<{ txHash: string; paidUntil: Date }> {
+  const signer = resolveSigner(args)
+  const writable = new ethers.Contract(
+    SUBSCRIPTION_MANAGER_ADDRESS,
+    SUBSCRIPTION_MANAGER_ABI,
+    signer,
+  )
+
+  const planKey = args.planKey
+  const price: bigint = await subscriptionManagerRead.planPriceWei(planKey)
+  if (price === 0n) throw new Error('Unknown plan key')
+
+  const team = await signer.getAddress()
+  const tx = await writable.paySubscription(team, planKey, { value: price })
+  const receipt = await tx.wait()
+
+  const paidUntilSec: bigint = await subscriptionManagerRead.paidUntil(team)
+  return { txHash: receipt.hash, paidUntil: new Date(Number(paidUntilSec) * 1000) }
+}
+
+/**
+ * Returns the subscription expiry timestamp for the given team wallet.
+ */
+export async function checkSubscription(teamAddress: string): Promise<Date | null> {
+  const addr = ethers.getAddress(teamAddress)
+  const ts: bigint = await subscriptionManagerRead.paidUntil(addr)
+  if (ts === 0n) return null
+  return new Date(Number(ts) * 1000)
 }
