@@ -38,7 +38,7 @@ export interface RequiredModalProps {
 
 /**
  * A non-dismissable modal used whenever the user must complete
- * an action before continuing. It now supports arbitrary children
+ * an action before continuing. It supports arbitrary children
  * (e.g. forms) while retaining the original one-button variant.
  */
 export function RequiredModal({
@@ -52,12 +52,8 @@ export function RequiredModal({
   const router = useRouter()
 
   return (
-    <AlertDialog open={true} onOpenChange={() => {}}>
-      <AlertDialogContent
-        className='sm:max-w-md'
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
-      >
+    <AlertDialog open onOpenChange={() => {}}>
+      <AlertDialogContent className='sm:max-w-md'>
         <AlertDialogHeader>
           <AlertDialogTitle className='flex items-center gap-2'>
             {Icon && <Icon className='h-5 w-5 text-rose-600' />}
