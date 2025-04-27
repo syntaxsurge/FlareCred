@@ -9,6 +9,7 @@ import SiteHeader from '@/components/site-header'
 import { ThemeProvider } from '@/components/theme-provider'
 import { UserProvider } from '@/lib/auth'
 import { Web3Provider } from '@/lib/wallet'
+import { getUser } from '@/lib/db/queries/queries'
 
 export const metadata: Metadata = {
   title: 'FlareCred',
@@ -22,9 +23,14 @@ export const viewport: Viewport = {
 
 const manrope = Manrope({ subsets: ['latin'] })
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  /* Provide a default resolved promise to satisfy UserProvider’s prop requirements */
-  const emptyUserPromise: Promise<null> = Promise.resolve(null)
+/**
+ * Root layout — now resolves the authenticated user on the server and
+ * passes the resulting promise to UserProvider so client components
+ * (e.g. dashboard sidebar) can immediately render role-based UI.
+ */
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  /* Resolve the current user once on the server */
+  const userPromise = getUser()
 
   return (
     <html
@@ -58,8 +64,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               }}
             />
 
-            {/* Pass the required userPromise prop */}
-            <UserProvider userPromise={emptyUserPromise}>
+            {/* Forward the resolved user promise to downstream client components */}
+            <UserProvider userPromise={userPromise}>
               <SiteHeader />
               <main className='mx-auto max-w-7xl px-4 py-4 md:px-6'>{children}</main>
             </UserProvider>
