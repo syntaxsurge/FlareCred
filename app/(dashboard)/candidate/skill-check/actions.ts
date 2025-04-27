@@ -34,7 +34,14 @@ export async function startQuizAction(formData: FormData) {
 
   const quizId = formData.get('quizId')
   const answer = formData.get('answer')
+  const seed = formData.get('seed') as string | null
+
   if (!quizId || !answer) return { score: 0, message: 'Invalid request.' }
+
+  /* --------------------------- Seed validation --------------------------- */
+  if (!seed || !/^0x[0-9a-fA-F]{1,64}$/.test(seed)) {
+    return { score: 0, message: 'Invalid seed.' }
+  }
 
   /* Ensure candidate record exists --------------------------------------- */
   let [candidateRow] = await db
@@ -116,6 +123,7 @@ export async function startQuizAction(formData: FormData) {
   await db.insert(quizAttempts).values({
     candidateId: candidateRow.id,
     quizId: quiz.id,
+    seed,
     score: aiScore,
     maxScore: 100,
     pass: passed ? 1 : 0,

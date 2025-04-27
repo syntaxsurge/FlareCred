@@ -39,7 +39,6 @@ export const candidates = pgTable(
 /*                       C A N D I D A T E   C R E D E N T I A L S            */
 /* -------------------------------------------------------------------------- */
 
-/** High-level credential categories */
 export const credentialCategoryEnum = pgEnum('credential_category', [
   'EDUCATION',
   'EXPERIENCE',
@@ -134,6 +133,8 @@ export const quizAttempts = pgTable('quiz_attempts', {
   id: serial('id').primaryKey(),
   candidateId: integer('candidate_id').notNull(),
   quizId: integer('quiz_id').notNull(),
+  /** Hex-encoded RNG seed that produced the question order */
+  seed: varchar('seed', { length: 66 }).notNull().default(''),
   score: integer('score'),
   maxScore: integer('max_score').default(100),
   pass: integer('pass').default(0),
