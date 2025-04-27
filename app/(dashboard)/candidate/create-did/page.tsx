@@ -6,13 +6,18 @@ import { KeyRound } from 'lucide-react'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
 import PageCard from '@/components/ui/page-card'
 import { UserAvatar } from '@/components/ui/user-avatar'
+import { RequiredModal } from '@/components/ui/required-modal'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
-import { teamMembers, users as usersT } from '@/lib/db/schema/core'
+import { teamMembers, users as usersT, teams } from '@/lib/db/schema/core'
 
 import { CreateDidButton } from './create-did-button'
 
 export const revalidate = 0
+
+/* -------------------------------------------------------------------------- */
+/*                                   TYPES                                    */
+/* -------------------------------------------------------------------------- */
 
 type Member = {
   id: number
@@ -21,6 +26,10 @@ type Member = {
 }
 
 const MAX_DISPLAY = 5
+
+/* -------------------------------------------------------------------------- */
+/*                                   PAGE                                     */
+/* -------------------------------------------------------------------------- */
 
 export default async function CreateDIDPage() {
   const user = await getUser()
@@ -33,29 +42,51 @@ export default async function CreateDIDPage() {
     .where(eq(teamMembers.userId, user.id))
     .limit(1)
 
+  /* If the user somehow lacks a team, bounce back to dashboard */
+  if (!membership?.teamId) redirect('/dashboard')
+
+  /* ----------------- Existing DID check ---------------- */
+  const [{ did } = {}] = await db
+    .select({ did: teams.did })
+    .from(teams)
+    .where(eq(teams.id, membership.teamId))
+    .limit(1)
+
+  if (did) {
+    /* Team already has a DID – block duplicate creation */
+    return (
+      <RequiredModal
+        iconKey='keyround'
+        title='Team DID Already Created'
+        description='Your workspace already owns a Decentralised Identifier; you cannot create another one.'
+        buttonText='Go to Dashboard'
+        redirectTo='/dashboard'
+      />
+    )
+  }
+
+  /* ---------------- Team size & members ---------------- */
   let displayMembers: Member[] = []
   let teamSize = 1
 
-  if (membership?.teamId) {
-    const [{ count }] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(teamMembers)
-      .where(eq(teamMembers.teamId, membership.teamId))
-    teamSize = count
+  const [{ count }] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(teamMembers)
+    .where(eq(teamMembers.teamId, membership.teamId))
+  teamSize = count
 
-    const rows = await db
-      .select({
-        id: usersT.id,
-        name: usersT.name,
-        email: usersT.email,
-      })
-      .from(teamMembers)
-      .innerJoin(usersT, eq(teamMembers.userId, usersT.id))
-      .where(eq(teamMembers.teamId, membership.teamId))
-      .limit(MAX_DISPLAY)
+  const rows = await db
+    .select({
+      id: usersT.id,
+      name: usersT.name,
+      email: usersT.email,
+    })
+    .from(teamMembers)
+    .innerJoin(usersT, eq(teamMembers.userId, usersT.id))
+    .where(eq(teamMembers.teamId, membership.teamId))
+    .limit(MAX_DISPLAY)
 
-    displayMembers = rows.map((r) => ({ id: r.id, name: r.name, email: r.email }))
-  }
+  displayMembers = rows.map((r) => ({ id: r.id, name: r.name, email: r.email }))
 
   if (!displayMembers.some((m) => m.id === user.id)) {
     displayMembers.unshift({ id: user.id, name: user.name, email: user.email })
