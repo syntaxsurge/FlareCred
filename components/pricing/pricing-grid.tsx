@@ -3,10 +3,11 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
 import { Check } from 'lucide-react'
+import { formatUnits } from 'ethers'
 
 import { SubmitButton } from '@/app/(dashboard)/pricing/submit-button'
 import { Button } from '@/components/ui/button'
-import { PLAN_META } from '@/lib/constants/pricing'
+import { PLAN_META, FLR_DECIMALS } from '@/lib/constants/pricing'
 import { useFlareUsdPrice } from '@/hooks/useFlareUsdPrice'
 
 /* -------------------------------------------------------------------------- */
@@ -39,7 +40,7 @@ export function PricingGrid({ currentPlanName }: PricingGridProps) {
 
       <div className='grid gap-10 md:grid-cols-3'>
         {PLAN_META.map((meta) => {
-          const priceFlr = Number(meta.priceWei) / 1e18
+          const priceFlr = Number(formatUnits(meta.priceWei, FLR_DECIMALS))
           const usdLabel = usd ? ` ≈ $${(priceFlr * usd).toFixed(2)}` : ''
 
           const isCurrent =
@@ -125,7 +126,7 @@ function PricingCard({
           const planKey: 1 | 2 = meta.key === 'base' ? 1 : 2
           return (
             <Suspense fallback={<Button className='w-full'>Loading…</Button>}>
-              {/* @ts-expect-error — stale prop will be handled in Section 3 */}
+              {/* @ts-expect-error — stale prop handled downstream */}
               <SubmitButton planKey={planKey} priceWei={meta.priceWei} stale={stale} />
             </Suspense>
           )
