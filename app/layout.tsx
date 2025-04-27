@@ -23,6 +23,9 @@ export const viewport: Viewport = {
 const manrope = Manrope({ subsets: ['latin'] })
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  /* Provide a default resolved promise to satisfy UserProvider’s prop requirements */
+  const emptyUserPromise: Promise<null> = Promise.resolve(null)
+
   return (
     <html
       lang='en'
@@ -55,7 +58,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               }}
             />
 
-            <UserProvider>
+            {/* Pass the required userPromise prop */}
+            <UserProvider userPromise={emptyUserPromise}>
               <SiteHeader />
               <main className='mx-auto max-w-7xl px-4 py-4 md:px-6'>{children}</main>
             </UserProvider>
