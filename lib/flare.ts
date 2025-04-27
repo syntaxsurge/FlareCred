@@ -26,6 +26,7 @@ const {
   NEXT_PUBLIC_DID_REGISTRY_ADDRESS: _NEXT_PUBLIC_DID_REGISTRY_ADDRESS,
   NEXT_PUBLIC_CREDENTIAL_NFT_ADDRESS: _NEXT_PUBLIC_CREDENTIAL_NFT_ADDRESS,
   NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS: _NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS,
+  NEXT_PUBLIC_FDC_VERIFIER_ADDRESS: _NEXT_PUBLIC_FDC_VERIFIER_ADDRESS,
   PRIVATE_KEY,
 } = process.env as Record<string, string | undefined>
 
@@ -42,6 +43,10 @@ const NEXT_PUBLIC_CREDENTIAL_NFT_ADDRESS = assertAddress(
 const NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS = assertAddress(
   'NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS',
   _NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS,
+)
+const NEXT_PUBLIC_FDC_VERIFIER_ADDRESS = assertAddress(
+  'NEXT_PUBLIC_FDC_VERIFIER_ADDRESS',
+  _NEXT_PUBLIC_FDC_VERIFIER_ADDRESS,
 )
 const CHAIN_ID = Number(NEXT_PUBLIC_FLARE_CHAIN_ID ?? '114')
 
@@ -82,6 +87,13 @@ const SUBSCRIPTION_MANAGER_ABI = [
   'event SubscriptionPaid(address indexed team,uint8 planKey,uint256 paidUntil)',
 ] as const
 
+const FDC_VERIFIER_ABI = [
+  'function verifyEVM(bytes) view returns (bool)',
+  'function verifyJson(bytes) view returns (bool)',
+  'function verifyPayment(bytes) view returns (bool)',
+  'function verifyAddress(bytes) view returns (bool)',
+] as const
+
 /* -------------------------------------------------------------------------- */
 /*                            R E A D  C O N T R A C T S                      */
 /* -------------------------------------------------------------------------- */
@@ -101,6 +113,10 @@ const subscriptionManagerRead = new ethers.Contract(
   SUBSCRIPTION_MANAGER_ABI,
   provider,
 )
+
+const fdcVerifierRead: ethers.Contract | null = NEXT_PUBLIC_FDC_VERIFIER_ADDRESS
+  ? new ethers.Contract(NEXT_PUBLIC_FDC_VERIFIER_ADDRESS, FDC_VERIFIER_ABI, provider)
+  : null
 
 /* -------------------------------------------------------------------------- */
 /*                                   Utils                                    */
@@ -122,6 +138,51 @@ function resolveSigner(args?: SignerArgs): ethers.Signer {
   }
   if (defaultSigner) return defaultSigner
   throw new Error('No signer available; provide signer or set PRIVATE_KEY')
+}
+
+/* -------------------------------------------------------------------------- */
+/*                        F D C   P R O O F   C H E C K                       */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Calls the on-chain FlareCredVerifier to confirm an FDC proof is valid.
+ * Throws on failure with the underlying revert reason for precise UI feedback.
+ */
+export async function verifyFdcProof(proofType: string, proofData: any): Promise<boolean> {
+  if (!fdcVerifierRead) {
+    throw new Error('FDC verifier contract address is not configured')
+  }
+
+  /* Resolve method name --------------------------------------------------- */
+  const fnMap: Record<string, string> = {
+    EVM: 'verifyEVM',
+    JSON: 'verifyJson',
+    PAYMENT: 'verifyPayment',
+    ADDRESS: 'verifyAddress',
+  }
+  const fn = fnMap[proofType.toUpperCase()]
+  if (!fn) throw new Error(`Unsupported proofType '${proofType}'`)
+
+  /* Normalise proof input -------------------------------------------------- */
+  let arg: any = proofData
+  if (typeof proofData === 'string') {
+    try {
+      arg = JSON.parse(proofData)
+    } catch {
+      // keep raw string (e.g. tx-hash) – ABI enc will coerce to bytes
+    }
+  }
+
+  /* Static call – surface revert reasons ---------------------------------- */
+  try {
+    // ethers v6: readonly call is already static
+    const ok: boolean = await (fdcVerifierRead as any)[fn](arg)
+    if (!ok) throw new Error('Proof verification failed')
+    return true
+  } catch (err: any) {
+    // Bubble revert reason up
+    throw new Error(err?.shortMessage || err?.reason || err?.message || 'Proof verification failed')
+  }
 }
 
 /* -------------------------------------------------------------------------- */

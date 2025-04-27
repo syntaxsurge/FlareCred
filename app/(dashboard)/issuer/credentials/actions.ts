@@ -5,9 +5,13 @@ import { z } from 'zod'
 import { ethers } from 'ethers'
 
 import { validatedActionWithUser } from '@/lib/auth/middleware'
-import { issueFlareCredential } from '@/lib/flare'
+import { issueFlareCredential, verifyFdcProof } from '@/lib/flare'
 import { db } from '@/lib/db/drizzle'
-import { candidateCredentials, CredentialStatus, candidates } from '@/lib/db/schema/candidate'
+import {
+  candidateCredentials,
+  CredentialStatus,
+  candidates,
+} from '@/lib/db/schema/candidate'
 import { users, teams, teamMembers } from '@/lib/db/schema/core'
 import { issuers } from '@/lib/db/schema/issuer'
 
@@ -58,6 +62,39 @@ export const approveCredentialAction = validatedActionWithUser(
       .limit(1)
     if (!cred) return buildError('Credential not found for this issuer.')
     if (cred.status === CredentialStatus.VERIFIED) return buildError('Credential already verified.')
+
+    /* 2b. enforce FDC proof ------------------------------------------------- */
+    try {
+      const parsedProof =
+        typeof cred.proofData === 'string'
+          ? (() => {
+              try {
+                return JSON.parse(cred.proofData)
+              } catch {
+                return cred.proofData
+              }
+            })()
+          : cred.proofData
+
+      await verifyFdcProof(cred.proofType, parsedProof)
+    } catch (err: any) {
+      return buildError(`FDC verification failed: ${err?.message ?? String(err)}`)
+    }
+
+    /* Extract tx-hash (if present) for later deep-link --------------------- */
+    let proofTx: string | undefined
+    try {
+      if (cred.proofType === 'EVM' || cred.proofType === 'PAYMENT') {
+        if (cred.proofData.startsWith('0x') && cred.proofData.length === 66) {
+          proofTx = cred.proofData
+        } else {
+          const obj = JSON.parse(cred.proofData)
+          if (typeof obj.txHash === 'string') proofTx = obj.txHash
+        }
+      }
+    } catch {
+      /* ignore */
+    }
 
     /* 3. subject DID ------------------------------------------------------- */
     const [candRow] = await db
@@ -116,6 +153,30 @@ export const approveCredentialAction = validatedActionWithUser(
       }
     }
 
+    /* Build new vcJson payload -------------------------------------------- */
+    let newVcJson: string
+    try {
+      const baseVcObj =
+        cred.vcJson && !vcJsonText
+          ? JSON.parse(cred.vcJson)
+          : { vc: JSON.parse(vcJsonText as string) }
+
+      const merged: any = {
+        ...baseVcObj,
+        tokenId: tokenId ?? baseVcObj.tokenId,
+        txHash: txHash ?? baseVcObj.txHash,
+      }
+      if (proofTx) merged.proofTx = proofTx
+      newVcJson = JSON.stringify(merged)
+    } catch {
+      // Fallback minimal
+      newVcJson = JSON.stringify({
+        tokenId,
+        txHash,
+        proofTx,
+      })
+    }
+
     /* 5. persist ----------------------------------------------------------- */
     await db
       .update(candidateCredentials)
@@ -123,17 +184,11 @@ export const approveCredentialAction = validatedActionWithUser(
         status: CredentialStatus.VERIFIED,
         verified: true,
         verifiedAt: new Date(),
-        vcJson:
-          vcJsonText &&
-          JSON.stringify({
-            vc: JSON.parse(vcJsonText),
-            tokenId,
-            txHash,
-          }),
+        vcJson: newVcJson,
       })
       .where(eq(candidateCredentials.id, cred.id))
 
-    return { success: 'Credential verified and anchored on Flare.' }
+    return { success: 'Credential verified, proof confirmed, and NFT anchored on Flare.' }
   },
 )
 
