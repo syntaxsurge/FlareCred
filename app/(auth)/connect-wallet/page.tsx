@@ -56,12 +56,10 @@ export default function ConnectWalletPage() {
         </p>
       </div>
 
-      <ConnectButton
-        accountStatus='avatar'
-        chainStatus='icon'
-        showBalance={false}
-        className='w-full justify-center'
-      />
+      {/* Full-width ConnectButton without invalid className prop */}
+      <div className='w-full flex justify-center'>
+        <ConnectButton accountStatus='avatar' chainStatus='icon' showBalance={false} />
+      </div>
 
       {checking && (
         <p className='text-muted-foreground text-xs'>Verifying wallet session…</p>
