@@ -1,20 +1,20 @@
 'use client'
 
 import React, { useState, useTransition } from 'react'
-
-import { CheckCircle2, Clipboard, XCircle } from 'lucide-react'
+import { CheckCircle2, Clipboard, Fingerprint, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { usePublicClient } from 'wagmi'
 import { parseAbi } from 'viem'
 
+import PageCard from '@/components/ui/page-card'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatusBadge } from '@/components/ui/status-badge'
 
 /* -------------------------------------------------------------------------- */
 /*                              C O N S T A N T S                             */
 /* -------------------------------------------------------------------------- */
 
+/** Deployed DIDRegistry address (exposed via env) */
 const REGISTRY_ADDRESS = process.env
   .NEXT_PUBLIC_DID_REGISTRY_ADDRESS as `0x${string}` | undefined
 
@@ -27,7 +27,7 @@ const DID_REGISTRY_ABI = parseAbi(['function hasDID(address owner) view returns 
 /*                                 U T I L S                                  */
 /* -------------------------------------------------------------------------- */
 
-/** Accepts `did:flare:0x…` or raw `0x…`, returns a checksummed address or null. */
+/** Accepts `did:flare:0x…` or raw `0x…`; returns a checksummed address or null. */
 function extractAddress(value: string): `0x${string}` | null {
   const trimmed = value.trim()
   const didMatch = trimmed.match(/^did:flare:(0x[0-9a-fA-F]{40})$/)
@@ -38,31 +38,33 @@ function extractAddress(value: string): `0x${string}` | null {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                   V I E W                                  */
+/*                                   P A G E                                   */
 /* -------------------------------------------------------------------------- */
 
-export default function VerifyIdPage() {
-  /* Bind the public client to the Flare test-net / main-net specified in env */
+export default function VerifyDIDPage() {
+  /** Bind an RPC client to the Flare network defined in env */
   const publicClient = usePublicClient({ chainId: TARGET_CHAIN_ID })
 
-  const [value, setValue] = useState('')
-  const [result, setResult] = useState<'verified' | 'failed' | null>(null)
+  const [input, setInput] = useState('')
+  const [result, setResult] = useState<'verified' | 'unregistered' | 'error' | null>(null)
   const [message, setMessage] = useState('')
   const [isPending, startTransition] = useTransition()
 
-  function handleVerify(e: React.FormEvent<HTMLFormElement>) {
+  /* ----------------------------- Handlers ----------------------------- */
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
 
     if (!publicClient) {
-      toast.error('Unsupported chain—please connect to the correct Flare network and retry.')
+      toast.error('Unsupported chain — please connect to the configured Flare network.')
       return
     }
     if (!REGISTRY_ADDRESS) {
-      toast.error('Registry address not configured.')
+      toast.error('DID Registry address is not configured.')
       return
     }
 
-    const addr = extractAddress(value)
+    const addr = extractAddress(input)
     if (!addr) {
       toast.error('Enter a valid Flare DID or 0x address.')
       return
@@ -79,19 +81,20 @@ export default function VerifyIdPage() {
 
         if (exists) {
           setResult('verified')
-          setMessage('ID is registered on-chain.')
-          toast.success('ID verified ✔')
+          setMessage('This address has minted a DID on-chain.')
+          toast.success('DID verified ✅')
         } else {
-          setResult('failed')
-          setMessage('No DID found for this address.')
-          toast.error('ID not verified')
+          setResult('unregistered')
+          setMessage('No DID is registered for this address.')
+          toast.info('DID not found')
         }
       } catch (err: any) {
-        setResult('failed')
+        setResult('error')
         setMessage(
-          'Error querying contract: ' + String(err?.shortMessage || err?.message || err),
+          'Error while querying the contract: ' +
+            String(err?.shortMessage || err?.message || err),
         )
-        toast.error('Verification error')
+        toast.error('Verification failed')
       }
     })
   }
@@ -99,67 +102,71 @@ export default function VerifyIdPage() {
   function pasteFromClipboard() {
     navigator.clipboard
       .readText()
-      .then((text) => setValue(text))
+      .then((text) => setInput(text))
       .catch(() => toast.error('Clipboard read failed'))
   }
 
+  /* ------------------------------- UI -------------------------------- */
+
   return (
-    <section className='space-y-6'>
-      <header className='max-w-2xl space-y-2'>
-        <h1 className='text-3xl font-extrabold tracking-tight'>Verify ID</h1>
-        <p className='text-muted-foreground text-sm'>
-          Enter a <strong>Flare DID</strong> (<code>did:flare:0x…</code>) or raw{' '}
-          <strong>0x address</strong> to check if it has been registered.
+    <PageCard
+      icon={Fingerprint}
+      title='DID Verification'
+      description='Check whether a Flare Decentralised Identifier is registered on-chain.'
+    >
+      <div className='space-y-6'>
+        <p className='text-sm leading-relaxed'>
+          This tool talks directly to the&nbsp;
+          <code className='rounded bg-muted px-1 py-0.5 text-xs'>DIDRegistry</code> smart contract.
+          A <strong>verified DID</strong> means the address has successfully called&nbsp;
+          <code className='rounded bg-muted px-1 py-0.5 text-xs'>createDID</code> and therefore
+          owns a permanent, on-chain identifier (<code className='font-mono'>did:flare:0x…</code>).
+          If the DID is <em>unregistered</em>, no such transaction exists.
         </p>
-      </header>
 
-      <Card className='max-w-2xl'>
-        <CardHeader>
-          <CardTitle className='text-lg font-medium'>ID Verification Tool</CardTitle>
-        </CardHeader>
+        <form onSubmit={handleSubmit} className='space-y-4'>
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            rows={3}
+            required
+            spellCheck={false}
+            className='border-border w-full resize-y rounded-md border p-3 font-mono text-xs leading-tight'
+            placeholder='did:flare:0x1234…  — or —  0x1234…'
+          />
 
-        <CardContent className='space-y-4'>
-          <form onSubmit={handleVerify} className='space-y-4'>
-            <textarea
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              rows={3}
-              required
-              spellCheck={false}
-              className='border-border w-full resize-y rounded-md border p-3 font-mono text-xs leading-tight'
-              placeholder='did:flare:0x1234…  — or —  0x1234…'
-            />
+          <div className='flex flex-wrap gap-2'>
+            <Button type='submit' disabled={isPending}>
+              {isPending ? 'Checking…' : 'Check'}
+            </Button>
 
-            <div className='flex flex-wrap gap-2'>
-              <Button type='submit' disabled={isPending}>
-                {isPending ? 'Verifying…' : 'Verify'}
-              </Button>
+            <Button
+              type='button'
+              variant='outline'
+              onClick={pasteFromClipboard}
+              title='Paste from clipboard'
+            >
+              <Clipboard className='mr-2 h-4 w-4' />
+              Paste
+            </Button>
+          </div>
+        </form>
 
-              <Button
-                type='button'
-                variant='outline'
-                onClick={pasteFromClipboard}
-                title='Paste from clipboard'
-              >
-                <Clipboard className='mr-2 h-4 w-4' />
-                Paste
-              </Button>
-            </div>
-          </form>
+        {result && (
+          <div className='flex items-center gap-2'>
+            {result === 'verified' ? (
+              <CheckCircle2 className='h-5 w-5 text-emerald-600' />
+            ) : result === 'unregistered' ? (
+              <XCircle className='h-5 w-5 text-rose-600' />
+            ) : (
+              <XCircle className='h-5 w-5 text-yellow-600' />
+            )}
 
-          {result && (
-            <div className='flex items-center gap-2'>
-              {result === 'verified' ? (
-                <CheckCircle2 className='h-5 w-5 text-emerald-600' />
-              ) : (
-                <XCircle className='h-5 w-5 text-rose-600' />
-              )}
-              <StatusBadge status={result} />
-              <span>{message}</span>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </section>
+            <StatusBadge status={result === 'verified' ? 'verified' : 'failed'} />
+            <span>{message}</span>
+          </div>
+        )}
+      </div>
+    </PageCard>
   )
 }
