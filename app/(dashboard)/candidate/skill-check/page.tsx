@@ -28,6 +28,7 @@ export default async function SkillCheckPage() {
   if (!did)
     return (
       <RequiredModal
+        iconKey='keyround'
         title='DID Required'
         description='You need to create a Decentralised Identifier (DID) for your team before you can continue.'
         buttonText='Create DID'

@@ -36,6 +36,7 @@ export default async function CandidateHighlightsSettings() {
   if (!candRow)
     return (
       <RequiredModal
+        iconKey='userround'
         title='Profile Required'
         description='Please complete your candidate profile before accessing Profile Highlights.'
         buttonText='Complete Profile'

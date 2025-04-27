@@ -14,12 +14,27 @@ import {
 import { Button } from '@/components/ui/button'
 
 /* -------------------------------------------------------------------------- */
+/*                                 Icons Map                                  */
+/* -------------------------------------------------------------------------- */
+
+import { UserRound, KeyRound, Bot, Star } from 'lucide-react'
+
+const ICON_MAP: Record<string, LucideIcon> = {
+  userround: UserRound,
+  keyround: KeyRound,
+  Bot,
+  star: Star,
+}
+
+/* -------------------------------------------------------------------------- */
 /*                                  Props                                     */
 /* -------------------------------------------------------------------------- */
 
 export interface RequiredModalProps {
-  /** Optional icon rendered before the title */
+  /** Direct LucideIcon component (only use inside client components) */
   icon?: LucideIcon
+  /** String identifier looked up in ICON_MAP (safe for server ⇒ client) */
+  iconKey?: string
   /** Bold heading shown at the top */
   title: string
   /** Helper text under the title */
@@ -38,11 +53,12 @@ export interface RequiredModalProps {
 
 /**
  * A non-dismissable modal used whenever the user must complete
- * an action before continuing. It supports arbitrary children
- * (e.g. forms) while retaining the original one-button variant.
+ * an action before continuing.  Icons can be supplied via `icon`
+ * (client-only) or `iconKey` (server-safe string identifier).
  */
 export function RequiredModal({
-  icon: Icon,
+  icon,
+  iconKey,
   title,
   description,
   buttonText,
@@ -50,6 +66,9 @@ export function RequiredModal({
   children,
 }: RequiredModalProps) {
   const router = useRouter()
+
+  /* Resolve icon priority: explicit component ▶︎ mapped key ▶︎ none */
+  const Icon = icon ?? (iconKey ? ICON_MAP[iconKey.toLowerCase()] : undefined)
 
   return (
     <AlertDialog open onOpenChange={() => {}}>
