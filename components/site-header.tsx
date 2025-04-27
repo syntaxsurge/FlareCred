@@ -44,25 +44,35 @@ export default function SiteHeader() {
   const router = useRouter()
 
   /* Wallet connection state */
-  const { isConnected, address } = useAccount({
-    /* When the wallet (re)connects, ensure the backend refreshes the
-       session cookie, then navigate to the dashboard which forces the
-       server to re-evaluate role-based layouts without a manual reload. */
-    async onConnect({ address }: { address?: string }) {
-      if (!address) {
-        router.replace('/connect-wallet')
-        return
-      }
+  const { isConnected, address } = useAccount()
+
+  /* When the wallet connects, ask the backend to refresh the session cookie
+     then navigate to the dashboard so role-based layouts are re-evaluated. */
+  useEffect(() => {
+    if (!isConnected) return
+
+    if (!address) {
+      router.replace('/connect-wallet')
+      return
+    }
+
+    let cancelled = false
+
+    ;(async () => {
       try {
         await fetch(`/api/auth/wallet-status?address=${address}`, {
           method: 'GET',
           cache: 'no-store',
         })
       } finally {
-        router.replace('/dashboard')
+        if (!cancelled) router.replace('/dashboard')
       }
-    },
-  })
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [isConnected, address, router])
 
   /* Detect wallet disconnect (wagmi no longer exposes onDisconnect) */
   const prevConnectedRef = useRef<boolean>(isConnected)
