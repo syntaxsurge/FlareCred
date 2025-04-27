@@ -8,7 +8,6 @@ import { Toaster } from 'sonner'
 import SiteHeader from '@/components/site-header'
 import { ThemeProvider } from '@/components/theme-provider'
 import { UserProvider } from '@/lib/auth'
-import { getUser } from '@/lib/db/queries/queries'
 import { Web3Provider } from '@/lib/wallet'
 
 export const metadata: Metadata = {
@@ -23,9 +22,7 @@ export const viewport: Viewport = {
 
 const manrope = Manrope({ subsets: ['latin'] })
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const userPromise = getUser()
-
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang='en'
@@ -58,9 +55,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               }}
             />
 
-            <UserProvider userPromise={userPromise}>
+            <UserProvider>
               <SiteHeader />
-              <main className='mx-auto max-w-7xl px-4 py-6 md:px-6'>{children}</main>
+              <main className='mx-auto max-w-7xl px-4 py-4 md:px-6'>{children}</main>
             </UserProvider>
           </ThemeProvider>
         </Web3Provider>

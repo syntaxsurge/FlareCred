@@ -5,8 +5,15 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-import { ChevronDown, LayoutDashboard, LogOut, Settings } from 'lucide-react'
+import {
+  ChevronDown,
+  LayoutDashboard,
+  LogOut,
+  Settings as Cog,
+  User as UserIcon,
+} from 'lucide-react'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
+import { useAccount } from 'wagmi'
 
 import { signOut } from '@/app/(auth)/actions'
 import { ModeToggle } from '@/components/theme-toggle'
@@ -23,57 +30,63 @@ import { UserAvatar } from '@/components/ui/user-avatar'
 import { useUser } from '@/lib/auth'
 
 /* -------------------------------------------------------------------------- */
-/*                        W A L L E T C O N N E C T  G U A R D                */
+/*                               NAVIGATION DATA                              */
 /* -------------------------------------------------------------------------- */
 
-const RAW_PROJECT_ID = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ?? ''
-const PLACEHOLDER = '00000000000000000000000000000000'
-const WALLETCONNECT_ENABLED = RAW_PROJECT_ID !== '' && RAW_PROJECT_ID !== PLACEHOLDER
-
-/* Landing page anchor sections */
-const LANDING_SECTIONS = [
+const LEARN_SECTIONS = [
   { id: 'overview', label: 'Overview' },
   { id: 'features', label: 'Features' },
   { id: 'deep-dive', label: 'Deep Dive' },
   { id: 'workflow', label: 'Workflow' },
   { id: 'pricing', label: 'Pricing' },
-  { id: 'cta', label: 'Get Started' },
 ] as const
 
-/* Tools dropdown items */
 const TOOLS_MENU = [
   { href: '/candidates', label: 'Candidates' },
   { href: '/issuers', label: 'Issuers' },
   { href: '/verify', label: 'Verify' },
 ] as const
 
+/* -------------------------------------------------------------------------- */
+/*                                  HEADER                                    */
+/* -------------------------------------------------------------------------- */
+
 export default function SiteHeader() {
   const router = useRouter()
+  const { isConnected } = useAccount()
   const { userPromise } = useUser()
   const [user, setUser] = useState<Awaited<typeof userPromise> | null>(null)
 
-  /* Resolve user promise */
+  /* Resolve user once (handles promise or plain value) */
   useEffect(() => {
-    let active = true
-    const val: unknown = userPromise
-    if (val && typeof val === 'object' && typeof (val as any)?.then === 'function') {
-      ;(val as Promise<any>).then(
-        (u) => active && setUser(u),
-        () => active && setUser(null),
+    let mounted = true
+    const maybePromise = userPromise as unknown
+    if (maybePromise && typeof maybePromise === 'object' && typeof (maybePromise as any).then === 'function') {
+      ;(maybePromise as Promise<any>).then(
+        (u) => mounted && setUser(u),
+        () => mounted && setUser(null),
       )
     } else {
-      setUser(val as Awaited<typeof userPromise>)
+      setUser(maybePromise as Awaited<typeof userPromise>)
     }
     return () => {
-      active = false
+      mounted = false
     }
   }, [userPromise])
+
+  /* ---------------------------------------------------------------------- */
+  /*                              S I G N  O U T                            */
+  /* ---------------------------------------------------------------------- */
 
   async function handleSignOut() {
     await signOut()
     router.refresh()
     router.push('/')
   }
+
+  /* ---------------------------------------------------------------------- */
+  /*                                   UI                                   */
+  /* ---------------------------------------------------------------------- */
 
   return (
     <header className='border-border/60 bg-background/80 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40 w-full border-b shadow-sm backdrop-blur'>
@@ -95,21 +108,25 @@ export default function SiteHeader() {
         </Link>
 
         {/* Desktop nav */}
-        <nav className='hidden justify-center gap-8 md:flex'>
-          {/* Home dropdown */}
+        <nav className='hidden justify-center gap-6 md:flex'>
+          <Link
+            href='/'
+            className='text-foreground/80 hover:text-foreground text-sm font-medium transition-colors'
+          >
+            Home
+          </Link>
+
+          {/* Learn dropdown */}
           <HoverCard openDelay={100} closeDelay={100}>
             <HoverCardTrigger asChild>
-              <Link
-                href='/'
-                className='text-foreground/80 hover:text-foreground flex items-center gap-1 text-sm font-medium transition-colors'
-              >
-                Home
+              <span className='text-foreground/80 hover:text-foreground flex cursor-pointer items-center gap-1 text-sm font-medium transition-colors'>
+                Learn
                 <ChevronDown className='mt-0.5 h-3 w-3' />
-              </Link>
+              </span>
             </HoverCardTrigger>
-            <HoverCardContent side='bottom' align='start' className='w-44 rounded-lg p-2'>
+            <HoverCardContent side='bottom' align='start' className='w-40 rounded-lg p-2'>
               <ul className='space-y-1'>
-                {LANDING_SECTIONS.map((s) => (
+                {LEARN_SECTIONS.map((s) => (
                   <li key={s.id}>
                     <Link
                       href={`/#${s.id}`}
@@ -126,15 +143,12 @@ export default function SiteHeader() {
           {/* Tools dropdown */}
           <HoverCard openDelay={100} closeDelay={100}>
             <HoverCardTrigger asChild>
-              <Link
-                href='/candidates'
-                className='text-foreground/80 hover:text-foreground flex items-center gap-1 text-sm font-medium transition-colors'
-              >
+              <span className='text-foreground/80 hover:text-foreground flex cursor-pointer items-center gap-1 text-sm font-medium transition-colors'>
                 Tools
                 <ChevronDown className='mt-0.5 h-3 w-3' />
-              </Link>
+              </span>
             </HoverCardTrigger>
-            <HoverCardContent side='bottom' align='start' className='w-44 rounded-lg p-2'>
+            <HoverCardContent side='bottom' align='start' className='w-40 rounded-lg p-2'>
               <ul className='space-y-1'>
                 {TOOLS_MENU.map((t) => (
                   <li key={t.href}>
@@ -165,10 +179,12 @@ export default function SiteHeader() {
         {/* Right-aligned controls */}
         <div className='flex items-center justify-end gap-3'>
           <ModeToggle />
-          {WALLETCONNECT_ENABLED && (
-            <ConnectButton accountStatus='avatar' showBalance={false} chainStatus='icon' />
+
+          {!isConnected && (
+            <ConnectButton accountStatus='avatar' chainStatus='icon' showBalance={false} />
           )}
-          {user ? (
+
+          {isConnected && user && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <UserAvatar
@@ -188,7 +204,7 @@ export default function SiteHeader() {
                   asChild
                   className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex flex-col items-start gap-1 select-none rounded-md px-3 py-2 text-left'
                 >
-                  <Link href='/settings/team' className='w-full'>
+                  <Link href='/settings/general' className='w-full'>
                     <p className='truncate text-sm font-medium'>
                       {user.name || user.email || 'Unnamed User'}
                     </p>
@@ -205,6 +221,18 @@ export default function SiteHeader() {
 
                 <DropdownMenuSeparator />
 
+                {/* Profile */}
+                <DropdownMenuItem
+                  asChild
+                  className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex items-center gap-2 rounded-md px-3 py-2'
+                >
+                  <Link href='/settings/general' className='flex items-center gap-2'>
+                    <UserIcon className='h-4 w-4' />
+                    <span className='text-sm'>Profile</span>
+                  </Link>
+                </DropdownMenuItem>
+
+                {/* Dashboard */}
                 <DropdownMenuItem
                   asChild
                   className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex items-center gap-2 rounded-md px-3 py-2'
@@ -215,18 +243,20 @@ export default function SiteHeader() {
                   </Link>
                 </DropdownMenuItem>
 
+                {/* Team settings */}
                 <DropdownMenuItem
                   asChild
                   className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex items-center gap-2 rounded-md px-3 py-2'
                 >
-                  <Link href='/settings/general' className='flex items-center gap-2'>
-                    <Settings className='h-4 w-4' />
-                    <span className='text-sm'>Settings</span>
+                  <Link href='/settings/team' className='flex items-center gap-2'>
+                    <Cog className='h-4 w-4' />
+                    <span className='text-sm'>Team Settings</span>
                   </Link>
                 </DropdownMenuItem>
 
                 <DropdownMenuSeparator />
 
+                {/* Sign out */}
                 <form action={handleSignOut} className='w-full'>
                   <button type='submit' className='w-full'>
                     <DropdownMenuItem className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex items-center gap-2 rounded-md px-3 py-2'>
@@ -237,20 +267,7 @@ export default function SiteHeader() {
                 </form>
               </DropdownMenuContent>
             </DropdownMenu>
-          ) : (
-            <>
-              <Link href='/sign-in' className='shrink-0'>
-                <Button variant='ghost' size='sm'>
-                  Sign in
-                </Button>
-              </Link>
-              <Link href='/sign-up' className='shrink-0'>
-                <Button size='sm'>Get started</Button>
-              </Link>
-            </>
           )}
         </div>
       </div>
     </header>
-  )
-}
