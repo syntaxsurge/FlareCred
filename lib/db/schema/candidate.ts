@@ -76,6 +76,10 @@ export const candidateCredentials = pgTable('candidate_credentials', {
   /** Fine-grained type identifier (e.g. 'bachelor', 'github_repo') */
   type: varchar('type', { length: 50 }).notNull(),
   fileUrl: text('file_url'),
+  /** ----- NEW: FDC proof tracking ------------------------------------- */
+  proofType: varchar('proof_type', { length: 30 }).notNull().default(''),
+  proofData: text('proof_data').notNull().default(''),
+  /** ------------------------------------------------------------------- */
   status: varchar('status', { length: 20 }).notNull().default(CredentialStatus.UNVERIFIED),
   verified: boolean('verified').notNull().default(false),
   /** Full VC JSON (optional). */

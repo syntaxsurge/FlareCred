@@ -15,10 +15,12 @@ export type AdminCredentialRow = {
   status: CredentialStatus
   candidate: string
   issuer: string | null
+  proofType: string | null
+  proofData: string | null
 }
 
 /**
- * Return a page of credentials with full‑text search, sorting and pagination.
+ * Return a page of credentials with full-text search, sorting and pagination.
  */
 export async function getAdminCredentialsPage(
   page: number,
@@ -69,6 +71,8 @@ export async function getAdminCredentialsPage(
       status: credsT.status,
       candidate: usersT.email,
       issuer: issuersT.name,
+      proofType: credsT.proofType,
+      proofData: credsT.proofData,
     })
     .from(credsT)
     .leftJoin(candT, eq(credsT.candidateId, candT.id))
@@ -77,13 +81,10 @@ export async function getAdminCredentialsPage(
 
   if (where) q = q.where(where)
 
-  const rows = await q
-    .orderBy(orderBy)
-    .limit(pageSize + 1)
-    .offset(offset)
+  const rows = await q.orderBy(orderBy).limit(pageSize + 1).offset(offset)
 
   const hasNext = rows.length > pageSize
   if (hasNext) rows.pop()
 
-  return { credentials: rows, hasNext }
+  return { credentials: rows as AdminCredentialRow[], hasNext }
 }

@@ -18,6 +18,9 @@ export interface CredentialRow {
   issuer: string | null
   status: CredentialStatus
   fileUrl: string | null
+  /** FDC proof meta */
+  proofType?: string | null
+  proofData?: string | null
   /** VC JSON is not required by all consumers but kept for completeness. */
   vcJson?: string | null
 }
@@ -131,6 +134,8 @@ export async function getCandidateCredentialsSection(
       issuer: issuers.name,
       status: candidateCredentials.status,
       fileUrl: candidateCredentials.fileUrl,
+      proofType: candidateCredentials.proofType,
+      proofData: candidateCredentials.proofData,
       vcJson: candidateCredentials.vcJson,
     })
     .from(candidateCredentials)
@@ -151,6 +156,8 @@ export async function getCandidateCredentialsSection(
     issuer: r.issuer ?? null,
     status: r.status as CredentialStatus,
     fileUrl: r.fileUrl ?? null,
+    proofType: r.proofType ?? null,
+    proofData: r.proofData ?? null,
     vcJson: r.vcJson ?? null,
   }))
 

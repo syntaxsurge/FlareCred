@@ -14,6 +14,8 @@ export interface CandidateCredentialRow {
   issuer: string | null
   status: CredentialStatus
   fileUrl: string | null
+  proofType: string | null
+  proofData: string | null
 }
 
 export interface StatusCounts {
@@ -70,6 +72,8 @@ export async function getCandidateCredentialsSection(
       issuer: issuers.name,
       status: candidateCredentials.status,
       fileUrl: candidateCredentials.fileUrl,
+      proofType: candidateCredentials.proofType,
+      proofData: candidateCredentials.proofData,
     })
     .from(candidateCredentials)
     .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))

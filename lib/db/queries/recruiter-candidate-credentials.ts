@@ -15,11 +15,13 @@ export type RecruiterCredentialRow = {
   status: CredentialStatus
   verified: boolean
   fileUrl: string | null
+  proofType: string | null
+  proofData: string | null
   createdAt: Date
 }
 
 /* -------------------------------------------------------------------------- */
-/*                             Paginated fetch                                */
+/*                             Paginated fetch                                */
 /* -------------------------------------------------------------------------- */
 
 /**
@@ -39,7 +41,7 @@ export async function getRecruiterCandidateCredentialsPage(
 ): Promise<{ credentials: RecruiterCredentialRow[]; hasNext: boolean }> {
   const offset = (page - 1) * pageSize
 
-  /* --------------------------- ORDER BY helper --------------------------- */
+  /* --------------------------- ORDER BY helper --------------------------- */
   const secondary =
     sortBy === 'title'
       ? order === 'asc'
@@ -78,6 +80,8 @@ export async function getRecruiterCandidateCredentialsPage(
       status: credsT.status,
       verified: credsT.verified,
       fileUrl: credsT.fileUrl,
+      proofType: credsT.proofType,
+      proofData: credsT.proofData,
       createdAt: credsT.createdAt,
     })
     .from(credsT)
