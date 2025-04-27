@@ -23,10 +23,6 @@ interface PricingGridProps {
 /*                         P R I C I N G   G R I D                            */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Renders all pricing tiers, displaying on-chain USD value and an
- * inline warning when the oracle feed is stale (> 1 hour old).
- */
 export function PricingGrid({ currentPlanName }: PricingGridProps) {
   const { usd, stale } = useFlareUsdPrice()
 
@@ -54,7 +50,6 @@ export function PricingGrid({ currentPlanName }: PricingGridProps) {
               priceFlr={priceFlr}
               usdLabel={usdLabel}
               isCurrent={isCurrent}
-              stale={stale}
             />
           )
         })}
@@ -72,13 +67,11 @@ function PricingCard({
   priceFlr,
   usdLabel,
   isCurrent,
-  stale,
 }: {
   meta: (typeof PLAN_META)[number]
   priceFlr: number
   usdLabel: string
   isCurrent: boolean
-  stale: boolean
 }) {
   return (
     <div
@@ -126,8 +119,7 @@ function PricingCard({
           const planKey: 1 | 2 = meta.key === 'base' ? 1 : 2
           return (
             <Suspense fallback={<Button className='w-full'>Loading…</Button>}>
-              {/* @ts-expect-error — stale prop handled downstream */}
-              <SubmitButton planKey={planKey} priceWei={meta.priceWei} stale={stale} />
+              <SubmitButton planKey={planKey} priceWei={meta.priceWei} />
             </Suspense>
           )
         })()

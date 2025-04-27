@@ -35,10 +35,8 @@ const SUBSCRIPTION_MANAGER_ABI = parseAbi([
 interface Props {
   /** 1 = Base, 2 = Plus */
   planKey: 1 | 2
-  /** Plan price (wei) — passed to `value` parameter */
+  /** Plan price in wei (passed to the payable value) */
   priceWei: bigint
-  /** Legacy prop forwarded by PricingGrid (ignored internally) */
-  stale?: boolean
 }
 
 /* -------------------------------------------------------------------------- */
@@ -72,6 +70,7 @@ export function SubmitButton({ planKey, priceWei }: Props) {
       toast.error('Subscription manager address missing.')
       return
     }
+
     if (!isConnected || !walletClient || !address) {
       toast.error('Please connect your wallet first.')
       return
