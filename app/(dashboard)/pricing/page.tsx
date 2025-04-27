@@ -1,8 +1,6 @@
 import { PricingGrid } from '@/components/pricing/pricing-grid'
 import { getUser, getTeamForUser } from '@/lib/db/queries/queries'
 
-export const revalidate = 3600
-
 export default async function PricingPage() {
   /* --------------------------------------------------------------- */
   /* Determine the current team plan (if signed in)                  */
