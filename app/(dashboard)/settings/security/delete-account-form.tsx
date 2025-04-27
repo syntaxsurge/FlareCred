@@ -1,46 +1,76 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useTransition } from 'react'
 
-import { deleteAccount } from '@/app/(auth)/actions'
-import { ActionButton } from '@/components/ui/action-button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
+import { useAccount, useSignMessage } from 'wagmi'
 
+import { Button } from '@/components/ui/button'
+
+/**
+ * Prompts the user to sign a message with their wallet and, on success,
+ * calls the backend delete route to permanently delete the account.
+ */
 export default function DeleteAccountForm() {
+  const { address, isConnected } = useAccount()
+  const { signMessageAsync } = useSignMessage()
   const router = useRouter()
-  const [password, setPassword] = useState('')
+  const [isPending, startTransition] = useTransition()
 
   async function handleDelete() {
-    const fd = new FormData()
-    fd.append('password', password)
-    const res = (await deleteAccount({}, fd)) as { error?: string }
-    if (!res?.error) {
-      router.push('/sign-in')
+    if (isPending) return
+    if (!isConnected || !address) {
+      toast.error('Please connect your wallet first.')
+      return
     }
-    return res
+
+    const message = `I confirm deletion of my FlareCred account (${address}) at ${new Date().toISOString()}`
+    const toastId = toast.loading('Awaiting wallet signature…')
+
+    startTransition(async () => {
+      try {
+        const signature = await signMessageAsync({ message })
+
+        toast.loading('Deleting account…', { id: toastId })
+
+        const res = await fetch('/api/auth/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address, message, signature }),
+        })
+
+        const data = await res.json().catch(() => ({}))
+
+        if (!res.ok || data?.error) {
+          throw new Error(data?.error ?? 'Account deletion failed.')
+        }
+
+        toast.success('Account deleted.', { id: toastId })
+        router.push('/')
+        router.refresh()
+      } catch (err: any) {
+        toast.error(err?.message ?? 'Signature rejected or transaction failed.', { id: toastId })
+      }
+    })
   }
 
   return (
-    <form onSubmit={(e) => e.preventDefault()} className='space-y-4'>
-      <div>
-        <Label htmlFor='delete-password'>Confirm Password</Label>
-        <Input
-          id='delete-password'
-          type='password'
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          minLength={8}
-          maxLength={100}
-          placeholder='Enter password to confirm'
-        />
-      </div>
-
-      <ActionButton onAction={handleDelete} pendingLabel='Deleting…' variant='destructive'>
-        Delete Account
-      </ActionButton>
-    </form>
+    <Button
+      variant='destructive'
+      onClick={handleDelete}
+      disabled={isPending}
+      className='w-max whitespace-nowrap'
+    >
+      {isPending ? (
+        <>
+          <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+          Deleting…
+        </>
+      ) : (
+        'Delete Account'
+      )}
+    </Button>
   )
 }
