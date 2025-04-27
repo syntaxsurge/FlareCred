@@ -16,6 +16,7 @@ import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useAccount } from 'wagmi'
 
 import { signOut } from '@/app/(auth)/actions'
+import WalletOnboardModal from '@/components/auth/WalletOnboardModal'
 import { ModeToggle } from '@/components/theme-toggle'
 import { Button } from '@/components/ui/button'
 import {
@@ -89,185 +90,195 @@ export default function SiteHeader() {
   /* ---------------------------------------------------------------------- */
 
   return (
-    <header className='border-border/60 bg-background/80 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40 w-full border-b shadow-sm backdrop-blur'>
-      <div className='mx-auto grid h-16 max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-6 px-4 md:px-6'>
-        {/* Brand */}
-        <Link
-          href='/'
-          className='text-primary flex items-center gap-2 whitespace-nowrap text-lg font-extrabold tracking-tight'
-        >
-          <Image
-            src='/images/flarecred-logo.png'
-            alt='FlareCred logo'
-            width={24}
-            height={24}
-            priority
-            className='h-6 w-auto'
-          />
-          FlareCred
-        </Link>
-
-        {/* Desktop nav */}
-        <nav className='hidden justify-center gap-6 md:flex'>
+    <>
+      <header className='border-border/60 bg-background/80 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40 w-full border-b shadow-sm backdrop-blur'>
+        <div className='mx-auto grid h-16 max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-6 px-4 md:px-6'>
+          {/* Brand */}
           <Link
             href='/'
-            className='text-foreground/80 hover:text-foreground text-sm font-medium transition-colors'
+            className='text-primary flex items-center gap-2 whitespace-nowrap text-lg font-extrabold tracking-tight'
           >
-            Home
+            <Image
+              src='/images/flarecred-logo.png'
+              alt='FlareCred logo'
+              width={24}
+              height={24}
+              priority
+              className='h-6 w-auto'
+            />
+            FlareCred
           </Link>
 
-          {/* Learn dropdown */}
-          <HoverCard openDelay={100} closeDelay={100}>
-            <HoverCardTrigger asChild>
-              <span className='text-foreground/80 hover:text-foreground flex cursor-pointer items-center gap-1 text-sm font-medium transition-colors'>
-                Learn
-                <ChevronDown className='mt-0.5 h-3 w-3' />
-              </span>
-            </HoverCardTrigger>
-            <HoverCardContent side='bottom' align='start' className='w-40 rounded-lg p-2'>
-              <ul className='space-y-1'>
-                {LEARN_SECTIONS.map((s) => (
-                  <li key={s.id}>
-                    <Link
-                      href={`/#${s.id}`}
-                      className='hover:bg-muted block rounded px-2 py-1 text-sm'
-                    >
-                      {s.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </HoverCardContent>
-          </HoverCard>
+          {/* Desktop nav */}
+          <nav className='hidden justify-center gap-6 md:flex'>
+            <Link
+              href='/'
+              className='text-foreground/80 hover:text-foreground text-sm font-medium transition-colors'
+            >
+              Home
+            </Link>
 
-          {/* Tools dropdown */}
-          <HoverCard openDelay={100} closeDelay={100}>
-            <HoverCardTrigger asChild>
-              <span className='text-foreground/80 hover:text-foreground flex cursor-pointer items-center gap-1 text-sm font-medium transition-colors'>
-                Tools
-                <ChevronDown className='mt-0.5 h-3 w-3' />
-              </span>
-            </HoverCardTrigger>
-            <HoverCardContent side='bottom' align='start' className='w-40 rounded-lg p-2'>
-              <ul className='space-y-1'>
-                {TOOLS_MENU.map((t) => (
-                  <li key={t.href}>
-                    <Link href={t.href} className='hover:bg-muted block rounded px-2 py-1 text-sm'>
-                      {t.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </HoverCardContent>
-          </HoverCard>
+            {/* Learn dropdown */}
+            <HoverCard openDelay={100} closeDelay={100}>
+              <HoverCardTrigger asChild>
+                <span className='text-foreground/80 hover:text-foreground flex cursor-pointer items-center gap-1 text-sm font-medium transition-colors'>
+                  Learn
+                  <ChevronDown className='mt-0.5 h-3 w-3' />
+                </span>
+              </HoverCardTrigger>
+              <HoverCardContent side='bottom' align='start' className='w-40 rounded-lg p-2'>
+                <ul className='space-y-1'>
+                  {LEARN_SECTIONS.map((s) => (
+                    <li key={s.id}>
+                      <Link
+                        href={`/#${s.id}`}
+                        className='hover:bg-muted block rounded px-2 py-1 text-sm'
+                      >
+                        {s.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </HoverCardContent>
+            </HoverCard>
 
-          <Link
-            href='/pricing'
-            className='text-foreground/80 hover:text-foreground text-sm font-medium transition-colors'
-          >
-            Pricing
-          </Link>
+            {/* Tools dropdown */}
+            <HoverCard openDelay={100} closeDelay={100}>
+              <HoverCardTrigger asChild>
+                <span className='text-foreground/80 hover:text-foreground flex cursor-pointer items-center gap-1 text-sm font-medium transition-colors'>
+                  Tools
+                  <ChevronDown className='mt-0.5 h-3 w-3' />
+                </span>
+              </HoverCardTrigger>
+              <HoverCardContent side='bottom' align='start' className='w-40 rounded-lg p-2'>
+                <ul className='space-y-1'>
+                  {TOOLS_MENU.map((t) => (
+                    <li key={t.href}>
+                      <Link
+                        href={t.href}
+                        className='hover:bg-muted block rounded px-2 py-1 text-sm'
+                      >
+                        {t.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </HoverCardContent>
+            </HoverCard>
 
-          <Link
-            href='/dashboard'
-            className='text-foreground/80 hover:text-foreground text-sm font-medium transition-colors'
-          >
-            Dashboard
-          </Link>
-        </nav>
+            <Link
+              href='/pricing'
+              className='text-foreground/80 hover:text-foreground text-sm font-medium transition-colors'
+            >
+              Pricing
+            </Link>
 
-        {/* Right-aligned controls */}
-        <div className='flex items-center justify-end gap-3'>
-          <ModeToggle />
+            <Link
+              href='/dashboard'
+              className='text-foreground/80 hover:text-foreground text-sm font-medium transition-colors'
+            >
+              Dashboard
+            </Link>
+          </nav>
 
-          {!isConnected && (
-            <ConnectButton accountStatus='avatar' chainStatus='icon' showBalance={false} />
-          )}
+          {/* Right-aligned controls */}
+          <div className='flex items-center justify-end gap-3'>
+            <ModeToggle />
 
-          {isConnected && user && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <UserAvatar
-                  src={(user as any)?.image ?? undefined}
-                  name={(user as any)?.name ?? null}
-                  email={(user as any)?.email ?? null}
-                  className='cursor-pointer'
-                />
-              </DropdownMenuTrigger>
+            {!isConnected && (
+              <ConnectButton accountStatus='avatar' chainStatus='icon' showBalance={false} />
+            )}
 
-              <DropdownMenuContent
-                align='end'
-                className='data-[state=open]:animate-in data-[state=closed]:animate-out w-56 max-w-[90vw] rounded-lg p-1 shadow-lg sm:w-64'
-              >
-                {/* User card */}
-                <DropdownMenuItem
-                  asChild
-                  className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex flex-col items-start gap-1 select-none rounded-md px-3 py-2 text-left'
+            {isConnected && user && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <UserAvatar
+                    src={(user as any)?.image ?? undefined}
+                    name={(user as any)?.name ?? null}
+                    email={(user as any)?.email ?? null}
+                    className='cursor-pointer'
+                  />
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent
+                  align='end'
+                  className='data-[state=open]:animate-in data-[state=closed]:animate-out w-56 max-w-[90vw] rounded-lg p-1 shadow-lg sm:w-64'
                 >
-                  <Link href='/settings/general' className='w-full'>
-                    <p className='truncate text-sm font-medium'>
-                      {user.name || user.email || 'Unnamed User'}
-                    </p>
-                    {user.email && (
-                      <p className='text-muted-foreground truncate text-xs break-all'>
-                        {user.email}
+                  {/* User card */}
+                  <DropdownMenuItem
+                    asChild
+                    className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex flex-col items-start gap-1 select-none rounded-md px-3 py-2 text-left'
+                  >
+                    <Link href='/settings/general' className='w-full'>
+                      <p className='truncate text-sm font-medium'>
+                        {user.name || user.email || 'Unnamed User'}
                       </p>
-                    )}
-                    <span className='bg-muted text-muted-foreground inline-block rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider'>
-                      {user.role}
-                    </span>
-                  </Link>
-                </DropdownMenuItem>
+                      {user.email && (
+                        <p className='text-muted-foreground truncate text-xs break-all'>
+                          {user.email}
+                        </p>
+                      )}
+                      <span className='bg-muted text-muted-foreground inline-block rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider'>
+                        {user.role}
+                      </span>
+                    </Link>
+                  </DropdownMenuItem>
 
-                <DropdownMenuSeparator />
+                  <DropdownMenuSeparator />
 
-                {/* Profile */}
-                <DropdownMenuItem
-                  asChild
-                  className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex items-center gap-2 rounded-md px-3 py-2'
-                >
-                  <Link href='/settings/general' className='flex items-center gap-2'>
-                    <UserIcon className='h-4 w-4' />
-                    <span className='text-sm'>Profile</span>
-                  </Link>
-                </DropdownMenuItem>
+                  {/* Profile */}
+                  <DropdownMenuItem
+                    asChild
+                    className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex items-center gap-2 rounded-md px-3 py-2'
+                  >
+                    <Link href='/settings/general' className='flex items-center gap-2'>
+                      <UserIcon className='h-4 w-4' />
+                      <span className='text-sm'>Profile</span>
+                    </Link>
+                  </DropdownMenuItem>
 
-                {/* Dashboard */}
-                <DropdownMenuItem
-                  asChild
-                  className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex items-center gap-2 rounded-md px-3 py-2'
-                >
-                  <Link href='/dashboard' className='flex items-center gap-2'>
-                    <LayoutDashboard className='h-4 w-4' />
-                    <span className='text-sm'>Dashboard</span>
-                  </Link>
-                </DropdownMenuItem>
+                  {/* Dashboard */}
+                  <DropdownMenuItem
+                    asChild
+                    className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex items-center gap-2 rounded-md px-3 py-2'
+                  >
+                    <Link href='/dashboard' className='flex items-center gap-2'>
+                      <LayoutDashboard className='h-4 w-4' />
+                      <span className='text-sm'>Dashboard</span>
+                    </Link>
+                  </DropdownMenuItem>
 
-                {/* Team settings */}
-                <DropdownMenuItem
-                  asChild
-                  className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex items-center gap-2 rounded-md px-3 py-2'
-                >
-                  <Link href='/settings/team' className='flex items-center gap-2'>
-                    <Cog className='h-4 w-4' />
-                    <span className='text-sm'>Team Settings</span>
-                  </Link>
-                </DropdownMenuItem>
+                  {/* Team settings */}
+                  <DropdownMenuItem
+                    asChild
+                    className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex items-center gap-2 rounded-md px-3 py-2'
+                  >
+                    <Link href='/settings/team' className='flex items-center gap-2'>
+                      <Cog className='h-4 w-4' />
+                      <span className='text-sm'>Team Settings</span>
+                    </Link>
+                  </DropdownMenuItem>
 
-                <DropdownMenuSeparator />
+                  <DropdownMenuSeparator />
 
-                {/* Sign out */}
-                <form action={handleSignOut} className='w-full'>
-                  <button type='submit' className='w-full'>
-                    <DropdownMenuItem className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex items-center gap-2 rounded-md px-3 py-2'>
-                      <LogOut className='h-4 w-4' />
-                      <span className='text-sm'>Sign out</span>
-                    </DropdownMenuItem>
-                  </button>
-                </form>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+                  {/* Sign out */}
+                  <form action={handleSignOut} className='w-full'>
+                    <button type='submit' className='w-full'>
+                      <DropdownMenuItem className='data-[highlighted]:bg-muted data-[highlighted]:text-foreground flex items-center gap-2 rounded-md px-3 py-2'>
+                        <LogOut className='h-4 w-4' />
+                        <span className='text-sm'>Sign out</span>
+                      </DropdownMenuItem>
+                    </button>
+                  </form>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* Wallet-first onboarding modal */}
+      <WalletOnboardModal isConnected={isConnected} user={user} />
+    </>
+  )
+}
