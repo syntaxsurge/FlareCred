@@ -3,9 +3,10 @@
 import * as React from 'react'
 
 import AddCredentialForm from '@/app/(dashboard)/candidate/credentials/add/add-credential-form'
-import { DidRequiredModal } from '@/components/dashboard/candidate/did-required-modal'
+import { RequiredModal } from '@/components/ui/required-modal'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { KeyRound } from 'lucide-react'
 
 interface Props {
   /** Server action wrapper passed from the parent server component */
@@ -48,7 +49,15 @@ export default function AddCredentialDialog({ addCredentialAction, hasDid }: Pro
       </Dialog>
 
       {/* DID requirement modal */}
-      {showDidModal && !hasDid && <DidRequiredModal />}
+      {showDidModal && !hasDid && (
+        <RequiredModal
+          icon={KeyRound}
+          title='DID Required'
+          description='You need to create a Decentralised Identifier (DID) for your team before adding credentials.'
+          buttonText='Create DID'
+          redirectTo='/candidate/create-did'
+        />
+      )}
     </>
   )
 }
