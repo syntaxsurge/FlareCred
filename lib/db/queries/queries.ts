@@ -13,30 +13,27 @@ import { activityLogs, teamMembers, teams, users } from '../schema'
 
 export async function getUser() {
   const sessionCookie = (await cookies()).get('session')
-  if (!sessionCookie || !sessionCookie.value) {
+  if (!sessionCookie || !sessionCookie.value) return null
+
+  /* Decode and validate the JWT ------------------------------------------------ */
+  let sessionData: { wallet?: string; expires?: string }
+  try {
+    sessionData = (await verifyToken(sessionCookie.value)) as any
+  } catch {
     return null
   }
 
-  const sessionData = await verifyToken(sessionCookie.value)
-  if (!sessionData || !sessionData.user || typeof sessionData.user.id !== 'number') {
-    return null
-  }
+  if (!sessionData?.wallet) return null
+  if (!sessionData.expires || new Date(sessionData.expires) < new Date()) return null
 
-  if (new Date(sessionData.expires) < new Date()) {
-    return null
-  }
-
-  const user = await db
+  /* Look up the user by wallet address ---------------------------------------- */
+  const rows = await db
     .select()
     .from(users)
-    .where(and(eq(users.id, sessionData.user.id), isNull(users.deletedAt)))
+    .where(and(eq(users.walletAddress, sessionData.wallet), isNull(users.deletedAt)))
     .limit(1)
 
-  if (user.length === 0) {
-    return null
-  }
-
-  return user[0]
+  return rows.length ? rows[0] : null
 }
 
 /* -------------------------------------------------------------------------- */
@@ -46,8 +43,8 @@ export async function getUser() {
 /**
  * Persist an on-chain subscription payment for the given team.
  *
- * @param teamId   ID of the team that just paid on-chain
- * @param planKey  Internal pricing key (‘free’ | ‘base’ | ‘plus’)
+ * @param teamId     ID of the team that just paid on-chain
+ * @param planKey    Internal pricing key (‘free’ | ‘base’ | ‘plus’)
  * @param paidUntil  Expiry timestamp returned by the SubscriptionManager
  */
 export async function updateTeamCryptoSubscription(
@@ -85,9 +82,7 @@ export async function getUserWithTeam(userId: number) {
 
 export async function getActivityLogs() {
   const user = await getUser()
-  if (!user) {
-    throw new Error('User not authenticated')
-  }
+  if (!user) throw new Error('User not authenticated')
 
   return await db
     .select({
