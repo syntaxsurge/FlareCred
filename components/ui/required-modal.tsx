@@ -37,6 +37,10 @@ export interface RequiredModalProps {
   iconKey?: string
   /** Bold heading shown at the top */
   title: string
+  /** Make the header clickable (default = false) */
+  headerClickable?: boolean
+  /** Optional click handler for the header (only used when `headerClickable` is true) */
+  onHeaderClick?: () => void
   /** Helper text under the title */
   description?: string
   /** CTA label (ignored when `children` passed) */
@@ -53,13 +57,17 @@ export interface RequiredModalProps {
 
 /**
  * A non-dismissable modal used whenever the user must complete
- * an action before continuing.  Icons can be supplied via `icon`
+ * an action before continuing. Icons can be supplied via `icon`
  * (client-only) or `iconKey` (server-safe string identifier).
+ * Set `headerClickable` to true (optionally with `onHeaderClick`)
+ * to make the title area interactable.
  */
 export function RequiredModal({
   icon,
   iconKey,
   title,
+  headerClickable = false,
+  onHeaderClick,
   description,
   buttonText,
   redirectTo,
@@ -74,7 +82,10 @@ export function RequiredModal({
     <AlertDialog open onOpenChange={() => {}}>
       <AlertDialogContent className='sm:max-w-md'>
         <AlertDialogHeader>
-          <AlertDialogTitle className='flex items-center gap-2'>
+          <AlertDialogTitle
+            className={`flex items-center gap-2 ${headerClickable ? 'cursor-pointer' : ''}`}
+            onClick={headerClickable ? onHeaderClick : undefined}
+          >
             {Icon && <Icon className='h-5 w-5 text-rose-600' />}
             {title}
           </AlertDialogTitle>
