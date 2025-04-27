@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState, useTransition } from 'react'
+import React, { useEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { useAccount } from 'wagmi'
@@ -38,13 +38,49 @@ export default function WalletOnboardModal({ isConnected, user }: Props) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
 
-  /* Show modal when wallet connected but no user session */
+  /* Ensure auto-login check fires only once per connection */
+  const attemptedAutoRef = useRef(false)
+
+  /* ---------------------------------------------------------------------- */
+  /*                        A U T O - L O G I N  C H E C K                  */
+  /* ---------------------------------------------------------------------- */
+
   useEffect(() => {
-    if (isConnected && !user) setOpen(true)
+    if (!isConnected || user || !address || attemptedAutoRef.current) return
+
+    attemptedAutoRef.current = true
+
+    ;(async () => {
+      try {
+        const res = await fetch(`/api/auth/wallet-status?address=${address}`, {
+          method: 'GET',
+          cache: 'no-store',
+        })
+        const json = await res.json().catch(() => ({}))
+
+        /* If the wallet already has a complete user record, simply refresh to
+           allow the server components to pick up the session and skip onboarding. */
+        if (res.ok && json?.exists) {
+          router.refresh()
+          return
+        }
+
+        /* Otherwise, prompt for profile completion. */
+        setOpen(true)
+      } catch {
+        /* Network failure → fall back to showing the modal. */
+        setOpen(true)
+      }
+    })()
+  }, [isConnected, user, address, router])
+
+  /* Close modal when wallet disconnects or once the user session becomes available */
+  useEffect(() => {
+    if (!isConnected || user) setOpen(false)
   }, [isConnected, user])
 
   /* ---------------------------------------------------------------------- */
-  /*                               SUBMISSION                               */
+  /*                              S U B M I T                               */
   /* ---------------------------------------------------------------------- */
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
