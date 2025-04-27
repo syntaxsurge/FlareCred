@@ -13,8 +13,8 @@ import { getTeamForUser, getUser } from '@/lib/db/queries/queries'
 /* -------------------------------------------------------------------------- */
 
 /**
- * Fetches the latest FLR/USD price (18-decimals) from Coingecko.
- * We cache the result for 5 minutes to avoid rate-limits.
+ * Fetch the latest FLR → USD price (18 decimals) from Coingecko.
+ * Result is cached for 5 minutes to avoid rate-limits.
  */
 const getFlrUsdPrice = cache(async (): Promise<number | null> => {
   try {
@@ -34,16 +34,16 @@ const getFlrUsdPrice = cache(async (): Promise<number | null> => {
 /* -------------------------------------------------------------------------- */
 
 interface PricingGridProps {
-  /** Team’s current plan name (`Free`|`Base`|`Plus`) or null if anonymous. */
+  /** Team’s current plan (`Free` | `Base` | `Plus`) or null if anonymous. */
   currentPlanName?: string | null
 }
 
 /**
- * Renders pricing cards for each plan tier, highlighting the active one
- * and enabling on-chain subscription via the wallet button.
+ * Pricing cards for all tiers, highlighting the active plan
+ * and enabling on-chain subscription via the connected wallet.
  */
 export async function PricingGrid({ currentPlanName }: PricingGridProps) {
-  /* Resolve current plan if not provided (server-only) */
+  /* Resolve current plan on the server when not supplied */
   if (currentPlanName === undefined) {
     const user = await getUser()
     if (user) {
@@ -68,9 +68,6 @@ export async function PricingGrid({ currentPlanName }: PricingGridProps) {
         const isCurrent =
           !!currentPlanName && currentPlanName.toLowerCase() === meta.name.toLowerCase()
 
-        const planKey: 0 | 1 | 2 =
-          meta.key === 'base' ? 1 : meta.key === 'plus' ? 2 : 0
-
         return (
           <PricingCard
             key={meta.key}
@@ -78,7 +75,6 @@ export async function PricingGrid({ currentPlanName }: PricingGridProps) {
             priceFlr={priceFlr}
             usdLabel={usdLabel}
             isCurrent={isCurrent}
-            planKey={planKey}
           />
         )
       })}
@@ -95,13 +91,11 @@ function PricingCard({
   priceFlr,
   usdLabel,
   isCurrent,
-  planKey,
 }: {
   meta: (typeof PLAN_META)[number]
   priceFlr: number
   usdLabel: string
   isCurrent: boolean
-  planKey: 0 | 1 | 2
 }) {
   return (
     <div
@@ -143,9 +137,15 @@ function PricingCard({
           <Link href='/sign-up'>Get Started</Link>
         </Button>
       ) : (
-        <Suspense fallback={<Button className='w-full'>Loading…</Button>}>
-          <SubmitButton planKey={planKey} priceWei={meta.priceWei} />
-        </Suspense>
+        /* Base / Plus plans → blockchain transaction */
+        (() => {
+          const planKey: 1 | 2 = meta.key === 'base' ? 1 : 2
+          return (
+            <Suspense fallback={<Button className='w-full'>Loading…</Button>}>
+              <SubmitButton planKey={planKey} priceWei={meta.priceWei} />
+            </Suspense>
+          )
+        })()
       )}
     </div>
   )
