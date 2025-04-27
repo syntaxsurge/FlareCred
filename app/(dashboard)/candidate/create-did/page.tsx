@@ -6,7 +6,7 @@ import { KeyRound } from 'lucide-react'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
 import PageCard from '@/components/ui/page-card'
 import { UserAvatar } from '@/components/ui/user-avatar'
-import { RequiredModal } from '@/components/ui/required-modal'
+import { AppModal } from '@/components/ui/app-modal'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
 import { teamMembers, users as usersT, teams } from '@/lib/db/schema/core'
@@ -55,12 +55,13 @@ export default async function CreateDIDPage() {
   if (did) {
     /* Team already has a DID – block duplicate creation */
     return (
-      <RequiredModal
+      <AppModal
         iconKey='keyround'
         title='Team DID Already Created'
         description='Your workspace already owns a Decentralised Identifier; you cannot create another one.'
         buttonText='Go to Dashboard'
         redirectTo='/dashboard'
+        required
       />
     )
   }

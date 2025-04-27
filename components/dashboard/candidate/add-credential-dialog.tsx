@@ -3,7 +3,7 @@
 import * as React from 'react'
 
 import AddCredentialForm from '@/app/(dashboard)/candidate/credentials/add/add-credential-form'
-import { RequiredModal } from '@/components/ui/required-modal'
+import { AppModal } from '@/components/ui/app-modal'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { KeyRound } from 'lucide-react'
@@ -50,12 +50,13 @@ export default function AddCredentialDialog({ addCredentialAction, hasDid }: Pro
 
       {/* DID requirement modal */}
       {showDidModal && !hasDid && (
-        <RequiredModal
+        <AppModal
           icon={KeyRound}
           title='DID Required'
           description='You need to create a Decentralised Identifier (DID) for your team before adding credentials.'
           buttonText='Create DID'
           redirectTo='/candidate/create-did'
+          required
         />
       )}
     </>

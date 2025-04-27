@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 import { useAccount } from 'wagmi'
 import { Loader2, UserPlus } from 'lucide-react'
 
-import { RequiredModal } from '@/components/ui/required-modal'
+import { AppModal } from '@/components/ui/app-modal'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -133,7 +133,7 @@ export default function WalletOnboardModal({ isConnected, user }: Props) {
   if (!open) return null
 
   return (
-    <RequiredModal
+    <AppModal
       icon={UserPlus}
       title='Complete your FlareCred profile'
       description='Just a few details and you’re ready to go.'
@@ -184,6 +184,6 @@ export default function WalletOnboardModal({ isConnected, user }: Props) {
           )}
         </Button>
       </form>
-    </RequiredModal>
+    </AppModal>
   )
 }

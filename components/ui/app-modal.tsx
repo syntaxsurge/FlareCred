@@ -12,43 +12,40 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
+import { X, UserRound, KeyRound, Bot, Star } from 'lucide-react'
 
 /* -------------------------------------------------------------------------- */
-/*                                 Icons Map                                  */
+/*                                 Icon Map                                   */
 /* -------------------------------------------------------------------------- */
-
-import { UserRound, KeyRound, Bot, Star } from 'lucide-react'
 
 const ICON_MAP: Record<string, LucideIcon> = {
   userround: UserRound,
   keyround: KeyRound,
-  Bot,
+  bot: Bot,
   star: Star,
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                  Props                                     */
+/*                                   Props                                    */
 /* -------------------------------------------------------------------------- */
 
-export interface RequiredModalProps {
-  /** Direct LucideIcon component (only use inside client components) */
+export interface AppModalProps {
+  /** Direct LucideIcon component (client only) */
   icon?: LucideIcon
-  /** String identifier looked up in ICON_MAP (safe for server ⇒ client) */
+  /** String identifier mapped through ICON_MAP (SSR safe) */
   iconKey?: string
-  /** Bold heading shown at the top */
+  /** Bold heading text */
   title: string
-  /** Make the header clickable (default = false) */
-  headerClickable?: boolean
-  /** Optional click handler for the header (only used when `headerClickable` is true) */
-  onHeaderClick?: () => void
   /** Helper text under the title */
   description?: string
-  /** CTA label (ignored when `children` passed) */
+  /** CTA label (ignored when custom children provided) */
   buttonText?: string
-  /** Route pushed on CTA click (ignored when `children` passed) */
+  /** Route pushed on CTA click (ignored when custom children provided) */
   redirectTo?: string
   /** Optional custom body; when provided, default button section is omitted */
   children?: React.ReactNode
+  /** If true, modal cannot be closed (no outside-click close & no X). */
+  required?: boolean
 }
 
 /* -------------------------------------------------------------------------- */
@@ -56,36 +53,48 @@ export interface RequiredModalProps {
 /* -------------------------------------------------------------------------- */
 
 /**
- * A non-dismissable modal used whenever the user must complete
- * an action before continuing. Icons can be supplied via `icon`
- * (client-only) or `iconKey` (server-safe string identifier).
- * Set `headerClickable` to true (optionally with `onHeaderClick`)
- * to make the title area interactable.
+ * Generic application modal.
+ *
+ * - `required = true` locks the dialog (no close button & outside click disabled).
+ * - Provide `children` for custom content; otherwise a single CTA button is shown.
  */
-export function RequiredModal({
+export function AppModal({
   icon,
   iconKey,
   title,
-  headerClickable = false,
-  onHeaderClick,
   description,
   buttonText,
   redirectTo,
   children,
-}: RequiredModalProps) {
+  required = false,
+}: AppModalProps) {
   const router = useRouter()
+  const [open, setOpen] = React.useState(true)
 
-  /* Resolve icon priority: explicit component ▶︎ mapped key ▶︎ none */
   const Icon = icon ?? (iconKey ? ICON_MAP[iconKey.toLowerCase()] : undefined)
 
+  /* Close handler ignored when required */
+  const close = () => {
+    if (!required) setOpen(false)
+  }
+
   return (
-    <AlertDialog open onOpenChange={() => {}}>
+    <AlertDialog open={required ? true : open} onOpenChange={required ? undefined : setOpen}>
       <AlertDialogContent className='sm:max-w-md'>
-        <AlertDialogHeader>
-          <AlertDialogTitle
-            className={`flex items-center gap-2 ${headerClickable ? 'cursor-pointer' : ''}`}
-            onClick={headerClickable ? onHeaderClick : undefined}
+        {/* Close button (hidden when required) */}
+        {!required && (
+          <button
+            type='button'
+            onClick={close}
+            className='text-muted-foreground hover:text-foreground focus:ring-ring absolute right-4 top-4 rounded-md p-1 focus:outline-none focus:ring-2'
           >
+            <X className='h-4 w-4' aria-hidden='true' />
+            <span className='sr-only'>Close</span>
+          </button>
+        )}
+
+        <AlertDialogHeader>
+          <AlertDialogTitle className='flex items-center gap-2'>
             {Icon && <Icon className='h-5 w-5 text-rose-600' />}
             {title}
           </AlertDialogTitle>
