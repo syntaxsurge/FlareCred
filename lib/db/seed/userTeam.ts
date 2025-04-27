@@ -1,21 +1,16 @@
 import { and, eq } from 'drizzle-orm'
 
-import { hashPassword } from '@/lib/auth/session'
-
 import { db } from '../drizzle'
 import { users, teams, teamMembers } from '../schema'
 
 /**
  * Seed core demo users (admin, candidate, issuer, recruiter), create personal placeholder
- * teams for each, and add everyone to a shared \"Test Team” with the primary admin as owner.
+ * teams for each, and add everyone to a shared "Test Team” with the primary admin as owner.
  *
- * All accounts use the plaintext password: `myPassword`.
+ * Wallet-only authentication means no passwords are stored.
  */
 export async function seedUserTeam() {
   console.log('Seeding users and teams…')
-
-  /* ---------- common demo password ---------- */
-  const passwordHash = await hashPassword('myPassword')
 
   /* ---------- users to seed ---------- */
   const SEED = [
@@ -55,7 +50,7 @@ export async function seedUserTeam() {
     if (!u) {
       ;[u] = await db
         .insert(users)
-        .values({ name, email: lowerEmail, passwordHash, role, walletAddress })
+        .values({ name, email: lowerEmail, role, walletAddress })
         .returning()
       console.log(`✅ Created user ${lowerEmail} (${name})`)
     } else {
@@ -81,7 +76,7 @@ export async function seedUserTeam() {
 
     if (!existingTeam) {
       await db.insert(teams).values({ name: personalName, creatorUserId: u.id })
-      console.log(`✅ Created placeholder team \"${personalName}\"`)
+      console.log(`✅ Created placeholder team "${personalName}"`)
     } else {
       console.log(`ℹ️ Placeholder team for ${lowerEmail} exists`)
     }
@@ -97,9 +92,9 @@ export async function seedUserTeam() {
       .insert(teams)
       .values({ name: sharedName, creatorUserId: adminId })
       .returning()
-    console.log(`✅ Created shared team \"${sharedName}\"`)
+    console.log(`✅ Created shared team "${sharedName}"`)
   } else {
-    console.log(`ℹ️ Shared team \"${sharedName}\" exists`)
+    console.log(`ℹ️ Shared team "${sharedName}" exists`)
   }
 
   /* ---------- add memberships ---------- */
@@ -115,7 +110,7 @@ export async function seedUserTeam() {
 
     if (existing.length === 0) {
       await db.insert(teamMembers).values({ teamId: shared.id, userId, role })
-      console.log(`✅ Added ${email} to \"${sharedName}\" as ${role}`)
+      console.log(`✅ Added ${email} to "${sharedName}" as ${role}`)
     }
   }
 
