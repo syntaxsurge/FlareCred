@@ -1,13 +1,13 @@
 import { redirect } from 'next/navigation'
 
 import { asc, eq } from 'drizzle-orm'
-import { Star } from 'lucide-react'
+import { Star, UserRound } from 'lucide-react'
 
+import { RequiredModal } from '@/components/ui/required-modal'
 import HighlightsBoard, {
   type Credential as HighlightCredential,
 } from '@/components/dashboard/candidate/highlights-board'
 import ProfileHeader from '@/components/dashboard/candidate/profile-header'
-import { ProfileRequiredModal } from '@/components/dashboard/candidate/profile-required-modal'
 import PageCard from '@/components/ui/page-card'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
@@ -33,7 +33,16 @@ export default async function CandidateHighlightsSettings() {
     .limit(1)
 
   /* ------------------ Require profile setup ---------------- */
-  if (!candRow) return <ProfileRequiredModal />
+  if (!candRow)
+    return (
+      <RequiredModal
+        icon={UserRound}
+        title='Profile Required'
+        description='Please complete your candidate profile before accessing Profile Highlights.'
+        buttonText='Complete Profile'
+        redirectTo='/candidate/profile'
+      />
+    )
 
   /* --------------- Credentials + highlights -------------- */
   const creds = await db

@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm'
-import { Bot } from 'lucide-react'
+import { Bot, KeyRound } from 'lucide-react'
 
-import { DidRequiredModal } from '@/components/dashboard/candidate/did-required-modal'
+import { RequiredModal } from '@/components/ui/required-modal'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import PageCard from '@/components/ui/page-card'
 import { db } from '@/lib/db/drizzle'
@@ -25,7 +25,16 @@ export default async function SkillCheckPage() {
     .where(eq(teamMembers.userId, user.id))
     .limit(1)
 
-  if (!did) return <DidRequiredModal />
+  if (!did)
+    return (
+      <RequiredModal
+        icon={KeyRound}
+        title='DID Required'
+        description='You need to create a Decentralised Identifier (DID) for your team before you can continue.'
+        buttonText='Create DID'
+        redirectTo='/candidate/create-did'
+      />
+    )
 
   /* -------------------- Data --------------------- */
   const quizzes = await db.select().from(skillQuizzes)
