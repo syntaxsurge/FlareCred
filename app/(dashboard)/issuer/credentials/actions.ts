@@ -14,6 +14,7 @@ import {
 } from '@/lib/db/schema/candidate'
 import { users, teams, teamMembers } from '@/lib/db/schema/core'
 import { issuers } from '@/lib/db/schema/issuer'
+import { isGithubRepoCredential } from '@/lib/constants/credential'
 
 /* -------------------------------------------------------------------------- */
 /*                               U T I L S                                    */
@@ -64,8 +65,9 @@ export const approveCredentialAction = validatedActionWithUser(
     if (cred.status === CredentialStatus.VERIFIED) return buildError('Credential already verified.')
 
     /* 2b. enforce FDC proof ------------------------------------------------- */
+    let parsedProof: unknown = cred.proofData
     try {
-      const parsedProof =
+      parsedProof =
         typeof cred.proofData === 'string'
           ? (() => {
               try {
@@ -85,7 +87,7 @@ export const approveCredentialAction = validatedActionWithUser(
     let proofTx: string | undefined
     try {
       if (cred.proofType === 'EVM' || cred.proofType === 'PAYMENT') {
-        if (cred.proofData.startsWith('0x') && cred.proofData.length === 66) {
+        if (typeof cred.proofData === 'string' && cred.proofData.startsWith('0x') && cred.proofData.length === 66) {
           proofTx = cred.proofData
         } else {
           const obj = JSON.parse(cred.proofData)
@@ -121,18 +123,32 @@ export const approveCredentialAction = validatedActionWithUser(
     let txHash: string | undefined
 
     if (!vcJsonText) {
+      /* ---------- credentialSubject assembly ---------- */
+      const credentialSubject: Record<string, unknown> = {
+        id: subjectDid,
+        title: cred.title,
+        type: cred.type,
+        candidateName: candRow.candUser.name || candRow.candUser.email || 'Unknown',
+      }
+
+      if (
+        isGithubRepoCredential(cred.type) &&
+        typeof parsedProof === 'object' &&
+        parsedProof !== null &&
+        'request' in parsedProof &&
+        typeof (parsedProof as any).request?.url === 'string'
+      ) {
+        credentialSubject.githubRepo = (parsedProof as any).request.url
+      }
+
       const vcPayload = {
         '@context': ['https://www.w3.org/2018/credentials/v1'],
         type: ['VerifiableCredential', 'FlareCredCredential'],
         issuer: issuer.did,
         issuanceDate: new Date().toISOString(),
-        credentialSubject: {
-          id: subjectDid,
-          title: cred.title,
-          type: cred.type,
-          candidateName: candRow.candUser.name || candRow.candUser.email || 'Unknown',
-        },
-      }
+        credentialSubject,
+      } as const
+
       vcJsonText = JSON.stringify(vcPayload)
       const vcHash = toVcHash(vcJsonText)
 
@@ -189,78 +205,5 @@ export const approveCredentialAction = validatedActionWithUser(
       .where(eq(candidateCredentials.id, cred.id))
 
     return { success: 'Credential verified, proof confirmed, and NFT anchored on Flare.' }
-  },
-)
-
-/* -------------------------------------------------------------------------- */
-/*                              R E J E C T                                   */
-/* -------------------------------------------------------------------------- */
-
-export const rejectCredentialAction = validatedActionWithUser(
-  z.object({ credentialId: z.coerce.number() }),
-  async ({ credentialId }, _, user) => {
-    const [issuer] = await db
-      .select()
-      .from(issuers)
-      .where(eq(issuers.ownerUserId, user.id))
-      .limit(1)
-    if (!issuer) return buildError('Issuer not found.')
-
-    await db
-      .update(candidateCredentials)
-      .set({
-        status: CredentialStatus.REJECTED,
-        verified: false,
-        verifiedAt: new Date(),
-      })
-      .where(
-        and(
-          eq(candidateCredentials.id, credentialId),
-          eq(candidateCredentials.issuerId, issuer.id),
-        ),
-      )
-
-    return { success: 'Credential rejected.' }
-  },
-)
-
-/* -------------------------------------------------------------------------- */
-/*                            U N V E R I F Y                                 */
-/* -------------------------------------------------------------------------- */
-
-export const unverifyCredentialAction = validatedActionWithUser(
-  z.object({ credentialId: z.coerce.number() }),
-  async ({ credentialId }, _, user) => {
-    const [issuer] = await db
-      .select()
-      .from(issuers)
-      .where(eq(issuers.ownerUserId, user.id))
-      .limit(1)
-    if (!issuer) return buildError('Issuer not found.')
-
-    const [cred] = await db
-      .select()
-      .from(candidateCredentials)
-      .where(
-        and(
-          eq(candidateCredentials.id, credentialId),
-          eq(candidateCredentials.issuerId, issuer.id),
-        ),
-      )
-      .limit(1)
-    if (!cred) return buildError('Credential not found for this issuer.')
-    if (cred.status !== CredentialStatus.VERIFIED)
-      return buildError('Only verified credentials can be unverified.')
-
-    await db
-      .update(candidateCredentials)
-      .set({
-        status: CredentialStatus.UNVERIFIED,
-        verified: false,
-        verifiedAt: null,
-      })
-      .where(eq(candidateCredentials.id, cred.id))
-
-    return { success: 'Credential marked unverified.' }
   },
 )
