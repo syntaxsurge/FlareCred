@@ -58,6 +58,20 @@ function buildLink(basePath: string, init: Record<string, string>, overrides: Re
   return `${basePath}${qs ? `?${qs}` : ''}`
 }
 
+/**
+ * Extracts <tx-hash> from a vcJson string if present, else returns null.
+ */
+function getProofTx(vcJson: string | null | undefined): string | null {
+  if (!vcJson) return null
+  try {
+    const obj = JSON.parse(vcJson)
+    if (typeof obj.proofTx === 'string') return obj.proofTx
+  } catch {
+    /* ignore malformed JSON */
+  }
+  return null
+}
+
 /* -------------------------------------------------------------------------- */
 /*                               Row actions                                  */
 /* -------------------------------------------------------------------------- */
@@ -247,6 +261,26 @@ export default function CandidateCredentialsTable({
         header: sortHeader('Status', 'status'),
         sortable: false,
         render: (v) => <StatusBadge status={String(v)} />,
+      },
+      {
+        key: 'proof',
+        header: 'Proof',
+        sortable: false,
+        render: (_v, row) => {
+          const proofTx = getProofTx(row.vcJson)
+          return proofTx ? (
+            <a
+              href={`https://flarescan.com/tx/${proofTx}`}
+              target='_blank'
+              rel='noopener noreferrer'
+              className='text-primary underline'
+            >
+              Verify on Flare
+            </a>
+          ) : (
+            '—'
+          )
+        },
       },
       {
         key: 'id',

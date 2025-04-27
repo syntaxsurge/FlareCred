@@ -22,6 +22,7 @@ export interface RowType {
   type: string
   candidate: string
   status: CredentialStatus
+  vcJson?: string | null
 }
 
 interface Props {
@@ -35,7 +36,7 @@ interface Props {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                 Helpers                                    */
+/*                                 Helpers                                    */
 /* -------------------------------------------------------------------------- */
 
 function buildLink(basePath: string, init: Record<string, string>, overrides: Record<string, any>) {
@@ -48,6 +49,20 @@ function buildLink(basePath: string, init: Record<string, string>, overrides: Re
   return `${basePath}${qs ? `?${qs}` : ''}`
 }
 
+/**
+ * Parses vcJson and returns proofTx if it exists.
+ */
+function getProofTx(vcJson: string | null | undefined): string | null {
+  if (!vcJson) return null
+  try {
+    const obj = JSON.parse(vcJson)
+    if (typeof obj.proofTx === 'string') return obj.proofTx
+  } catch {
+    /* ignore */
+  }
+  return null
+}
+
 /* -------------------------------------------------------------------------- */
 /*                                 Icons                                      */
 /* -------------------------------------------------------------------------- */
@@ -57,7 +72,7 @@ const RejectIcon = (props: LucideProps) => (
 )
 
 /* -------------------------------------------------------------------------- */
-/*                           Row‑level link                                   */
+/*                           Row-level link                                   */
 /* -------------------------------------------------------------------------- */
 
 function RowActions({ row }: { row: RowType }) {
@@ -67,13 +82,13 @@ function RowActions({ row }: { row: RowType }) {
       className='text-primary hover:bg-muted hover:text-foreground inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium'
     >
       <FileSignature className='h-4 w-4' />
-      <span className='hidden sm:inline'>Review &amp; Sign</span>
+      <span className='hidden sm:inline'>Review & Sign</span>
     </Link>
   )
 }
 
 /* -------------------------------------------------------------------------- */
-/*                         Bulk‑selection actions                             */
+/*                         Bulk-selection actions                             */
 /* -------------------------------------------------------------------------- */
 
 function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowType>[] {
@@ -123,7 +138,7 @@ export default function IssuerRequestsTable({
   const router = useRouter()
   const bulkActions = buildBulkActions(router)
 
-  /* --------------------------- Search input ----------------------------- */
+  /* --------------------------- Search input ----------------------------- */
   const [search, setSearch] = React.useState(searchQuery)
   const debounceRef = React.useRef<NodeJS.Timeout | null>(null)
 
@@ -179,6 +194,26 @@ export default function IssuerRequestsTable({
         header: sortableHeader('Status', 'status'),
         sortable: false,
         render: (v) => <StatusBadge status={String(v)} />,
+      },
+      {
+        key: 'proof',
+        header: 'Proof',
+        sortable: false,
+        render: (_v, row) => {
+          const proofTx = getProofTx((row as any).vcJson)
+          return proofTx ? (
+            <a
+              href={`https://flarescan.com/tx/${proofTx}`}
+              target='_blank'
+              rel='noopener noreferrer'
+              className='text-primary underline'
+            >
+              Verify on Flare
+            </a>
+          ) : (
+            '—'
+          )
+        },
       },
       {
         key: 'id',

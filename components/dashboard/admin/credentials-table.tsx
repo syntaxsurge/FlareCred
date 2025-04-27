@@ -30,6 +30,7 @@ export interface RowType {
   candidate: string
   issuer: string | null
   status: string
+  vcJson?: string | null
 }
 
 interface CredentialsTableProps {
@@ -43,7 +44,7 @@ interface CredentialsTableProps {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                               Helpers                                      */
+/*                               Helpers                                      */
 /* -------------------------------------------------------------------------- */
 
 function buildLink(base: string, init: Record<string, string>, overrides: Record<string, any>) {
@@ -56,8 +57,22 @@ function buildLink(base: string, init: Record<string, string>, overrides: Record
   return `${base}${qs ? `?${qs}` : ''}`
 }
 
+/**
+ * Extract proofTx from vcJson string if present.
+ */
+function getProofTx(vcJson: string | null | undefined): string | null {
+  if (!vcJson) return null
+  try {
+    const obj = JSON.parse(vcJson)
+    if (typeof obj.proofTx === 'string') return obj.proofTx
+  } catch {
+    /* ignore */
+  }
+  return null
+}
+
 /* -------------------------------------------------------------------------- */
-/*                              Row‑level actions                             */
+/*                              Row-level actions                             */
 /* -------------------------------------------------------------------------- */
 
 function RowActions({ id }: { id: number }) {
@@ -200,6 +215,26 @@ export default function AdminCredentialsTable({
         header: sortableHeader('Status', 'status'),
         sortable: false,
         render: (v) => <StatusBadge status={String(v)} />,
+      },
+      {
+        key: 'proof',
+        header: 'Proof',
+        sortable: false,
+        render: (_v, row) => {
+          const proofTx = getProofTx((row as any).vcJson)
+          return proofTx ? (
+            <a
+              href={`https://flarescan.com/tx/${proofTx}`}
+              target='_blank'
+              rel='noopener noreferrer'
+              className='text-primary underline'
+            >
+              Verify on Flare
+            </a>
+          ) : (
+            '—'
+          )
+        },
       },
       {
         key: 'id',
