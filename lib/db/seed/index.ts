@@ -2,15 +2,21 @@ import { seedQuizzes } from './quiz'
 import { seedUserTeam } from './userTeam'
 
 /**
- * Sequentially seed core user/team data (requires walletAddress column),
- * then parallel-seed additional demo content.
+ * Seeds wallet-centric demo data.
+ *
+ * 1. Create base users and their personal teams (requires walletAddress).
+ * 2. Populate auxiliary data sets in parallel once the core entities exist.
  */
 async function main() {
   try {
-    /* Wallet-aware users & teams must exist before anything else */
+    /* ------------------------------------------------------------------ */
+    /*                    Core users and personal teams                    */
+    /* ------------------------------------------------------------------ */
     await seedUserTeam()
 
-    /* Independent seeds (no Stripe) */
+    /* ------------------------------------------------------------------ */
+    /*                        Independent demo seeds                       */
+    /* ------------------------------------------------------------------ */
     await Promise.all([seedQuizzes()])
 
     console.log('All seeds completed successfully.')
