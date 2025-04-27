@@ -10,25 +10,19 @@ export function relativeTime(date: Date): string {
   if (seconds < 60) return 'just now'
 
   const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) {
-    return `${minutes} minute${minutes === 1 ? '' : 's'} ago`
-  }
+  if (minutes < 60) return `${minutes} minute${minutes === 1 ? '' : 's'} ago`
 
   const hours = Math.floor(seconds / 3_600)
-  if (hours < 24) {
-    return `${hours} hour${hours === 1 ? '' : 's'} ago`
-  }
+  if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`
 
   const days = Math.floor(seconds / 86_400)
-  if (days < 7) {
-    return `${days} day${days === 1 ? '' : 's'} ago`
-  }
+  if (days < 7) return `${days} day${days === 1 ? '' : 's'} ago`
 
   return date.toLocaleDateString()
 }
 
 /* -------------------------------------------------------------------------- */
-/*                            D A T E   U T I L I T Y                         */
+/*                               D A T E  U T I L S                           */
 /* -------------------------------------------------------------------------- */
 
 /**
@@ -49,4 +43,16 @@ export function addMonths(date: Date, n: number): Date {
   }
 
   return d
+}
+
+/**
+ * Format a `Date` object as an ISO-8601 string without modification.
+ * Provided as a dedicated helper for consistency across the app and
+ * to emphasise UTC semantics when serialising timestamps.
+ *
+ * @example
+ *   formatIso(new Date()) // "2025-04-28T12:34:56.789Z"
+ */
+export function formatIso(date: Date): string {
+  return date.toISOString()
 }
