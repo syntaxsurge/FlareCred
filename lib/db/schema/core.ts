@@ -11,7 +11,6 @@ export const users = pgTable('users', {
   email: varchar('email', { length: 255 }).notNull().unique(),
   /** On-chain wallet that pays gas and owns the team DID */
   walletAddress: varchar('wallet_address', { length: 42 }).notNull().unique(),
-  passwordHash: text('password_hash').notNull(),
   // One of: 'admin', 'recruiter', 'issuer', 'candidate'
   role: varchar('role', { length: 20 }).notNull().default('candidate'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
