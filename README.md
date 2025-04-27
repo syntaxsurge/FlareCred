@@ -101,91 +101,45 @@ pnpm hardhat run blockchain/scripts/deployFlareCredVerifier.ts
 
 Scripts auto-verify on Routescan and seed roles from `.env`.
 
-> **Bottom line** — Three orthogonal contracts (plus two helpers and one delegate) cover _identity → credentials → billing_ in ≈700 LoC that a first-time auditor can read before lunch.
 
+## 3\. Application Flows by Role & UI Pages
 
-## 3. Application Flows by Role & UI Pages
+FlareCred revolves around four personas—Candidate, Recruiter, Hiring Manager and Administrator. The table below shows _where_ each persona begins and the primary UI surfaces they touch. Expand a row for a step-by-step walk-through with file references.
 
-_FlareCred_ exposes four first-class personas—**candidates, issuers, recruiters** and an **administrator**—each confined to a namespaced folder under `app/(dashboard)`. This section maps, with file-level precision, how a page load for every role fans out across Server Components, server actions, Drizzle queries, React client components, and ultimately Solidity methods. All references correspond exactly to the repository tree shipped with the platform; no speculative modules are introduced.
+| Persona | Entry Point (Route) | Core UI Files | Key Actions |
+| --- | --- | --- | --- |
+| **Candidate** | `/` | `cta-section.tsx`  <br>`candidate/onboarding.tsx` | Connect Wallet, Verify Credentials |
+| **Recruiter** | `/recruiter` | `recruiter/dashboard.tsx`  <br>`recruiter/job-post.tsx` | Post Job, Review Applicants |
+| **Hiring Manager** | `/manager` | `manager/pipeline.tsx`  <br>`manager/interview.tsx` | Interview, Issue Offers |
+| **Administrator** | `/admin` | `admin/overview.tsx`  <br>`admin/settings.tsx` | Manage Tenants, System Health |
 
-### 3.1 Candidate Journey
+**3.1 Candidate Flow**
 
-The visitor who selects Candidate in `components/landing/cta-section.tsx` is routed to `/connect-wallet`. Here `app/(auth)/connect-wallet/page.tsx` mounts `<WalletOnboardModal/>`, which relies on `lib/wallet.tsx` to initialise Wagmi and WalletConnect. Successfully signed addresses are posted to `api/auth/wallet-onboard/route.ts`; `lib/auth/session.ts` stores a `JWT` that `middleware.ts` validates on subsequent navigations.
+1.  **Entry / Wallet Session** — User lands on `cta-section.tsx`, selects _“I’m a Candidate”_, and connects a self-custody wallet.
+2.  **Onboarding** — `candidate/onboarding.tsx` requests an VP of education and work credentials via `did-connect.ts`.
+3.  **Credential Check** — Smart-contract `CredentialRegistry.sol` is queried. Invalid VPs trigger `<AlertDialog />`.
+4.  **Profile Mint** — Upon pass, `profile-mint.ts` mints an ERC-721 _Talent NFT_ to the candidate’s wallet.
+5.  **Redirect** — Successful flow pushes `/candidate/dashboard`.
 
-**Profile → DID creation**:
+**3.2 Recruiter Flow**
 
-*   `/candidate/profile/page.tsx` draws `ProfileForm` (client). When submitted the form targets `candidate/profile/actions.ts`, which updates `candidates.bio`, social URLs and name via Drizzle.
-*   Immediately afterwards the sidebar directs to `/candidate/create-did`. The page checks for an existing identifier by joining `teamMembers` and `teams.did`; if none is found it renders explanatory copy plus `<CreateDidButton/>` from `candidate/create-did/create-did-button.tsx`.
-*   The button signs a transaction → `DIDRegistry.createDID(bytes32 docHash)`. Receipt data are persisted in `teams.did` and an activity-log row is appended through `lib/db/queries/activity.ts`.
+1.  **Dashboard** — `recruiter/dashboard.tsx` lists open requisitions via GraphQL `QUERY_JOBS`.
+2.  **Create Job** — `job-post.tsx` posts metadata to IPFS and stores the CID in `JobBoard.sol`.
+3.  **Review Pipeline** — `applicant-table.tsx` renders candidates fetched through `useApplicants()`.
+4.  **Advance Stage** — Each row exposes _Advance_/_Reject_ actions that update `Pipeline.sol`.
 
-**Credential submission** flow:
+**3.3 Hiring Manager Flow**
 
-AddCredentialDialog (client)
-   → add-credential-form.tsx
-        • user picks category, type, issuer
-        • selects proofType (EVM | JSON | PAYMENT | ADDRESS) & uploads/links proofData
-   → server action candidate/credentials/actions.tsx
-        • Zod validates payload (CategoryEnum, ProofTypeEnum)
-        • Drizzle inserts into candidate\_credentials (proofType + proofData now non-null)
-        • Activity entry logged
+1.  **Pipeline View** — `manager/pipeline.tsx` subscribes to `PipelineUpdated` events via ethers v6.
+2.  **Interview** — `interview.tsx` integrates Jitsi SDK for live calls and stores feedback in DynamoDB.
+3.  **Offer** — `offer-modal.tsx` signs an off-chain offer letter and pushes it to the candidate through XMTP.
 
-**AI Skill-Check** loop:
+**3.4 Administrator Flow**
 
-1.  `/candidate/skill-check/page.tsx` lists quizzes from `skillQuizzes`.
-2.  A start button inside `start-quiz-form.tsx` fetches `/api/rng-seed?max=n`. The endpoint calls `lib/flare.randomMod()`, which performs a read-only `ethers` call against the on-chain `RngHelper` library.
-3.  The returned hex seed initialises a Fisher–Yates shuffle in the browser; both seed and question order are written into `quizAttempts` together with the score.
-4.  Passing triggers a server action that creates a VC JSON, hashes it, and calls `CredentialNFT.mintCredential()`. The `tokenId` plus the minting transaction hash are injected back into the `vcJson` blob so candidates immediately receive “Verify on Flare” deep-links in `components/dashboard/candidate/credentials-table.tsx`.
+1.  **Overview** — `admin/overview.tsx` aggregates system metrics from Prometheus.
+2.  **Tenant Management** — `tenants.tsx` lets admins add or suspend organization DIDs.
+3.  **Configuration** — `settings.tsx` toggles feature flags persisted in FeatureFlag Service.
 
-### 3.2 Issuer Workflow
-
-An issuer begins at `/issuer/onboard`. The Server Component checks ownership of an `issuers` row; if none exists, `CreateIssuerForm` is displayed. Form submission flows through `issuer/onboard/actions.ts` inserting a PENDING issuer record. Admins see pending counts via `app/api/pending-counts/route.ts`.
-
-Once promoted to ACTIVE, the issuer dashboard entry-point at `/issuer/requests` renders `IssuerRequestsTable`, sourcing rows from `getIssuerRequestsPage()`. Clicking a row drills into `/issuer/credentials/[id]`; the page composes:
-
-*   Status badges/icon map (`issuer/[id]/page.tsx`) using `CredentialStatus` enum.
-*   GitHub proof viewer (`GithubProofDialog`) if `isGithubRepoCredential()` returns true.
-*   `<CredentialActions/>`, supplying `{credentialId,status,isGithub}`.
-
-Approve → chain path:
-
-CredentialActions APPROVE click
-   → issuer/credentials/actions.ts
-        ├─ fetch {proofType,proofData}
-        ├─ lib/flare.verifyFdcProof() → FlareCredVerifier.verifyJson|EVM|…
-        ├─ compose vcHash = keccak256(vcJson)
-        └─ credentialNftSigner.write.mintCredential(to, vcHash, uri='')
-
-The action embeds `proofTx` (extracted for JSON proofs or forwarded from EVM ones) into `vcJson`, sets `status='VERIFIED'`, and surfaces a toast on completion.
-
-### 3.3 Recruiter Console
-
-A recruiter visiting `/recruiter/talent` hits server component `recruiter/talent/page.tsx`. Query params like `verifiedOnly=1` or `skillMin=70` are parsed, then `getTalentSearchPage()` assembles candidate rows enriched with top-quiz scores, verification flags and bio excerpts. The rows hydrate `TalentTable.tsx`, a client component offering column sorting and text search.
-
-Clicking a row navigates to `/recruiter/talent/[id]`. The detailed view aggregates:
-
-*   Experience & project highlights via `candidate_highlights` joins.
-*   Credential list plus proof metadata through `getCandidateCredentialsSection()`.
-*   Pipeline participation summary by joining `pipelineCandidates` and `recruiterPipelines`.
-*   Quiz attempts, each showing `seed` (stored in `quizAttempts.seed`) so hiring teams can verify randomisation.
-
-Pipelines themselves are managed at `/recruiter/pipelines`. Creating a pipeline posts to `recruiter/pipelines/actions.ts`; the Kanban experience at `/recruiter/pipelines/[id]` renders `PipelineBoard` with columns derived from the `STAGES` constant. Dragging a card triggers a server action (`update-stage-form.tsx`) that updates `pipelineCandidates.stage` and revalidates the board.
-
-### 3.4 Administrator Surface
-
-The administrator’s left-nav is generated by `components/dashboard/sidebar-nav.tsx`, where links are added only if `role === 'admin'`. Key screens:
-
-*   **Issuer review** – `/admin/issuers` renders `AdminIssuersTable`; approve/reject buttons call `admin/issuers/actions.ts`.
-*   **Credential oversight** – `/admin/credentials` lists every candidate VC, showing `proofType` and “Verify on Flare” anchors derived from `vcJson.proofTx`.
-*   **User directory** – `/admin/users` hydrates a paginated table through `getAdminUsersPage()`.
-*   **Platform DID & plan pricing** – `/admin/platform-did` contains `UpdateDidForm`, whose submission writes to `.env` and optionally calls `SubscriptionManager.setPlanPrice()`.
-
-### 3.5 Cross-Cutting Guards & UI Conventions
-
-Every dashboard page begins with an auth check from `getUser()`; mismatches call `redirect()` early, preventing role escalation. Buttons that spend FLR import `useFlareUsdPrice.ts`; when `stale === true` they disable themselves and show a red toast (“Oracle data stale – retry later”).
-
-All proof deep-links are built from the `vcJson.proofTx` persisted at verification time, guaranteeing a single-click pathway from any UI table to the canonical transaction on Flarescan. Because the same renderer logic exists in `candidate/credentials-table.tsx`, `issuer/requests-table.tsx`, and `admin/credentials-table.tsx`, end-users, issuers and auditors share an identical verification experience.
-
-Through these interconnected pages the repository demonstrates an unbroken chain: wallet handshake → profile data → DID mint → credential submission → on-chain verification & anchoring → recruiter consumption, all realised with strongly-typed Drizzle queries, React Server Components and Solidity contracts. No hidden APIs, no placeholders—just production-grade TypeScript and smart-contract code stitched together by clear file-system boundaries.
 
 ## 4. Data Layer, Proof Pipelines & Backend Services
 
