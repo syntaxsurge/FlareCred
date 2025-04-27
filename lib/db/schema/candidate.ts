@@ -72,7 +72,11 @@ export const candidateCredentials = pgTable('candidate_credentials', {
   issuerId: integer('issuer_id').references(() => issuers.id),
   category: credentialCategoryEnum('category').notNull().default(CredentialCategory.OTHER),
   title: varchar('title', { length: 200 }).notNull(),
-  /** Fine-grained type identifier (e.g. 'bachelor', 'github_repo') */
+  /**
+   * Fine-grained type identifier (e.g. 'bachelor', 'github_repo').
+   * Currently recognised sub-types include **'github_repo'** for GitHub
+   * repository contribution credentials introduced in the Bonus Track.
+   */
   type: varchar('type', { length: 50 }).notNull(),
   fileUrl: text('file_url'),
   /** ----- NEW: FDC proof tracking ------------------------------------- */
