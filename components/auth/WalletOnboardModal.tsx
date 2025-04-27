@@ -88,6 +88,7 @@ export default function WalletOnboardModal({ isConnected, user }: Props) {
         }
 
         toast.success('Account created!', { id: toastId })
+        /* allow programmatic close only after successful creation */
         setOpen(false)
         router.refresh()
       } catch (err: any) {
@@ -101,8 +102,17 @@ export default function WalletOnboardModal({ isConnected, user }: Props) {
   /* ---------------------------------------------------------------------- */
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className='sm:max-w-md'>
+    <Dialog
+      open={open}
+      /* ignore external close attempts */
+      onOpenChange={() => {}}
+    >
+      <DialogContent
+        className='sm:max-w-md'
+        /* block outside-click and ESC key dismissals */
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle className='text-xl font-semibold'>
             Complete your FlareCred profile
