@@ -1,18 +1,49 @@
 'use client'
 
-import { Users } from 'lucide-react'
+import {
+  ArrowRight,
+  Loader2,
+  RotateCcw,
+  Users,
+} from 'lucide-react'
+import {
+  useAccount,
+  useSwitchChain,
+  useWalletClient,
+  usePublicClient,
+} from 'wagmi'
+import { parseAbi } from 'viem'
+import { toast } from 'sonner'
 
 import MembersTable, { RowType } from '@/components/dashboard/settings/members-table'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
+import { PLAN_META } from '@/lib/constants/pricing'
 
 import { InviteTeamMember } from './invite-team'
 
+/* -------------------------------------------------------------------------- */
+/*                               Constants                                    */
+/* -------------------------------------------------------------------------- */
+
+const SUBSCRIPTION_MANAGER_ADDRESS = process.env
+  .SUBSCRIPTION_MANAGER_ADDRESS as `0x${string}` | undefined
+
+const TARGET_CHAIN_ID = Number(process.env.NEXT_PUBLIC_FLARE_CHAIN_ID ?? '114')
+
+const SUBSCRIPTION_MANAGER_ABI = parseAbi([
+  'function paySubscription(address team,uint8 planKey) payable',
+])
+
+/* -------------------------------------------------------------------------- */
+/*                                   Types                                    */
+/* -------------------------------------------------------------------------- */
+
 interface TeamMeta {
   planName: string | null
-  subscriptionStatus: string | null
+  subscriptionPaidUntil: Date | string | null
   did: string | null
 }
 
@@ -30,6 +61,85 @@ interface SettingsProps {
   initialParams: Record<string, string>
 }
 
+/* -------------------------------------------------------------------------- */
+/*                       Renew Subscription Button                            */
+/* -------------------------------------------------------------------------- */
+
+function RenewSubscriptionButton({ planName }: { planName: 'base' | 'plus' }) {
+  const { address, chain, isConnected } = useAccount()
+  const { switchChainAsync } = useSwitchChain()
+  const { data: walletClient } = useWalletClient()
+  const publicClient = usePublicClient()
+
+  const [pending, setPending] = useState(false)
+
+  const meta = PLAN_META.find((p) => p.key === planName)
+  const planKey: 1 | 2 = planName === 'base' ? 1 : 2
+  const priceWei = meta?.priceWei ?? 0n
+
+  async function renew() {
+    if (pending) return
+    if (!SUBSCRIPTION_MANAGER_ADDRESS) {
+      toast.error('Subscription manager address missing.')
+      return
+    }
+    if (!isConnected || !walletClient || !address) {
+      toast.error('Please connect your wallet first.')
+      return
+    }
+
+    setPending(true)
+    const toastId = toast.loading('Preparing renewal…')
+
+    try {
+      /* Network */
+      if (chain?.id !== TARGET_CHAIN_ID) {
+        toast.loading('Switching network…', { id: toastId })
+        await switchChainAsync({ chainId: TARGET_CHAIN_ID })
+      }
+
+      /* Contract call */
+      toast.loading('Awaiting wallet signature…', { id: toastId })
+      const txHash = await walletClient.writeContract({
+        address: SUBSCRIPTION_MANAGER_ADDRESS,
+        abi: SUBSCRIPTION_MANAGER_ABI,
+        functionName: 'paySubscription',
+        args: [address, planKey],
+        value: priceWei,
+      })
+
+      toast.loading(`Tx sent: ${txHash.slice(0, 10)}…`, { id: toastId })
+      await publicClient?.waitForTransactionReceipt({ hash: txHash })
+      toast.success('Subscription renewed ✅', { id: toastId })
+      location.reload()
+    } catch (err: any) {
+      toast.error(err?.shortMessage || err?.message || 'Transaction failed.', { id: toastId })
+    } finally {
+      setPending(false)
+    }
+  }
+
+  return (
+    <Button onClick={renew} disabled={pending} variant='outline'>
+      {pending ? (
+        <>
+          <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+          Processing…
+        </>
+      ) : (
+        <>
+          Renew Subscription
+          <RotateCcw className='ml-2 h-4 w-4' />
+        </>
+      )}
+    </Button>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+/*                               Settings Card                                */
+/* -------------------------------------------------------------------------- */
+
 export function Settings({
   team,
   rows,
@@ -43,6 +153,13 @@ export function Settings({
   basePath,
   initialParams,
 }: SettingsProps) {
+  const paidUntilDate =
+    team.subscriptionPaidUntil ? new Date(team.subscriptionPaidUntil) : null
+  const now = new Date()
+  const isActive = paidUntilDate && paidUntilDate > now
+
+  const planLabel = team.planName ? team.planName.charAt(0).toUpperCase() + team.planName.slice(1) : 'Free'
+
   return (
     <PageCard
       icon={Users}
@@ -58,20 +175,24 @@ export function Settings({
           <CardContent>
             <div className='flex flex-col justify-between gap-6 sm:flex-row'>
               <div>
-                <p className='font-medium'>Current Plan: {team.planName || 'Free'}</p>
+                <p className='font-medium'>Current Plan: {planLabel}</p>
                 <p className='text-muted-foreground text-sm'>
-                  {team.subscriptionStatus === 'active'
-                    ? 'Billed monthly'
-                    : team.subscriptionStatus === 'trialing'
-                      ? 'Trial period'
-                      : 'No active subscription'}
+                  {isActive && paidUntilDate
+                    ? `Active until ${paidUntilDate.toLocaleDateString()}`
+                    : 'No active subscription'}
                 </p>
               </div>
-              <form action='/api/stripe/portal'>
-                <Button type='submit' variant='outline'>
-                  Manage Subscription
+
+              {team.planName === 'base' || team.planName === 'plus' ? (
+                <RenewSubscriptionButton planName={team.planName} />
+              ) : (
+                <Button asChild variant='outline'>
+                  <a href='/pricing' className='flex items-center gap-2'>
+                    Upgrade Plan
+                    <ArrowRight className='h-4 w-4' />
+                  </a>
                 </Button>
-              </form>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -85,7 +206,7 @@ export function Settings({
             {team.did ? (
               <>
                 <p className='text-sm'>DID:</p>
-                <p className='font-semibold break-all'>{team.did}</p>
+                <p className='break-all font-semibold'>{team.did}</p>
               </>
             ) : (
               <p className='text-muted-foreground text-sm'>

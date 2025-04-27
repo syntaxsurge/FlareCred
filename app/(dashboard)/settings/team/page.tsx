@@ -58,7 +58,7 @@ export default async function TeamSettingsPage({
     .select({
       id: teams.id,
       planName: teams.planName,
-      subscriptionStatus: teams.subscriptionStatus,
+      subscriptionPaidUntil: teams.subscriptionPaidUntil,
       did: teams.did,
     })
     .from(teams)

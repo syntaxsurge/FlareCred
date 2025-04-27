@@ -34,7 +34,8 @@ export default async function ActivityPage({
   const sizeRaw = Number(getParam(params, 'size') ?? '10')
   const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
 
-  const sort = getParam(params, 'sort') ?? 'timestamp'
+  /* Only timestamp sorting is supported after Stripe removal */
+  const sort = 'timestamp'
   const order = getParam(params, 'order') === 'asc' ? 'asc' : 'desc'
   const searchTerm = (getParam(params, 'q') ?? '').trim()
 
@@ -43,8 +44,8 @@ export default async function ActivityPage({
     user.id,
     page,
     pageSize,
-    sort as 'timestamp' | 'action',
-    order as 'asc' | 'desc',
+    sort,
+    order,
     searchTerm,
   )
 
@@ -62,7 +63,6 @@ export default async function ActivityPage({
     if (val) initialParams[k] = val
   }
   add('size')
-  add('sort')
   add('order')
   if (searchTerm) initialParams['q'] = searchTerm
 
