@@ -1,7 +1,7 @@
 import { asc, desc, ilike, sql } from 'drizzle-orm'
 
 import CandidatesTable, { type RowType } from '@/components/candidate-directory/candidates-table'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { db } from '@/lib/db/drizzle'
 import {
@@ -9,6 +9,7 @@ import {
   candidateCredentials as credT,
   users as usersT,
 } from '@/lib/db/schema'
+import { Users } from 'lucide-react'
 
 export const revalidate = 0
 
@@ -102,39 +103,29 @@ export default async function CandidateDirectoryPage({
 
   /* ------------------------------- View --------------------------------- */
   return (
-    <section className='mx-auto max-w-7xl space-y-10'>
-      <header className='space-y-2'>
-        <h1 className='text-3xl font-extrabold tracking-tight'>Candidate Directory</h1>
-        <p className='text-muted-foreground max-w-2xl text-sm'>
-          Browse public candidate profiles. Use the search box, sortable headers and pagination
-          controls to find talent quickly.
-        </p>
-      </header>
+    <PageCard
+      icon={Users}
+      title='Candidate Directory'
+      description='Browse public candidate profiles. Use the search box, sortable headers and pagination controls to find talent quickly.'
+    >
+      <div className='space-y-4 overflow-x-auto'>
+        <CandidatesTable
+          rows={rows}
+          sort={sort}
+          order={order as 'asc' | 'desc'}
+          basePath={BASE_PATH}
+          initialParams={initialParams}
+          searchQuery={searchTerm}
+        />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Candidates</CardTitle>
-        </CardHeader>
-
-        <CardContent className='overflow-x-auto'>
-          <CandidatesTable
-            rows={rows}
-            sort={sort}
-            order={order as 'asc' | 'desc'}
-            basePath={BASE_PATH}
-            initialParams={initialParams}
-            searchQuery={searchTerm}
-          />
-
-          <TablePagination
-            page={page}
-            hasNext={hasNext}
-            basePath={BASE_PATH}
-            initialParams={initialParams}
-            pageSize={pageSize}
-          />
-        </CardContent>
-      </Card>
-    </section>
+        <TablePagination
+          page={page}
+          hasNext={hasNext}
+          basePath={BASE_PATH}
+          initialParams={initialParams}
+          pageSize={pageSize}
+        />
+      </div>
+    </PageCard>
   )
 }

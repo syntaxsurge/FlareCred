@@ -2,7 +2,7 @@ import { asc, desc, ilike, or, and, eq } from 'drizzle-orm'
 
 import IssuerFilters from '@/components/issuer-directory/issuer-filters'
 import IssuersTable, { type RowType } from '@/components/issuer-directory/issuers-table'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { db } from '@/lib/db/drizzle'
 import {
@@ -11,6 +11,7 @@ import {
   IssuerCategory,
   IssuerIndustry,
 } from '@/lib/db/schema/issuer'
+import { ShieldCheck } from 'lucide-react'
 
 /* -------------------------------------------------------------------------- */
 /*                               TYPE HELPERS                                 */
@@ -24,6 +25,10 @@ export const revalidate = 0
 type Query = Record<string, string | string[] | undefined>
 const BASE_PATH = '/issuers'
 const first = (p: Query, k: string) => (Array.isArray(p[k]) ? p[k]?.[0] : p[k])
+
+/* -------------------------------------------------------------------------- */
+/*                                    PAGE                                    */
+/* -------------------------------------------------------------------------- */
 
 export default async function IssuerDirectoryPage({
   searchParams,
@@ -139,50 +144,38 @@ export default async function IssuerDirectoryPage({
   /*                                View                                    */
   /* ---------------------------------------------------------------------- */
   return (
-    <section className='mx-auto max-w-7xl space-y-10'>
-      <header className='space-y-2'>
-        <h1 className='text-3xl font-extrabold tracking-tight'>Verified Issuers</h1>
-        <p className='text-muted-foreground max-w-2xl text-sm'>
-          Browse all verified organisations. Use the search box, category and industry filters,
-          sortable headers, and pagination controls to quickly locate issuers.
-        </p>
-      </header>
+    <PageCard
+      icon={ShieldCheck}
+      title='Verified Issuers'
+      description='Browse all verified organisations. Use the search box, category and industry filters, sortable headers, and pagination controls to quickly locate issuers.'
+    >
+      <div className='space-y-4 overflow-x-auto'>
+        <IssuerFilters
+          basePath={BASE_PATH}
+          initialParams={initialParams}
+          categories={Object.values(IssuerCategory)}
+          industries={Object.values(IssuerIndustry)}
+          selectedCategory={validCategory ?? ''}
+          selectedIndustry={validIndustry ?? ''}
+        />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Issuer Directory</CardTitle>
-        </CardHeader>
+        <IssuersTable
+          rows={rows}
+          sort={sort}
+          order={order as 'asc' | 'desc'}
+          basePath={BASE_PATH}
+          initialParams={initialParams}
+          searchQuery={searchTerm}
+        />
 
-        <CardContent className='overflow-x-auto'>
-          <div className='mb-4'>
-            <IssuerFilters
-              basePath={BASE_PATH}
-              initialParams={initialParams}
-              categories={Object.values(IssuerCategory)}
-              industries={Object.values(IssuerIndustry)}
-              selectedCategory={validCategory ?? ''}
-              selectedIndustry={validIndustry ?? ''}
-            />
-          </div>
-
-          <IssuersTable
-            rows={rows}
-            sort={sort}
-            order={order as 'asc' | 'desc'}
-            basePath={BASE_PATH}
-            initialParams={initialParams}
-            searchQuery={searchTerm}
-          />
-
-          <TablePagination
-            page={page}
-            hasNext={hasNext}
-            basePath={BASE_PATH}
-            initialParams={initialParams}
-            pageSize={pageSize}
-          />
-        </CardContent>
-      </Card>
-    </section>
+        <TablePagination
+          page={page}
+          hasNext={hasNext}
+          basePath={BASE_PATH}
+          initialParams={initialParams}
+          pageSize={pageSize}
+        />
+      </div>
+    </PageCard>
   )
 }
