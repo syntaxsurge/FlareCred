@@ -44,16 +44,34 @@ export default function SiteHeader() {
   const router = useRouter()
 
   /* Wallet connection state */
-  const { isConnected } = useAccount({
+  const { isConnected, address } = useAccount({
+    /* Auto-refresh UI when the user disconnects */
     onDisconnect() {
-      /* Explicit user-triggered disconnect: clear server session then refresh */
       fetch('/api/auth/signout', { method: 'POST' }).finally(() => {
         router.refresh()
       })
     },
+    /* Auto-refresh UI when the wallet (re)connects */
+    async onConnect({ address }) {
+      if (!address) {
+        router.refresh()
+        return
+      }
+      /* Ensure server sets/updates the session cookie, then refresh UI */
+      try {
+        await fetch(`/api/auth/wallet-status?address=${address}`, {
+          method: 'GET',
+          cache: 'no-store',
+        })
+      } catch {
+        /* Ignore network errors – we still refresh */
+      } finally {
+        router.refresh()
+      }
+    },
   })
 
-  /* User promise required by downstream components (e.g. WalletOnboardModal) */
+  /* User promise required by downstream components */
   const { userPromise } = useUser()
   const [user, setUser] = useState<Awaited<typeof userPromise> | null>(null)
 
