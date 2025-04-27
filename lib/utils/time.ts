@@ -26,3 +26,27 @@ export function relativeTime(date: Date): string {
 
   return date.toLocaleDateString()
 }
+
+/* -------------------------------------------------------------------------- */
+/*                            D A T E   U T I L I T Y                         */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Return a new `Date` advanced by `n` calendar months.
+ *
+ * @example
+ *   addMonths(new Date('2025-01-31'), 1) // → 2025-02-28 (handles overflow)
+ */
+export function addMonths(date: Date, n: number): Date {
+  const d = new Date(date) // clone
+  const day = d.getDate()
+
+  d.setMonth(d.getMonth() + n)
+
+  /* Handle month overflow (e.g. 31 Jan + 1 month → 28/29 Feb) */
+  if (d.getDate() < day) {
+    d.setDate(0) // step back to last day of previous month
+  }
+
+  return d
+}
