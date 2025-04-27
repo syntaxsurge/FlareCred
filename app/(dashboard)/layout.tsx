@@ -109,10 +109,15 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     adminPendingIssuers: 0,
   })
 
-  /* Resolve user once (suspense-safe) */
+  /* Resolve user once (supports promise OR plain object) */
   useEffect(() => {
     let mounted = true
-    userPromise.then((u) => mounted && setUser(u))
+    const maybe = userPromise as unknown
+    if (maybe && typeof maybe === 'object' && typeof (maybe as any).then === 'function') {
+      ;(maybe as Promise<any>).then((u) => mounted && setUser(u))
+    } else {
+      setUser(maybe as any)
+    }
     return () => {
       mounted = false
     }
