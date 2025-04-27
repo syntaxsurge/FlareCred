@@ -45,28 +45,28 @@ export default function SiteHeader() {
 
   /* Wallet connection state */
   const { isConnected, address } = useAccount({
-    /* Auto-refresh UI when the user disconnects */
+    /* When the user disconnects, clear the session then redirect
+       to the wallet-connect screen so the UI resets cleanly. */
     onDisconnect() {
       fetch('/api/auth/signout', { method: 'POST' }).finally(() => {
-        router.refresh()
+        router.replace('/connect-wallet')
       })
     },
-    /* Auto-refresh UI when the wallet (re)connects */
+    /* When the wallet (re)connects, ensure the backend refreshes the
+       session cookie, then navigate to the dashboard which forces the
+       server to re-evaluate role-based layouts without a manual reload. */
     async onConnect({ address }) {
       if (!address) {
-        router.refresh()
+        router.replace('/connect-wallet')
         return
       }
-      /* Ensure server sets/updates the session cookie, then refresh UI */
       try {
         await fetch(`/api/auth/wallet-status?address=${address}`, {
           method: 'GET',
           cache: 'no-store',
         })
-      } catch {
-        /* Ignore network errors – we still refresh */
       } finally {
-        router.refresh()
+        router.replace('/dashboard')
       }
     },
   })
@@ -102,7 +102,7 @@ export default function SiteHeader() {
     if (!isConnected && user && !signoutAttemptedRef.current) {
       signoutAttemptedRef.current = true
       fetch('/api/auth/signout', { method: 'POST' }).finally(() => {
-        router.refresh()
+        router.replace('/connect-wallet')
         signoutAttemptedRef.current = false
       })
     }
