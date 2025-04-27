@@ -54,10 +54,16 @@ export async function setSession(user: NewUser) {
     expires: expiresInOneDay.toISOString(),
   }
   const encryptedSession = await signToken(session)
+
+  /* Use Secure cookies only in production so development (HTTP) refreshes
+     still include the session and avoid unwanted redirects. */
+  const isProd = process.env.NODE_ENV === 'production'
+
   ;(await cookies()).set('session', encryptedSession, {
     expires: expiresInOneDay,
     httpOnly: true,
-    secure: true,
+    secure: isProd,
     sameSite: 'lax',
+    path: '/', // ensure cookie is sent on all routes
   })
 }
