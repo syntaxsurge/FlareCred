@@ -25,9 +25,10 @@ const {
   NEXT_PUBLIC_CREDENTIAL_NFT_ADDRESS: _NEXT_PUBLIC_CREDENTIAL_NFT_ADDRESS,
   NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS: _NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS,
   NEXT_PUBLIC_FDC_VERIFIER_ADDRESS: _NEXT_PUBLIC_FDC_VERIFIER_ADDRESS,
-  /** ------------- NEW ORACLE HELPER ADDRESS ----------------------------- */
+  /* ------------ Oracle & RNG helper addresses --------------------------- */
   NEXT_PUBLIC_FTSO_HELPER_ADDRESS: _NEXT_PUBLIC_FTSO_HELPER_ADDRESS,
-  /** --------------------------------------------------------------------- */
+  NEXT_PUBLIC_RNG_HELPER_ADDRESS: _NEXT_PUBLIC_RNG_HELPER_ADDRESS,
+  /* --------------------------------------------------------------------- */
   PRIVATE_KEY,
 } = process.env as Record<string, string | undefined>
 
@@ -49,12 +50,17 @@ const NEXT_PUBLIC_FDC_VERIFIER_ADDRESS = assertAddress(
   'NEXT_PUBLIC_FDC_VERIFIER_ADDRESS',
   _NEXT_PUBLIC_FDC_VERIFIER_ADDRESS,
 )
-/** ---------------------- ORACLE HELPER ADDRESS -------------------------- */
 const NEXT_PUBLIC_FTSO_HELPER_ADDRESS = assertAddress(
   'NEXT_PUBLIC_FTSO_HELPER_ADDRESS',
   _NEXT_PUBLIC_FTSO_HELPER_ADDRESS,
 )
+/** ----------------------- RNG helper address ---------------------------- */
+const NEXT_PUBLIC_RNG_HELPER_ADDRESS = assertAddress(
+  'NEXT_PUBLIC_RNG_HELPER_ADDRESS',
+  _NEXT_PUBLIC_RNG_HELPER_ADDRESS,
+)
 /** ---------------------------------------------------------------------- */
+
 const CHAIN_ID = Number(NEXT_PUBLIC_FLARE_CHAIN_ID ?? '114')
 
 /* -------------------------------------------------------------------------- */
@@ -107,6 +113,12 @@ const FTSO_HELPER_ABI = [
 ] as const
 /** ------------------------------------------------------------------------ */
 
+/** ------------------ RNG HELPER ABI & INTERFACE -------------------------- */
+const RNG_HELPER_ABI = [
+  'function randomMod(uint256) view returns (uint256)',
+] as const
+/** ------------------------------------------------------------------------ */
+
 /* -------------------------------------------------------------------------- */
 /*                            R E A D  C O N T R A C T S                      */
 /* -------------------------------------------------------------------------- */
@@ -154,6 +166,25 @@ export async function readFlrUsdPriceWei(): Promise<{
  */
 export function formatUsd(priceWei: bigint): number {
   return Number(priceWei) / 1e18
+}
+
+/* -------------------------------------------------------------------------- */
+/*                      R N G   R A N D O M   U T I L I T Y                   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Fetches a verifiable random number bounded to `[0, bound - 1]` using
+ * RngHelper.randomMod on-chain, returning the uint256 as a bigint.
+ */
+export async function randomMod(bound: number | bigint): Promise<bigint> {
+  if (typeof bound === 'number' && bound <= 0) throw new Error('bound must be positive')
+  if (typeof bound === 'bigint' && bound <= 0n) throw new Error('bound must be positive')
+
+  const iface = new ethers.Interface(RNG_HELPER_ABI)
+  const data = iface.encodeFunctionData('randomMod', [BigInt(bound)])
+  const raw = await provider.call({ to: NEXT_PUBLIC_RNG_HELPER_ADDRESS, data })
+  const [rnd] = iface.decodeFunctionResult('randomMod', raw) as [bigint]
+  return rnd
 }
 
 /* -------------------------------------------------------------------------- */
