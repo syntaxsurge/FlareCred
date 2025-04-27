@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Wallet } from 'lucide-react'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
@@ -8,16 +8,43 @@ import { useAccount } from 'wagmi'
 
 /**
  * Connect Wallet — prompts visitors to connect a wallet before using the app.
- * If a wallet is already connected, we immediately take them to the dashboard.
+ * After the wallet connects, we verify that the backend has established a
+ * session (`/api/auth/wallet-status`) before redirecting to the dashboard.
  */
 export default function ConnectWalletPage() {
   const router = useRouter()
-  const { isConnected } = useAccount()
+  const { isConnected, address } = useAccount()
+  const [checking, setChecking] = useState(false)
 
-  /* Auto-redirect once the wallet connects */
+  /* Once connected, ask the backend to set/confirm the session cookie; only
+     navigate to the dashboard if the user already exists and the cookie is set. */
   useEffect(() => {
-    if (isConnected) router.replace('/dashboard')
-  }, [isConnected, router])
+    let cancelled = false
+
+    async function ensureSessionAndRedirect() {
+      if (!isConnected || !address) return
+      setChecking(true)
+
+      try {
+        const res = await fetch(`/api/auth/wallet-status?address=${address}`, {
+          method: 'GET',
+          cache: 'no-store',
+        })
+        const json = await res.json().catch(() => ({}))
+
+        if (!cancelled && res.ok && json?.exists) {
+          router.replace('/dashboard')
+        }
+      } finally {
+        if (!cancelled) setChecking(false)
+      }
+    }
+
+    ensureSessionAndRedirect()
+    return () => {
+      cancelled = true
+    }
+  }, [isConnected, address, router])
 
   return (
     <section className='mx-auto flex min-h-[calc(100dvh-64px)] max-w-md flex-col items-center justify-center gap-6 px-4 text-center'>
@@ -35,6 +62,10 @@ export default function ConnectWalletPage() {
         showBalance={false}
         className='w-full justify-center'
       />
+
+      {checking && (
+        <p className='text-muted-foreground text-xs'>Verifying wallet session…</p>
+      )}
     </section>
   )
 }
