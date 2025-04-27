@@ -9,7 +9,7 @@ import { ChevronDown } from 'lucide-react'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useAccount } from 'wagmi'
 
-import WalletOnboardModal from '@/components/auth/WalletOnboardModal'
+import WalletOnboardModal from '@/components/auth/wallet-onboard-modal'
 import { ModeToggle } from '@/components/theme-toggle'
 import {
   HoverCard,
