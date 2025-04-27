@@ -1,5 +1,3 @@
-'use server'
-
 import { ethers } from 'ethers'
 import type { Log, LogDescription } from 'ethers'
 
@@ -27,6 +25,9 @@ const {
   NEXT_PUBLIC_CREDENTIAL_NFT_ADDRESS: _NEXT_PUBLIC_CREDENTIAL_NFT_ADDRESS,
   NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS: _NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS,
   NEXT_PUBLIC_FDC_VERIFIER_ADDRESS: _NEXT_PUBLIC_FDC_VERIFIER_ADDRESS,
+  /** ------------- NEW ORACLE HELPER ADDRESS ----------------------------- */
+  NEXT_PUBLIC_FTSO_HELPER_ADDRESS: _NEXT_PUBLIC_FTSO_HELPER_ADDRESS,
+  /** --------------------------------------------------------------------- */
   PRIVATE_KEY,
 } = process.env as Record<string, string | undefined>
 
@@ -48,6 +49,12 @@ const NEXT_PUBLIC_FDC_VERIFIER_ADDRESS = assertAddress(
   'NEXT_PUBLIC_FDC_VERIFIER_ADDRESS',
   _NEXT_PUBLIC_FDC_VERIFIER_ADDRESS,
 )
+/** ---------------------- ORACLE HELPER ADDRESS -------------------------- */
+const NEXT_PUBLIC_FTSO_HELPER_ADDRESS = assertAddress(
+  'NEXT_PUBLIC_FTSO_HELPER_ADDRESS',
+  _NEXT_PUBLIC_FTSO_HELPER_ADDRESS,
+)
+/** ---------------------------------------------------------------------- */
 const CHAIN_ID = Number(NEXT_PUBLIC_FLARE_CHAIN_ID ?? '114')
 
 /* -------------------------------------------------------------------------- */
@@ -94,6 +101,12 @@ const FDC_VERIFIER_ABI = [
   'function verifyAddress(bytes) view returns (bool)',
 ] as const
 
+/** ------------------ ORACLE HELPER ABI & INTERFACE ----------------------- */
+const FTSO_HELPER_ABI = [
+  'function flrUsdPriceWei() view returns (uint256 priceWei, uint256 timestamp)',
+] as const
+/** ------------------------------------------------------------------------ */
+
 /* -------------------------------------------------------------------------- */
 /*                            R E A D  C O N T R A C T S                      */
 /* -------------------------------------------------------------------------- */
@@ -117,6 +130,31 @@ const subscriptionManagerRead = new ethers.Contract(
 const fdcVerifierRead: ethers.Contract | null = NEXT_PUBLIC_FDC_VERIFIER_ADDRESS
   ? new ethers.Contract(NEXT_PUBLIC_FDC_VERIFIER_ADDRESS, FDC_VERIFIER_ABI, provider)
   : null
+
+/* -------------------------------------------------------------------------- */
+/*                        O R A C L E   P R I C E   R E A D E R               */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Reads the on-chain FLR/USD price in wei precision along with its timestamp.
+ */
+export async function readFlrUsdPriceWei(): Promise<{
+  priceWei: bigint
+  timestamp: number
+}> {
+  const iface = new ethers.Interface(FTSO_HELPER_ABI)
+  const data = iface.encodeFunctionData('flrUsdPriceWei')
+  const raw = await provider.call({ to: NEXT_PUBLIC_FTSO_HELPER_ADDRESS, data })
+  const [priceWei, ts] = iface.decodeFunctionResult('flrUsdPriceWei', raw) as [bigint, bigint]
+  return { priceWei, timestamp: Number(ts) }
+}
+
+/**
+ * Convenience helper converting wei-denominated price to a plain USD number.
+ */
+export function formatUsd(priceWei: bigint): number {
+  return Number(priceWei) / 1e18
+}
 
 /* -------------------------------------------------------------------------- */
 /*                                   Utils                                    */
@@ -251,13 +289,6 @@ export async function verifyFlareCredential(tokenId: bigint, expectedVcHash: str
 
 /* ---------- Subscription ---------- */
 
-/**
- * Pay for (or renew) a subscription by calling the on-chain manager.
- *
- * The signer’s address is used as the team wallet; value is taken from the
- * contract’s `planPriceWei(planKey)` storage, ensuring client-side tampering
- * cannot underpay.
- */
 export async function paySubscription(
   args: SignerArgs & { planKey: number },
 ): Promise<{ txHash: string; paidUntil: Date }> {
@@ -280,12 +311,15 @@ export async function paySubscription(
   return { txHash: receipt.hash, paidUntil: new Date(Number(paidUntilSec) * 1000) }
 }
 
-/**
- * Returns the subscription expiry timestamp for the given team wallet.
- */
 export async function checkSubscription(teamAddress: string): Promise<Date | null> {
   const addr = ethers.getAddress(teamAddress)
   const ts: bigint = await subscriptionManagerRead.paidUntil(addr)
   if (ts === 0n) return null
   return new Date(Number(ts) * 1000)
 }
+
+/* -------------------------------------------------------------------------- */
+/*                               E X P O R T S                                */
+/* -------------------------------------------------------------------------- */
+
+export { provider }
