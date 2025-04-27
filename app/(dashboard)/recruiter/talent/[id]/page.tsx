@@ -21,7 +21,7 @@ import {
 import {
   candidateCredentials,
   CredentialCategory,
-  candidateHighlights,
+  type CredentialStatus,
 } from '@/lib/db/schema/candidate'
 
 import AddToPipelineForm from './add-to-pipeline-form'
@@ -59,31 +59,35 @@ export default async function RecruiterCandidateProfile({
   /* --------------------- Experience & Project highlights --------------------- */
   const hlRows = await db
     .select({
-      credentialId: candidateHighlights.credentialId,
-      sortOrder: candidateHighlights.sortOrder,
+      credentialId: pipelineCandidates.credentialId,
+      sortOrder: pipelineCandidates.sortOrder,
     })
-    .from(candidateHighlights)
-    .where(eq(candidateHighlights.candidateId, candidateId))
-    .orderBy(asc(candidateHighlights.sortOrder))
+    .from(pipelineCandidates)
+    .where(eq(pipelineCandidates.candidateId, candidateId))
+    .orderBy(asc(pipelineCandidates.sortOrder))
 
   const highlightedIds = hlRows.map((h) => h.credentialId)
 
-  const highlightedCreds = highlightedIds.length
-    ? await db
-        .select({
-          id: candidateCredentials.id,
-          title: candidateCredentials.title,
-          createdAt: candidateCredentials.createdAt,
-          issuerName: issuers.name,
-          link: candidateCredentials.fileUrl,
-          description: candidateCredentials.type,
-          category: candidateCredentials.category,
-          status: candidateCredentials.status,
-        })
-        .from(candidateCredentials)
-        .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
-        .where(inArray(candidateCredentials.id, highlightedIds))
-    : []
+  const highlightedCreds =
+    highlightedIds.length === 0
+      ? []
+      : await db
+          .select({
+            id: candidateCredentials.id,
+            title: candidateCredentials.title,
+            createdAt: candidateCredentials.createdAt,
+            issuerName: issuers.name,
+            link: candidateCredentials.fileUrl,
+            description: candidateCredentials.type,
+            category: candidateCredentials.category,
+            status: candidateCredentials.status,
+            /** NEW PROOF FIELDS */
+            proofType: candidateCredentials.proofType,
+            proofData: candidateCredentials.proofData,
+          })
+          .from(candidateCredentials)
+          .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
+          .where(inArray(candidateCredentials.id, highlightedIds))
 
   /* maintain order */
   highlightedCreds.sort((a, b) => highlightedIds.indexOf(a.id) - highlightedIds.indexOf(b.id))
@@ -96,7 +100,7 @@ export default async function RecruiterCandidateProfile({
       title: e.title,
       company: e.issuerName,
       createdAt: e.createdAt,
-      status: e.status,
+      status: e.status as CredentialStatus,
     }))
 
   const projects = highlightedCreds
@@ -108,7 +112,7 @@ export default async function RecruiterCandidateProfile({
       link: p.link,
       description: p.description,
       createdAt: p.createdAt,
-      status: p.status,
+      status: p.status as CredentialStatus,
     }))
 
   /* --------------------- Pipelines owned by recruiter --------------------- */
@@ -131,8 +135,8 @@ export default async function RecruiterCandidateProfile({
     pipelineEntriesAll.length === 0
       ? undefined
       : pipelineEntriesAll.length === 1
-        ? `In ${pipelineEntriesAll[0].pipelineName}`
-        : `In ${pipelineEntriesAll.length} Pipelines`
+      ? `In ${pipelineEntriesAll[0].pipelineName}`
+      : `In ${pipelineEntriesAll.length} Pipelines`
 
   /* ----------------------------- Credentials section ----------------------------- */
   const page = Math.max(1, Number(first(q, 'page') ?? '1'))
