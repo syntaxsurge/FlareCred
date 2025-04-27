@@ -6,6 +6,9 @@ import eslintPluginPrettier from 'eslint-plugin-prettier'
 import unusedImports from 'eslint-plugin-unused-imports'
 
 export default [
+  /* ---------------------------------------------------------------------- */
+  /*                          I G N O R E   P A T H S                       */
+  /* ---------------------------------------------------------------------- */
   {
     ignores: [
       '**/node_modules/**',
@@ -29,7 +32,15 @@ export default [
       '**/.DS_Store',
     ],
   },
+
+  /* ---------------------------------------------------------------------- */
+  /*                         P R E T T I E R   O V E R R I D E               */
+  /* ---------------------------------------------------------------------- */
   eslintConfigPrettier,
+
+  /* ---------------------------------------------------------------------- */
+  /*                            T S   P R O J E C T                          */
+  /* ---------------------------------------------------------------------- */
   {
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
@@ -46,6 +57,7 @@ export default [
       prettier: eslintPluginPrettier,
     },
     rules: {
+      /* ---------- Unused imports / vars ---------- */
       'unused-imports/no-unused-imports': 'error',
       'unused-imports/no-unused-vars': [
         'warn',
@@ -58,6 +70,8 @@ export default [
           caughtErrorsIgnorePattern: '^_',
         },
       ],
+
+      /* ---------- Import ordering ---------- */
       'import/no-duplicates': 'error',
       'import/order': [
         'error',
@@ -70,7 +84,8 @@ export default [
               position: 'before',
             },
             {
-              pattern: '{@/components/**,@/lib/**,@/**}',
+              /* Internal aliases including hooks */
+              pattern: '{@/components/**,@/hooks/**,@/lib/**,@/**}',
               group: 'internal',
               position: 'after',
             },
@@ -83,6 +98,8 @@ export default [
           'newlines-between': 'always',
         },
       ],
+
+      /* ---------- TypeScript ---------- */
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unused-vars': [
         'warn',
@@ -92,6 +109,8 @@ export default [
           caughtErrorsIgnorePattern: '^_',
         },
       ],
+
+      /* ---------- Prettier ---------- */
       'prettier/prettier': 'warn',
     },
   },
