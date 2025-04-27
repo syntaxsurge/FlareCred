@@ -1,25 +1,26 @@
 import { cookies } from 'next/headers'
-
-import { compare, hash } from 'bcryptjs'
 import { SignJWT, jwtVerify } from 'jose'
 
-import { NewUser } from '@/lib/db/schema'
+import type { NewUser } from '@/lib/db/schema'
 
-const key = new TextEncoder().encode(process.env.AUTH_SECRET)
-const SALT_ROUNDS = 10
-
-export async function hashPassword(password: string) {
-  return hash(password, SALT_ROUNDS)
-}
-
-export async function comparePasswords(plainTextPassword: string, hashedPassword: string) {
-  return compare(plainTextPassword, hashedPassword)
-}
+/* -------------------------------------------------------------------------- */
+/*                                   TYPES                                    */
+/* -------------------------------------------------------------------------- */
 
 type SessionData = {
-  user: { id: number }
+  wallet: string
   expires: string
 }
+
+/* -------------------------------------------------------------------------- */
+/*                                  CONFIG                                    */
+/* -------------------------------------------------------------------------- */
+
+const key = new TextEncoder().encode(process.env.AUTH_SECRET)
+
+/* -------------------------------------------------------------------------- */
+/*                               T O K E N S                                  */
+/* -------------------------------------------------------------------------- */
 
 export async function signToken(payload: SessionData) {
   return await new SignJWT(payload)
@@ -36,6 +37,10 @@ export async function verifyToken(input: string) {
   return payload as SessionData
 }
 
+/* -------------------------------------------------------------------------- */
+/*                              S E S S I O N                                 */
+/* -------------------------------------------------------------------------- */
+
 export async function getSession() {
   const session = (await cookies()).get('session')?.value
   if (!session) return null
@@ -45,7 +50,7 @@ export async function getSession() {
 export async function setSession(user: NewUser) {
   const expiresInOneDay = new Date(Date.now() + 24 * 60 * 60 * 1000)
   const session: SessionData = {
-    user: { id: user.id! },
+    wallet: user.walletAddress,
     expires: expiresInOneDay.toISOString(),
   }
   const encryptedSession = await signToken(session)
