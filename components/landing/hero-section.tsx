@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 /**
- * Edge-to-edge hero banner with vibrant gradients and a clear “Free” call-out.
+ * Edge-to-edge hero banner with vibrant gradients and a direct Connect Wallet CTA.
  */
 export default function HeroSection() {
   return (
@@ -21,7 +21,7 @@ export default function HeroSection() {
       <div className='relative z-10 mx-auto max-w-6xl px-4 py-32 text-center sm:py-44'>
         <h1 className='text-5xl font-extrabold tracking-tight sm:text-6xl md:text-7xl'>
           <span className='bg-gradient-to-r from-indigo-400 via-purple-400 to-fuchsia-400 bg-clip-text text-transparent'>
-          FlareCred
+            FlareCred
           </span>
         </h1>
 
@@ -36,14 +36,7 @@ export default function HeroSection() {
         </p>
 
         <div className='mt-12 flex flex-wrap justify-center gap-4'>
-          <GradientButton href='/sign-up'>Create Free Account</GradientButton>
-
-          <GradientButton href='/sign-up?role=recruiter' tone='outline'>
-            For Recruiters
-          </GradientButton>
-          <GradientButton href='/sign-up?role=issuer' tone='outline'>
-            For Issuers
-          </GradientButton>
+          <GradientButton href='/connect-wallet'>Connect Wallet</GradientButton>
         </div>
       </div>
     </section>

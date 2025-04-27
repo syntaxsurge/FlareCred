@@ -17,27 +17,9 @@ export default function CTASection() {
           Showcase provable achievements and let recruiters trust you instantly.
         </p>
 
-        <div className='mt-10 flex flex-wrap justify-center gap-4'>
-          <Button asChild size='lg' className='rounded-full'>
-            <Link href='/sign-up'>Get Started</Link>
-          </Button>
-
-          <Button
-            asChild
-            size='lg'
-            variant='outline'
-            className='rounded-full shadow-lg backdrop-blur hover:bg-white/10 hover:text-white'
-          >
-            <Link href='/sign-up?role=recruiter'>For Recruiters</Link>
-          </Button>
-
-          <Button
-            asChild
-            size='lg'
-            variant='outline'
-            className='rounded-full shadow-lg backdrop-blur hover:bg-white/10 hover:text-white'
-          >
-            <Link href='/sign-up?role=issuer'>For Issuers</Link>
+        <div className='mt-10 flex justify-center'>
+          <Button asChild size='lg' className='rounded-full bg-white/10 text-white hover:bg-white/20'>
+            <Link href='/connect-wallet'>Connect Wallet</Link>
           </Button>
         </div>
       </div>
