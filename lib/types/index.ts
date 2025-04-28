@@ -1,6 +1,7 @@
 /**
  * Centralised domain-level type declarations.
- * Extend this barrel as the shared model surface grows.
+ * Shared primitives live here; feature-specific types are isolated in their own barrels and
+ * re-exported for ergonomic access via this root module.
  */
 
 /* -------------------------------------------------------------------------- */
@@ -26,16 +27,9 @@ export interface Pagination {
   initialParams: Record<string, string>
 }
 
-/**
- * Lightweight recruiter-pipeline summary used by forms and dropdowns.
- */
-export interface Pipeline {
-  id: number
-  name: string
-}
-
 /* -------------------------------------------------------------------------- */
 /*                            Domain-specific barrels                         */
 /* -------------------------------------------------------------------------- */
 
 export * from './candidate'
+export * from './recruiter'
