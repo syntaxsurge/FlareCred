@@ -5,10 +5,6 @@ import { useState } from 'react'
 import { Slider } from '@/components/ui/slider'
 import { useFilterNavigation } from '@/lib/hooks/use-filter-navigation'
 
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
-
 interface TalentFiltersProps {
   basePath: string
   /** Existing query params excluding skillMin/skillMax (e.g. sort, order, q…). */
@@ -29,34 +25,30 @@ export default function TalentFilters({
   skillMax: initialMax,
   verifiedOnly: initialVerifiedOnly,
 }: TalentFiltersProps) {
-  /* Local state mirrors the current URL so the UI reflects external changes */
+  /* Centralised filter navigation helper */
+  const updateParam = useFilterNavigation(basePath, initialParams)
+
   const [range, setRange] = useState<[number, number]>([initialMin, initialMax])
   const [verifiedOnly, setVerifiedOnly] = useState<boolean>(initialVerifiedOnly)
 
-  /* ---------------------------------------------------------------------- */
-  /*                Centralised filter-param navigation helper              */
-  /* ---------------------------------------------------------------------- */
-  const pushFilter = useFilterNavigation(basePath, initialParams)
-
-  /* ---------------------------------------------------------------------- */
-  /*                               Handlers                                 */
-  /* ---------------------------------------------------------------------- */
-
+  /* ------------------------- Handlers ------------------------------------ */
   function handleRangeChange(v: [number, number]) {
-    setRange(v)
-    const [min, max] = v
-    pushFilter('skillMin', min === 0 ? '' : String(min))
-    pushFilter('skillMax', max === 100 ? '' : String(max))
+    const min = Math.min(Math.max(0, v[0] ?? 0), 100)
+    const max = Math.max(Math.min(100, v[1] ?? 100), 0)
+    setRange([min, max])
+    updateParam('skillMin', min === 0 ? '' : String(min))
+    updateParam('skillMax', max === 100 ? '' : String(max))
+    updateParam('page', '1') // reset pagination
   }
 
-  function toggleVerified(checked: boolean) {
-    setVerifiedOnly(checked)
-    pushFilter('verifiedOnly', checked ? '1' : '')
+  function toggleVerified(e: React.ChangeEvent<HTMLInputElement>) {
+    const next = e.target.checked
+    setVerifiedOnly(next)
+    updateParam('verifiedOnly', next ? '1' : '')
+    updateParam('page', '1')
   }
 
-  /* ---------------------------------------------------------------------- */
-  /*                                 UI                                     */
-  /* ---------------------------------------------------------------------- */
+  /* ------------------------------- UI ------------------------------------ */
   return (
     <div className='mb-6 flex flex-wrap items-end gap-4'>
       {/* Skill-score range */}
@@ -82,7 +74,7 @@ export default function TalentFilters({
           type='checkbox'
           className='accent-primary size-4 cursor-pointer'
           checked={verifiedOnly}
-          onChange={(e) => toggleVerified(e.target.checked)}
+          onChange={toggleVerified}
         />
         <label htmlFor='verifiedOnly' className='cursor-pointer text-sm'>
           Verified only

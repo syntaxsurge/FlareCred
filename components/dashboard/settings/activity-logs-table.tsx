@@ -1,7 +1,5 @@
 'use client'
 
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
 import {
@@ -13,15 +11,14 @@ import {
   UserMinus,
   Mail,
   CheckCircle,
-  ArrowUpDown,
   Coins,
   type LucideIcon,
 } from 'lucide-react'
 
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
+import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import { ActivityType } from '@/lib/db/schema'
 import { relativeTime } from '@/lib/utils/time'
-import { buildLink } from '@/lib/utils'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -103,36 +100,16 @@ export default function ActivityLogsTable({
   initialParams,
   searchQuery,
 }: Props) {
-  const router = useRouter()
-  const [search, setSearch] = React.useState<string>(searchQuery)
-  const debounceRef = React.useRef<NodeJS.Timeout | null>(null)
+  /* -------------------- Centralised navigation helpers -------------------- */
+  const { search, handleSearchChange, sortableHeader } = useTableNavigation({
+    basePath,
+    initialParams,
+    sort,
+    order,
+    searchQuery,
+  })
 
-  /* Trigger navigation (server-side search) */
-  function handleSearchChange(value: string) {
-    setSearch(value)
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      const href = buildLink(basePath, initialParams, { q: value, page: 1 })
-      router.push(href, { scroll: false })
-    }, 400)
-  }
-
-  /* Build sortable header link */
-  const tsHeader = React.useMemo(() => {
-    const nextOrder = sort === 'timestamp' && order === 'asc' ? 'desc' : 'asc'
-    const href = buildLink(basePath, initialParams, {
-      sort: 'timestamp',
-      order: nextOrder,
-      page: 1,
-      q: search,
-    })
-    return (
-      <Link href={href} scroll={false} className='flex items-center gap-1'>
-        When <ArrowUpDown className='h-4 w-4' />
-      </Link>
-    )
-  }, [basePath, initialParams, sort, order, search])
-
+  /* --------------------------- Column definitions ------------------------- */
   const columns = React.useMemo<Column<RowType>[]>(() => {
     return [
       {
@@ -163,7 +140,7 @@ export default function ActivityLogsTable({
       },
       {
         key: 'timestamp',
-        header: tsHeader,
+        header: sortableHeader('When', 'timestamp'),
         sortable: false,
         className: 'min-w-[120px]',
         render: (v) => (
@@ -173,9 +150,9 @@ export default function ActivityLogsTable({
         ),
       },
     ]
-  }, [tsHeader])
+  }, [sortableHeader])
 
-  /* All rows fit on one client page; real paging handled server-side */
+  /* ------------------------------- View ---------------------------------- */
   return (
     <DataTable
       columns={columns}
