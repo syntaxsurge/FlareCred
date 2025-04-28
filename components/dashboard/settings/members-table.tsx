@@ -17,13 +17,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
-import {
-  DataTable,
-  type BulkAction,
-  type Column,
-} from '@/components/ui/tables/data-table'
+import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
+import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import { truncateAddress } from '@/lib/utils/address'
 
 /* -------------------------------------------------------------------------- */
@@ -106,36 +103,6 @@ function EditMemberForm({ row, onDone }: { row: RowType; onDone: () => void }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                             Bulk-selection                                 */
-/* -------------------------------------------------------------------------- */
-
-function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowType>[] {
-  const [isPending, startTransition] = React.useTransition()
-
-  return [
-    {
-      label: 'Remove',
-      icon: Trash2,
-      variant: 'destructive',
-      onClick: (selected) =>
-        startTransition(async () => {
-          const toastId = toast.loading('Removing members…')
-          await Promise.all(
-            selected.map(async (m) => {
-              const fd = new FormData()
-              fd.append('memberId', m.id.toString())
-              return removeTeamMember({}, fd)
-            }),
-          )
-          toast.success('Selected members removed.', { id: toastId })
-          router.refresh()
-        }),
-      isDisabled: () => isPending,
-    },
-  ]
-}
-
-/* -------------------------------------------------------------------------- */
 /*                                   Table                                    */
 /* -------------------------------------------------------------------------- */
 
@@ -149,7 +116,29 @@ export default function MembersTable({
   searchQuery,
 }: MembersTableProps) {
   const router = useRouter()
-  const bulkActions = isOwner ? buildBulkActions(router) : []
+
+  /* ----------------------- Bulk-selection actions ------------------------ */
+  const bulkActions = isOwner
+    ? useBulkActions<RowType>([
+        {
+          label: 'Remove',
+          icon: Trash2,
+          variant: 'destructive',
+          handler: async (selected) => {
+            const toastId = toast.loading('Removing members…')
+            await Promise.all(
+              selected.map(async (m) => {
+                const fd = new FormData()
+                fd.append('memberId', m.id.toString())
+                return removeTeamMember({}, fd)
+              }),
+            )
+            toast.success('Selected members removed.', { id: toastId })
+            router.refresh()
+          },
+        },
+      ])
+    : []
 
   /* -------------------- Centralised navigation helpers -------------------- */
   const { search, handleSearchChange, sortableHeader } = useTableNavigation({

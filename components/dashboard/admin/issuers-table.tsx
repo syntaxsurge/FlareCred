@@ -18,12 +18,13 @@ import {
 } from '@/app/(dashboard)/admin/issuers/actions'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/ui/status-badge'
-import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
+import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import {
   TableRowActions,
   type TableRowAction,
 } from '@/components/ui/tables/row-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
+import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import { IssuerStatus } from '@/lib/db/schema/issuer'
 import { cn } from '@/lib/utils'
 
@@ -73,71 +74,6 @@ const RejectIcon = ({ className, ...props }: LucideProps) => (
 )
 
 /* -------------------------------------------------------------------------- */
-/*                           Bulk-selection Actions                           */
-/* -------------------------------------------------------------------------- */
-
-function useBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowType>[] {
-  const [isPending, startTransition] = React.useTransition()
-
-  async function bulkUpdate(
-    selected: RowType[],
-    status: keyof typeof IssuerStatus,
-    reason?: string,
-  ) {
-    const toastId = toast.loading('Updating issuers…')
-    await Promise.all(
-      selected.map(async (row) => {
-        const fd = new FormData()
-        fd.append('issuerId', row.id.toString())
-        fd.append('status', status)
-        if (reason) fd.append('rejectionReason', reason)
-        return updateIssuerStatusAction({}, fd)
-      }),
-    )
-    toast.success('Issuers updated.', { id: toastId })
-    router.refresh()
-  }
-
-  async function bulkDelete(selected: RowType[]) {
-    const toastId = toast.loading('Deleting issuers…')
-    await Promise.all(
-      selected.map(async (row) => {
-        const fd = new FormData()
-        fd.append('issuerId', row.id.toString())
-        return deleteIssuerAction({}, fd)
-      }),
-    )
-    toast.success('Issuers deleted.', { id: toastId })
-    router.refresh()
-  }
-
-  return [
-    {
-      label: 'Verify',
-      icon: VerifyIcon as any,
-      onClick: (sel) => bulkUpdate(sel, IssuerStatus.ACTIVE),
-    },
-    {
-      label: 'Unverify',
-      icon: UnverifyIcon as any,
-      onClick: (sel) => bulkUpdate(sel, IssuerStatus.PENDING),
-    },
-    {
-      label: 'Reject',
-      icon: RejectIcon as any,
-      onClick: (sel) => bulkUpdate(sel, IssuerStatus.REJECTED, 'Bulk reject'),
-    },
-    {
-      label: 'Delete',
-      icon: Trash2,
-      variant: 'destructive',
-      onClick: bulkDelete,
-      isDisabled: () => isPending,
-    },
-  ]
-}
-
-/* -------------------------------------------------------------------------- */
 /*                                   Table                                    */
 /* -------------------------------------------------------------------------- */
 
@@ -150,7 +86,80 @@ export default function AdminIssuersTable({
   searchQuery,
 }: IssuersTableProps) {
   const router = useRouter()
-  const bulkActions = useBulkActions(router)
+
+  /* -------------------------- Bulk-selection actions ---------------------- */
+  const bulkActions = useBulkActions<RowType>([
+    {
+      label: 'Verify',
+      icon: VerifyIcon as any,
+      handler: async (selected) => {
+        const toastId = toast.loading('Updating issuers…')
+        await Promise.all(
+          selected.map(async (row) => {
+            const fd = new FormData()
+            fd.append('issuerId', row.id.toString())
+            fd.append('status', IssuerStatus.ACTIVE)
+            return updateIssuerStatusAction({}, fd)
+          }),
+        )
+        toast.success('Issuers updated.', { id: toastId })
+        router.refresh()
+      },
+    },
+    {
+      label: 'Unverify',
+      icon: UnverifyIcon as any,
+      handler: async (selected) => {
+        const toastId = toast.loading('Updating issuers…')
+        await Promise.all(
+          selected.map(async (row) => {
+            const fd = new FormData()
+            fd.append('issuerId', row.id.toString())
+            fd.append('status', IssuerStatus.PENDING)
+            return updateIssuerStatusAction({}, fd)
+          }),
+        )
+        toast.success('Issuers updated.', { id: toastId })
+        router.refresh()
+      },
+    },
+    {
+      label: 'Reject',
+      icon: RejectIcon as any,
+      variant: 'destructive',
+      handler: async (selected) => {
+        const toastId = toast.loading('Updating issuers…')
+        await Promise.all(
+          selected.map(async (row) => {
+            const fd = new FormData()
+            fd.append('issuerId', row.id.toString())
+            fd.append('status', IssuerStatus.REJECTED)
+            fd.append('rejectionReason', 'Bulk reject')
+            return updateIssuerStatusAction({}, fd)
+          }),
+        )
+        toast.success('Issuers updated.', { id: toastId })
+        router.refresh()
+      },
+    },
+    {
+      label: 'Delete',
+      icon: Trash2,
+      variant: 'destructive',
+      handler: async (selected) => {
+        const toastId = toast.loading('Deleting issuers…')
+        await Promise.all(
+          selected.map(async (row) => {
+            const fd = new FormData()
+            fd.append('issuerId', row.id.toString())
+            return deleteIssuerAction({}, fd)
+          }),
+        )
+        toast.success('Issuers deleted.', { id: toastId })
+        router.refresh()
+      },
+    },
+  ])
 
   /* --------------------- Centralised navigation helpers ------------------- */
   const { search, handleSearchChange, sortableHeader } = useTableNavigation({
