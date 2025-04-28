@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 
-import { formatUsd, readFlrUsdPriceWei } from '@/lib/flare'
+import { formatUsd, readFlrUsdPriceWei } from '@/lib/contracts/flare'
 
 interface PriceState {
   usd: number | null

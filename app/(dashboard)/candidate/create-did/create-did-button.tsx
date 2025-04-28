@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { createDidAction } from './actions'
 import { CHAIN_ID, DID_REGISTRY_ADDRESS } from '@/lib/config'
-import { DID_REGISTRY_ABI } from '@/lib/abis'
+import { DID_REGISTRY_ABI } from '@/lib/contracts/abis'
 
 /* -------------------------------------------------------------------------- */
 /*                               COMPONENT                                    */

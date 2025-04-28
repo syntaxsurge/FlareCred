@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { ethers } from 'ethers'
 
 import { validatedActionWithUser } from '@/lib/auth/middleware'
-import { issueFlareCredential, verifyFdcProof } from '@/lib/flare'
+import { issueFlareCredential, verifyFdcProof } from '@/lib/contracts/flare'
 import { db } from '@/lib/db/drizzle'
 import {
   candidateCredentials,

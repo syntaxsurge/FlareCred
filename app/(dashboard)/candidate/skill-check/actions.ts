@@ -2,7 +2,7 @@
 
 import { eq } from 'drizzle-orm'
 
-import { issueFlareCredential } from '@/lib/flare'
+import { issueFlareCredential } from '@/lib/contracts/flare'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
 import { quizAttempts, skillQuizzes, candidates } from '@/lib/db/schema/candidate'

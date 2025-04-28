@@ -7,12 +7,12 @@
 
 import type { InterfaceAbi } from 'ethers'
 
-import DIDRegistryArtifact from '../blockchain/artifacts/contracts/DIDRegistry.sol/DIDRegistry.json'
-import CredentialNFTArtifact from '../blockchain/artifacts/contracts/CredentialNFT.sol/CredentialNFT.json'
-import SubscriptionManagerArtifact from '../blockchain/artifacts/contracts/SubscriptionManager.sol/SubscriptionManager.json'
-import FlareCredVerifierArtifact from '../blockchain/artifacts/contracts/FlareCredVerifier.sol/FlareCredVerifier.json'
-import FtsoHelperArtifact from '../blockchain/artifacts/contracts/FtsoHelper.sol/FtsoHelper.json'
-import RngHelperArtifact from '../blockchain/artifacts/contracts/RngHelper.sol/RngHelper.json'
+import DIDRegistryArtifact from '../../blockchain/artifacts/contracts/DIDRegistry.sol/DIDRegistry.json'
+import CredentialNFTArtifact from '../../blockchain/artifacts/contracts/CredentialNFT.sol/CredentialNFT.json'
+import SubscriptionManagerArtifact from '../../blockchain/artifacts/contracts/SubscriptionManager.sol/SubscriptionManager.json'
+import FlareCredVerifierArtifact from '../../blockchain/artifacts/contracts/FlareCredVerifier.sol/FlareCredVerifier.json'
+import FtsoHelperArtifact from '../../blockchain/artifacts/contracts/FtsoHelper.sol/FtsoHelper.json'
+import RngHelperArtifact from '../../blockchain/artifacts/contracts/RngHelper.sol/RngHelper.json'
 
 /* -------------------------------------------------------------------------- */
 /*                                   EXPORTS                                  */

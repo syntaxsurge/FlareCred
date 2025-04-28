@@ -8,7 +8,7 @@ import {
   FDC_VERIFIER_ABI,
   FTSO_HELPER_ABI,
   RNG_HELPER_ABI,
-} from '@/lib/abis'
+} from '@/lib/contracts/abis'
 import {
   FLARE_RPC_URL,
   CHAIN_ID,

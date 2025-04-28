@@ -8,7 +8,7 @@ import { formatUnits } from 'ethers'
 import { SubmitButton } from '@/app/(dashboard)/pricing/submit-button'
 import { Button } from '@/components/ui/button'
 import { PLAN_META, FLR_DECIMALS } from '@/lib/constants/pricing'
-import { useFlareUsdPrice } from '@/hooks/useFlareUsdPrice'
+import { useFlareUsdPrice } from '@/lib/hooks/use-flare-usd-price'
 
 /* -------------------------------------------------------------------------- */
 /*                               T Y P E S                                    */

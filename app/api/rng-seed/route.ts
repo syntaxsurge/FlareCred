@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { randomMod } from '@/lib/flare'
+import { randomMod } from '@/lib/contracts/flare'
 
 /**
  * GET /api/rng-seed?max=NUMBER

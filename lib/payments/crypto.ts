@@ -2,7 +2,7 @@
 // to start an on-chain subscription payment and query its status.
 
 import { ethers } from 'ethers'
-import { paySubscription, checkSubscription } from '@/lib/flare'
+import { paySubscription, checkSubscription } from '@/lib/contracts/flare'
 
 /* -------------------------------------------------------------------------- */
 /*                               C H E C K O U T                              */

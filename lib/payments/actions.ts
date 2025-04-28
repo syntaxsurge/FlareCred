@@ -1,7 +1,7 @@
 'use server'
 
 import { withTeam } from '@/lib/auth/middleware'
-import { paySubscription } from '@/lib/flare'
+import { paySubscription } from '@/lib/contracts/flare'
 import { updateTeamCryptoSubscription } from '@/lib/db/queries/queries'
 
 /* -------------------------------------------------------------------------- */

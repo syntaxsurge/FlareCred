@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
 import { validatedActionWithUser } from '@/lib/auth/middleware'
-import { createFlareDID } from '@/lib/flare'
+import { createFlareDID } from '@/lib/contracts/flare'
 import { upsertEnv } from '@/lib/utils/env'
 
 

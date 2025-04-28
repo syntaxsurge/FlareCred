@@ -6,7 +6,7 @@ import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 
 import { validatedActionWithUser } from '@/lib/auth/middleware'
-import { createFlareDID } from '@/lib/flare'
+import { createFlareDID } from '@/lib/contracts/flare'
 import { db } from '@/lib/db/drizzle'
 import { candidateCredentials, CredentialStatus } from '@/lib/db/schema/candidate'
 import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'

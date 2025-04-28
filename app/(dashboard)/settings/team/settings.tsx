@@ -21,11 +21,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { PLAN_META } from '@/lib/constants/pricing'
-import { useFlareUsdPrice } from '@/hooks/useFlareUsdPrice'
+import { useFlareUsdPrice } from '@/lib/hooks/use-flare-usd-price'
 
 import { InviteTeamMember } from './invite-team'
 import { CHAIN_ID, SUBSCRIPTION_MANAGER_ADDRESS } from '@/lib/config'
-import { SUBSCRIPTION_MANAGER_ABI } from '@/lib/abis'
+import { SUBSCRIPTION_MANAGER_ABI } from '@/lib/contracts/abis'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */

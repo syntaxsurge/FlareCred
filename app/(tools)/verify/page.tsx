@@ -9,7 +9,7 @@ import PageCard from '@/components/ui/page-card'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { CHAIN_ID, DID_REGISTRY_ADDRESS } from '@/lib/config'
-import { DID_REGISTRY_ABI } from '@/lib/abis'
+import { DID_REGISTRY_ABI } from '@/lib/contracts/abis'
 import { extractAddressFromDid } from '@/lib/utils/address'
 
 

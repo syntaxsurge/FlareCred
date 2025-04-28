@@ -12,12 +12,12 @@ import { toast } from 'sonner'
 import { ArrowRight, Loader2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import { useFlareUsdPrice } from '@/hooks/useFlareUsdPrice'
+import { useFlareUsdPrice } from '@/lib/hooks/use-flare-usd-price'
 import {
   SUBSCRIPTION_MANAGER_ADDRESS,
   CHAIN_ID,
 } from '@/lib/config'
-import { SUBSCRIPTION_MANAGER_ABI } from '@/lib/abis'
+import { SUBSCRIPTION_MANAGER_ABI } from '@/lib/contracts/abis'
 
 /* -------------------------------------------------------------------------- */
 /*                                   PROPS                                    */
