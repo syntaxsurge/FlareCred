@@ -17,11 +17,11 @@ import {
 } from '@/components/ui/dialog'
 import {
   DataTable,
-  type BulkAction,
   type Column,
 } from '@/components/ui/tables/data-table'
 import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
+import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import { formatDateTime } from '@/lib/utils/time'
 
 /* -------------------------------------------------------------------------- */
@@ -46,36 +46,7 @@ interface UsersTableProps {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                             Bulk-selection                                 */
-/* -------------------------------------------------------------------------- */
-
-function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowType>[] {
-  const [isPending, startTransition] = React.useTransition()
-
-  return [
-    {
-      label: 'Delete',
-      icon: Trash2,
-      variant: 'destructive',
-      onClick: (selected) =>
-        startTransition(async () => {
-          await Promise.all(
-            selected.map(async (row) => {
-              const fd = new FormData()
-              fd.append('userId', row.id.toString())
-              return deleteUserAction({}, fd)
-            }),
-          )
-          toast.success('Selected users deleted.')
-          router.refresh()
-        }),
-      isDisabled: () => isPending,
-    },
-  ]
-}
-
-/* -------------------------------------------------------------------------- */
-/*                                    Table                                   */
+/*                                   Table                                    */
 /* -------------------------------------------------------------------------- */
 
 export default function AdminUsersTable({
@@ -87,7 +58,27 @@ export default function AdminUsersTable({
   searchQuery,
 }: UsersTableProps) {
   const router = useRouter()
-  const bulkActions = buildBulkActions(router)
+
+  /* ------------------------ Bulk-selection actions ----------------------- */
+  const bulkActions = useBulkActions<RowType>([
+    {
+      label: 'Delete',
+      icon: Trash2,
+      variant: 'destructive',
+      handler: async (selected) => {
+        const toastId = toast.loading('Deleting users…')
+        await Promise.all(
+          selected.map(async (row) => {
+            const fd = new FormData()
+            fd.append('userId', row.id.toString())
+            return deleteUserAction({}, fd)
+          }),
+        )
+        toast.success('Selected users deleted.', { id: toastId })
+        router.refresh()
+      },
+    },
+  ])
 
   /* -------------------- Centralised navigation helpers -------------------- */
   const { search, handleSearchChange, sortableHeader } = useTableNavigation({

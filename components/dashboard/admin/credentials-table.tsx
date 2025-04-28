@@ -8,9 +8,13 @@ import { toast } from 'sonner'
 
 import { deleteCredentialAction } from '@/app/(dashboard)/admin/credentials/actions'
 import { StatusBadge } from '@/components/ui/status-badge'
-import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
+import {
+  DataTable,
+  type Column,
+} from '@/components/ui/tables/data-table'
 import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
+import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import { getProofTx } from '@/lib/utils'
 
 /* -------------------------------------------------------------------------- */
@@ -38,35 +42,6 @@ interface CredentialsTableProps {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                             Bulk-selection                                 */
-/* -------------------------------------------------------------------------- */
-
-function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowType>[] {
-  const [isPending, startTransition] = React.useTransition()
-
-  return [
-    {
-      label: 'Delete',
-      icon: Trash2,
-      variant: 'destructive',
-      onClick: (selected) =>
-        startTransition(async () => {
-          await Promise.all(
-            selected.map(async (row) => {
-              const fd = new FormData()
-              fd.append('credentialId', row.id.toString())
-              return deleteCredentialAction({}, fd)
-            }),
-          )
-          toast.success('Selected credentials deleted.')
-          router.refresh()
-        }),
-      isDisabled: () => isPending,
-    },
-  ]
-}
-
-/* -------------------------------------------------------------------------- */
 /*                                   Table                                    */
 /* -------------------------------------------------------------------------- */
 
@@ -79,7 +54,27 @@ export default function AdminCredentialsTable({
   searchQuery,
 }: CredentialsTableProps) {
   const router = useRouter()
-  const bulkActions = buildBulkActions(router)
+
+  /* ------------------------ Bulk-selection actions ----------------------- */
+  const bulkActions = useBulkActions<RowType>([
+    {
+      label: 'Delete',
+      icon: Trash2,
+      variant: 'destructive',
+      handler: async (selected) => {
+        const toastId = toast.loading('Deleting credentials…')
+        await Promise.all(
+          selected.map(async (row) => {
+            const fd = new FormData()
+            fd.append('credentialId', row.id.toString())
+            return deleteCredentialAction({}, fd)
+          }),
+        )
+        toast.success('Selected credentials deleted.', { id: toastId })
+        router.refresh()
+      },
+    },
+  ])
 
   /* -------------------- Centralised navigation helpers -------------------- */
   const { search, handleSearchChange, sortableHeader } = useTableNavigation({
@@ -111,7 +106,7 @@ export default function AdminCredentialsTable({
     [router],
   )
 
-  /* ------------------------------ Columns --------------------------------- */
+  /* ----------------------------- Columns ---------------------------------- */
   const columns = React.useMemo<Column<RowType>[]>(() => {
     return [
       {
