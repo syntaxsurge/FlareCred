@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
-import { ArrowUpDown, MoreHorizontal, Trash2, FolderKanban, Loader2 } from 'lucide-react'
+import { MoreHorizontal, Trash2, FolderKanban, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { deletePipelineCandidateAction } from '@/app/(dashboard)/recruiter/pipelines/actions'
@@ -18,8 +18,8 @@ import {
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
 import StatusBadge from '@/components/ui/status-badge'
-import { DataTable, type BulkAction, type Column } from '@/components/ui/tables/data-table'
-import { buildLink } from '@/lib/utils'
+import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
+import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -41,7 +41,9 @@ interface PipelineEntriesTableProps {
   searchQuery: string
 }
 
-/* ------------------------------- Row actions ------------------------------ */
+/* -------------------------------------------------------------------------- */
+/*                               Row actions                                  */
+/* -------------------------------------------------------------------------- */
 
 function RowActions({ row }: { row: RowType }) {
   const router = useRouter()
@@ -52,12 +54,8 @@ function RowActions({ row }: { row: RowType }) {
       const fd = new FormData()
       fd.append('pipelineCandidateId', String(row.id))
       const res = await deletePipelineCandidateAction({}, fd)
-      if (res?.error) {
-        toast.error(res.error)
-      } else {
-        toast.success(res?.success ?? 'Removed from pipeline.')
-        router.refresh()
-      }
+      res?.error ? toast.error(res.error) : toast.success(res?.success ?? 'Removed from pipeline.')
+      router.refresh()
     })
   }
 
@@ -98,9 +96,11 @@ function RowActions({ row }: { row: RowType }) {
   )
 }
 
-/* ------------------------------ Bulk remove ------------------------------ */
+/* -------------------------------------------------------------------------- */
+/*                              Bulk actions                                  */
+/* -------------------------------------------------------------------------- */
 
-function makeBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowType>[] {
+function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowType>[] {
   const [isPending, startTransition] = React.useTransition()
 
   return [
@@ -139,40 +139,26 @@ export default function PipelineEntriesTable({
   searchQuery,
 }: PipelineEntriesTableProps) {
   const router = useRouter()
-  const bulkActions = makeBulkActions(router)
+  const bulkActions = buildBulkActions(router)
 
-  /* --------------------------- Server search ---------------------------- */
-  const [search, setSearch] = React.useState(searchQuery)
-  const debounceRef = React.useRef<NodeJS.Timeout | null>(null)
+  /* -------------------- Centralised navigation helpers -------------------- */
+  const { search, handleSearchChange, sortableHeader } = useTableNavigation({
+    basePath,
+    initialParams,
+    sort,
+    order,
+    searchQuery,
+    paramKeys: {
+      sort: 'pipeSort',
+      order: 'pipeOrder',
+      search: 'pipeQ',
+      page: 'pipePage',
+    },
+  })
 
-  function handleSearchChange(value: string) {
-    setSearch(value)
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      const href = buildLink(basePath, initialParams, { pipeQ: value, pipePage: 1 })
-      router.push(href, { scroll: false })
-    }, 400)
-  }
-
-  /* ----------------------------- Sorting -------------------------------- */
-  function sortableHeader(label: string, key: string) {
-    const nextOrder = sort === key && order === 'asc' ? 'desc' : 'asc'
-    const href = buildLink(basePath, initialParams, {
-      pipeSort: key,
-      pipeOrder: nextOrder,
-      pipePage: 1,
-      pipeQ: search,
-    })
-    return (
-      <Link href={href} scroll={false} className='flex items-center gap-1'>
-        {label} <ArrowUpDown className='h-4 w-4' />
-      </Link>
-    )
-  }
-
-  /* ----------------------------- Columns -------------------------------- */
-  const columns = React.useMemo<Column<RowType>[]>(
-    () => [
+  /* ----------------------------- Columns ---------------------------------- */
+  const columns = React.useMemo<Column<RowType>[]>(() => {
+    return [
       {
         key: 'pipelineName',
         header: sortableHeader('Pipeline', 'pipelineName'),
@@ -192,9 +178,8 @@ export default function PipelineEntriesTable({
         sortable: false,
         render: (_v, row) => <RowActions row={row} />,
       },
-    ],
-    [sort, order, basePath, initialParams, search],
-  )
+    ]
+  }, [sortableHeader])
 
   /* ------------------------------- View ---------------------------------- */
   return (
