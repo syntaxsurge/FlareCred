@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
@@ -9,15 +8,8 @@ import { toast } from 'sonner'
 
 import { deletePipelineCandidateAction } from '@/app/(dashboard)/recruiter/pipelines/actions'
 import { Button } from '@/components/ui/button'
-import {
-  DataTable,
-  type Column,
-  type BulkAction,
-} from '@/components/ui/tables/data-table'
-import {
-  TableRowActions,
-  type TableRowAction,
-} from '@/components/ui/tables/row-actions'
+import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
+import { RowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
 import StatusBadge from '@/components/ui/status-badge'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 
@@ -45,9 +37,7 @@ interface PipelineEntriesTableProps {
 /*                              Bulk actions                                  */
 /* -------------------------------------------------------------------------- */
 
-function buildBulkActions(
-  router: ReturnType<typeof useRouter>,
-): BulkAction<RowType>[] {
+function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowType>[] {
   const [isPending, startTransition] = React.useTransition()
 
   return [
@@ -152,14 +142,12 @@ export default function PipelineEntriesTable({
         header: '',
         enableHiding: false,
         sortable: false,
-        render: (_v, row) => (
-          <TableRowActions row={row} actions={makeActions(row)} />
-        ),
+        render: (_v, row) => <RowActions row={row} actions={makeActions(row)} />,
       },
     ]
   }, [sortableHeader, makeActions])
 
-  /* ------------------------------- View ---------------------------------- */
+  /* ------------------------------- View ----------------------------------- */
   return (
     <DataTable
       columns={columns}

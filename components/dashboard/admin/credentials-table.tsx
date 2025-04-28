@@ -7,21 +7,9 @@ import { Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { deleteCredentialAction } from '@/app/(dashboard)/admin/credentials/actions'
-import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
-import {
-  TableRowActions,
-  type TableRowAction,
-} from '@/components/ui/tables/row-actions'
+import { RowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import { getProofTx } from '@/lib/utils'
 
@@ -184,7 +172,7 @@ export default function AdminCredentialsTable({
         header: '',
         enableHiding: false,
         sortable: false,
-        render: (_v, row) => <TableRowActions row={row} actions={makeActions(row)} />,
+        render: (_v, row) => <RowActions row={row} actions={makeActions(row)} />,
       },
     ]
   }, [sortableHeader, makeActions])
