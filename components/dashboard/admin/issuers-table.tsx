@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
 import {
-  ArrowUpDown,
   MoreHorizontal,
   ShieldCheck,
   ShieldX,
@@ -31,8 +30,9 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
+import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import { IssuerStatus } from '@/lib/db/schema/issuer'
-import { buildLink, cn } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -58,7 +58,7 @@ interface IssuersTableProps {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                            C O L O R  E D   I C O N S                      */
+/*                            C O L O R  E D   I C O N S                      */
 /* -------------------------------------------------------------------------- */
 
 const VerifyIcon = ({ className, ...props }: LucideProps) => (
@@ -261,38 +261,18 @@ export default function AdminIssuersTable({
   const router = useRouter()
   const bulkActions = useBulkActions(router)
 
-  /* ----------------------------- Search ----------------------------------- */
-  const [search, setSearch] = React.useState<string>(searchQuery)
-  const debounceRef = React.useRef<NodeJS.Timeout | null>(null)
-
-  function handleSearchChange(value: string) {
-    setSearch(value)
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      const href = buildLink(basePath, initialParams, { q: value, page: 1 })
-      router.push(href, { scroll: false })
-    }, 400)
-  }
-
-  /* ----------------------------- Headers ---------------------------------- */
-  function sortableHeader(label: string, key: string) {
-    const nextOrder = sort === key && order === 'asc' ? 'desc' : 'asc'
-    const href = buildLink(basePath, initialParams, {
-      sort: key,
-      order: nextOrder,
-      page: 1,
-      q: search,
-    })
-    return (
-      <Link href={href} scroll={false} className='flex items-center gap-1'>
-        {label} <ArrowUpDown className='h-4 w-4' />
-      </Link>
-    )
-  }
+  /* -------------------- Centralised navigation helpers -------------------- */
+  const { search, handleSearchChange, sortableHeader } = useTableNavigation({
+    basePath,
+    initialParams,
+    sort,
+    order,
+    searchQuery,
+  })
 
   /* ----------------------------- Columns ---------------------------------- */
-  const columns = React.useMemo<Column<RowType>[]>(
-    () => [
+  const columns = React.useMemo<Column<RowType>[]>(() => {
+    return [
       {
         key: 'name',
         header: sortableHeader('Name / Domain', 'name'),
@@ -338,11 +318,10 @@ export default function AdminIssuersTable({
         sortable: false,
         render: (_v, row) => <RowActions id={row.id} status={row.status} />,
       },
-    ],
-    [sort, order, basePath, initialParams, search],
-  )
+    ]
+  }, [sortableHeader])
 
-  /* All rows fit on one client page - paging handled server‑side */
+  /* ----------------------------- Render ----------------------------------- */
   return (
     <DataTable
       columns={columns}

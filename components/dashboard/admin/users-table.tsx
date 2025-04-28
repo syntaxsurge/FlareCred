@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
-import { ArrowUpDown, MoreHorizontal, Pencil, Trash2, Loader2 } from 'lucide-react'
+import { MoreHorizontal, Pencil, Trash2, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { deleteUserAction } from '@/app/(dashboard)/admin/users/actions'
@@ -26,7 +26,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
 import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
-import { buildLink } from '@/lib/utils'
+import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import { formatDateTime } from '@/lib/utils/time'
 
 /* -------------------------------------------------------------------------- */
@@ -175,35 +175,16 @@ export default function AdminUsersTable({
   const router = useRouter()
   const bulkActions = buildBulkActions(router)
 
-  /* ----------------------------- Search ----------------------------------- */
-  const [search, setSearch] = React.useState<string>(searchQuery)
-  const debounceRef = React.useRef<NodeJS.Timeout | null>(null)
+  /* -------------------- Centralised navigation helpers -------------------- */
+  const { search, handleSearchChange, sortableHeader } = useTableNavigation({
+    basePath,
+    initialParams,
+    sort,
+    order,
+    searchQuery,
+  })
 
-  function handleSearchChange(value: string) {
-    setSearch(value)
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      const href = buildLink(basePath, initialParams, { q: value, page: 1 })
-      router.push(href, { scroll: false })
-    }, 400)
-  }
-
-  /* ----------------------------- Headers ---------------------------------- */
-  function sortableHeader(label: string, key: string) {
-    const nextOrder = sort === key && order === 'asc' ? 'desc' : 'asc'
-    const href = buildLink(basePath, initialParams, {
-      sort: key,
-      order: nextOrder,
-      page: 1,
-      q: search,
-    })
-    return (
-      <Link href={href} scroll={false} className='flex items-center gap-1'>
-        {label} <ArrowUpDown className='h-4 w-4' />
-      </Link>
-    )
-  }
-
+  /* -------------------------- Column definitions -------------------------- */
   const columns = React.useMemo<Column<RowType>[]>(() => {
     return [
       {
@@ -239,9 +220,9 @@ export default function AdminUsersTable({
         render: (_v, row) => <RowActions row={row} />,
       },
     ]
-  }, [sort, order, basePath, initialParams, search])
+  }, [sortableHeader])
 
-  /* All rows fit on one client page - paging handled server‑side */
+  /* ------------------------------ Render ---------------------------------- */
   return (
     <DataTable
       columns={columns}
