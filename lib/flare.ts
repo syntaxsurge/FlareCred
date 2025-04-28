@@ -157,7 +157,10 @@ export async function readFlrUsdPriceWei(): Promise<{
   const iface = new ethers.Interface(FTSO_HELPER_ABI)
   const data = iface.encodeFunctionData('flrUsdPriceWei')
   const raw = await provider.call({ to: NEXT_PUBLIC_FTSO_HELPER_ADDRESS, data })
-  const [priceWei, ts] = iface.decodeFunctionResult('flrUsdPriceWei', raw) as [bigint, bigint]
+  const [priceWei, ts] = iface.decodeFunctionResult(
+    'flrUsdPriceWei',
+    raw,
+  ) as unknown as [bigint, bigint]
   return { priceWei, timestamp: Number(ts) }
 }
 
@@ -183,7 +186,7 @@ export async function randomMod(bound: number | bigint): Promise<bigint> {
   const iface = new ethers.Interface(RNG_HELPER_ABI)
   const data = iface.encodeFunctionData('randomMod', [BigInt(bound)])
   const raw = await provider.call({ to: NEXT_PUBLIC_RNG_HELPER_ADDRESS, data })
-  const [rnd] = iface.decodeFunctionResult('randomMod', raw) as [bigint]
+  const [rnd] = iface.decodeFunctionResult('randomMod', raw) as unknown as [bigint]
   return rnd
 }
 
