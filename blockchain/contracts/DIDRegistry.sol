@@ -6,8 +6,8 @@ import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
 /// @title FlareCred DID Registry
-/// @notice Allows each address to mint exactly one `did:flare:0x…` and update its document pointer.
-///         Adds a `hasDID` helper so external apps can easily query registration state.
+/// @notice Allows each address to mint one `did:flare:0x…`, update its document pointer,
+///         and lets admins pre-mint DIDs for any account (useful during deployment).
 contract DIDRegistry is AccessControl {
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
@@ -16,7 +16,7 @@ contract DIDRegistry is AccessControl {
         bytes32 docHash;
     }
 
-    /// owner → DID string (`did:flare:0x…`)
+    /// owner → DID string
     mapping(address => string) public didOf;
     /// DID string → document metadata
     mapping(string => DIDDocument) public documentOf;
@@ -30,12 +30,16 @@ contract DIDRegistry is AccessControl {
     }
 
     /* -------------------------------------------------------------------------- */
-    /*                                 M I N T                                    */
+    /*                               I N T E R N A L                              */
     /* -------------------------------------------------------------------------- */
 
     function _deriveDID(address owner) private pure returns (string memory) {
         return string.concat("did:flare:", Strings.toHexString(uint160(owner), 20));
     }
+
+    /* -------------------------------------------------------------------------- */
+    /*                                   M I N T                                  */
+    /* -------------------------------------------------------------------------- */
 
     /// @notice Mint a new DID for the caller.
     /// @param docHash Optional keccak-256 hash of the initial DID document (zero for none).
@@ -49,8 +53,20 @@ contract DIDRegistry is AccessControl {
         emit DIDCreated(msg.sender, did, docHash);
     }
 
+    /// @notice Admin helper to mint a DID for `owner` without their signature.
+    function adminCreateDID(address owner, bytes32 docHash) external onlyRole(ADMIN_ROLE) {
+        require(owner != address(0), "Owner is zero");
+        require(bytes(didOf[owner]).length == 0, "DID already exists");
+
+        string memory did = _deriveDID(owner);
+        didOf[owner] = did;
+        documentOf[did] = DIDDocument({uri: "", docHash: docHash});
+
+        emit DIDCreated(owner, did, docHash);
+    }
+
     /* -------------------------------------------------------------------------- */
-    /*                              U P D A T E                                   */
+    /*                                 U P D A T E                                */
     /* -------------------------------------------------------------------------- */
 
     /// @notice Update the caller’s DID document pointer/hash.
@@ -62,7 +78,7 @@ contract DIDRegistry is AccessControl {
         emit DIDDocumentUpdated(did, uri, hash);
     }
 
-    /// @notice Admin override for emergencies or issuer actions.
+    /// @notice Admin override for emergencies.
     function adminSetDocument(
         address owner,
         string calldata uri,
@@ -76,16 +92,15 @@ contract DIDRegistry is AccessControl {
     }
 
     /* -------------------------------------------------------------------------- */
-    /*                                  V I E W                                   */
+    /*                                   V I E W                                  */
     /* -------------------------------------------------------------------------- */
 
-    /// @notice Returns true if `owner` has minted a DID.
     function hasDID(address owner) external view returns (bool) {
         return bytes(didOf[owner]).length != 0;
     }
 
     /* -------------------------------------------------------------------------- */
-    /*                               ERC-165                                      */
+    /*                                 ERC-165                                    */
     /* -------------------------------------------------------------------------- */
 
     function supportsInterface(bytes4 id) public view override returns (bool) {

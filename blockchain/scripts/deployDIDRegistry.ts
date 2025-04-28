@@ -1,7 +1,5 @@
 /**
- * Deploys the DIDRegistry contract and (optionally) verifies it, then mints an
- * initial Decentralised Identifier (DID) for the platform so the front-end can
- * use it immediately.
+ * Deploys DIDRegistry, verifies it, and pre-mints the platform DID.
  *
  * Usage:
  *   pnpm hardhat run blockchain/scripts/deployDIDRegistry.ts --network <network>
@@ -22,30 +20,24 @@ async function main(): Promise<void> {
   const registry: DIDRegistryInstance = await DIDRegistry.new(...args)
   console.log(`✅  DIDRegistry deployed at ${registry.address}`)
 
-  /* Persist address for front-end env ------------------------------------ */
+  /* Persist contract address */
   updateEnvLog('NEXT_PUBLIC_DID_REGISTRY_ADDRESS', registry.address)
 
-  /* -------------------------------------------------------------------- */
-  /*                     Mint platform DID immediately                     */
-  /* -------------------------------------------------------------------- */
+  /* ------------------ Mint platform DID via adminCreateDID ----------------- */
   if (!platformAddress) {
     console.warn('⚠️  PLATFORM_ADDRESS env var not set – skipping DID mint')
   } else {
     try {
-      await registry.createDID(ZeroHash, { from: platformAddress })
+      await registry.adminCreateDID(platformAddress, ZeroHash, { from: adminAddress })
       const did = await registry.didOf(platformAddress)
       console.log(`🎉  Platform DID created → ${did}`)
-
-      /* Persist DID for env file ---------------------------------------- */
       updateEnvLog('PLATFORM_ISSUER_DID', did)
     } catch (err) {
       console.warn('⚠️  Failed to mint platform DID:', (err as Error).message)
     }
   }
 
-  /* -------------------------------------------------------------------- */
-  /*                        Optional explorer verification                 */
-  /* -------------------------------------------------------------------- */
+  /* -------------------------- Explorer verification ------------------------ */
   if (!['hardhat', 'localhost'].includes(network.name)) {
     try {
       await run('verify:verify', {
