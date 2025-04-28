@@ -2,8 +2,8 @@
  * GitHub Metrics Worker
  * ---------------------
  * Fetches repository statistics via the GitHub REST v3 API, wraps the
- * response in an IJsonApi.Proof compatible payload, pins the resulting
- * JSON to IPFS, and logs the resulting CID to stdout.
+ * response in a JSON-API proof object, stores it on IPFS through Helia,
+ * then (optionally) pins the resulting CID on Pinata.
  *
  * Usage:
  *   pnpm run worker:github -- <owner>/<repo>
@@ -15,11 +15,16 @@
  */
 
 import { Octokit } from '@octokit/rest'
-import { create as createIpfs } from 'ipfs-http-client'
-import { formatIso } from '../lib/utils/time.js'
+import { createHelia } from 'helia'
+import { strings } from '@helia/strings'
 import process from 'node:process'
 import crypto from 'node:crypto'
-import { GITHUB_TOKEN, IPFS_PINATA_KEY, IPFS_PINATA_SECRET } from '@/lib/config.js'
+import { formatIso } from '../lib/utils/time.js'
+import {
+  GITHUB_TOKEN,
+  IPFS_PINATA_KEY,
+  IPFS_PINATA_SECRET,
+} from '@/lib/config.js'
 
 /* -------------------------------------------------------------------------- */
 /*                         C L I   &   E N V   P A R S E                      */
@@ -50,7 +55,7 @@ try {
 
 const r = repoResponse.data
 
-/* Extract the subset of fields we care about to keep the proof compact */
+/* Extract a concise metrics subset to keep the proof lightweight */
 const metrics = {
   full_name: r.full_name,
   description: r.description,
@@ -88,8 +93,8 @@ type JsonApiProof = {
   timestamp: string
 }
 
-/** Canonical schema URI for JSON-API proofs per FDC spec */
-const SCHEMA_URI = 'fdc:flareschema/jsonapi/1-0-0' // illustrative; not enforced on-chain
+/** Canonical schema URI for JSON-API proofs per FDC spec (illustrative) */
+const SCHEMA_URI = 'fdc:flareschema/jsonapi/1-0-0'
 
 const proof: JsonApiProof = {
   schema: SCHEMA_URI,
@@ -107,41 +112,43 @@ const proof: JsonApiProof = {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                         I P F S   P I N N I N G                            */
+/*                         I P F S   U P L O A D  (Helia)                     */
 /* -------------------------------------------------------------------------- */
 
-console.log('ℹ️  Pinning proof JSON to IPFS …')
+console.log('ℹ️  Initialising Helia node …')
 
-/**
- * Build IPFS client; if Pinata credentials are provided, we authenticate via
- * the PSA endpoint, otherwise we fall back to unauthenticated Infura gateway.
- */
-function createPinningClient() {
-  if (IPFS_PINATA_KEY && IPFS_PINATA_SECRET) {
-    const auth = Buffer.from(`${IPFS_PINATA_KEY}:${IPFS_PINATA_SECRET}`).toString('base64')
-    return createIpfs({
-      url: 'https://api.pinata.cloud/psa',
-      headers: { Authorization: `Basic ${auth}` },
-    })
-  }
+const helia = await createHelia()
+const s = strings(helia)
 
-  // Public write gateway (unauthenticated) – suitable for development
-  return createIpfs({ url: 'https://ipfs.infura.io:5001/api/v0' })
-}
+console.log('ℹ️  Adding proof JSON to IPFS via Helia …')
+const cid = await s.add(JSON.stringify(proof))
+const cidStr = cid.toString()
 
-const ipfs = createPinningClient()
+/* -------------------------------------------------------------------------- */
+/*                     O P T I O N A L   R E M O T E   P I N                  */
+/* -------------------------------------------------------------------------- */
 
-let cidStr: string
-try {
-  const { cid } = await ipfs.add(JSON.stringify(proof), {
-    pin: true,
-    wrapWithDirectory: false,
+async function pinWithPinata(cidStr: string) {
+  if (!IPFS_PINATA_KEY || !IPFS_PINATA_SECRET) return
+  console.log('ℹ️  Pinning CID to Pinata …')
+  const auth = Buffer.from(`${IPFS_PINATA_KEY}:${IPFS_PINATA_SECRET}`).toString('base64')
+  const res = await fetch('https://api.pinata.cloud/psa/pins', {
+    method: 'POST',
+    headers: {
+      Authorization: `Basic ${auth}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ cid: cidStr }),
   })
-  cidStr = cid.toString()
-} catch (err: any) {
-  console.error(`❌  IPFS pinning failed: ${err?.message || String(err)}`)
-  process.exit(1)
+  if (!res.ok) {
+    const msg = await res.text()
+    console.warn(`⚠️  Pinata pin failed (${res.status}): ${msg}`)
+  } else {
+    console.log('✅  Pin queued on Pinata')
+  }
 }
+
+await pinWithPinata(cidStr)
 
 /* -------------------------------------------------------------------------- */
 /*                             O U T P U T                                    */
@@ -149,8 +156,15 @@ try {
 
 const digest = crypto.createHash('sha256').update(JSON.stringify(proof)).digest('hex')
 
-console.log('✅  Proof pinned to IPFS')
+console.log('✅  Proof uploaded to IPFS')
 console.log(`    CID: ${cidStr}`)
 console.log(`    SHA-256 digest: ${digest}`)
 console.log('\n┊ proof JSON ┊')
 console.log(JSON.stringify(proof, null, 2))
+
+/* Clean shutdown to ensure the process exits */
+try {
+  await helia.stop()
+} catch {
+  /* ignore */
+}

@@ -21,6 +21,7 @@
   "dependencies": {
     "@esbuild-kit/core-utils": "^3.3.2",
     "@esbuild-kit/esm-loader": "^2.6.5",
+    "@helia/strings": "^4.0.3",
     "@hello-pangea/dnd": "^18.0.1",
     "@octokit/rest": "^21.1.1",
     "@radix-ui/react-alert-dialog": "^1.1.10",

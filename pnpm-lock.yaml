@@ -14,6 +14,9 @@ importers:
       '@esbuild-kit/esm-loader':
         specifier: ^2.6.5
         version: 2.6.5
+      '@helia/strings':
+        specifier: ^4.0.3
+        version: 4.0.3
       '@hello-pangea/dnd':
         specifier: ^18.0.1
         version: 18.0.1(@types/react@19.1.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -971,6 +974,9 @@ packages:
 
   '@helia/routers@3.0.1':
     resolution: {integrity: sha512-Eshr/8XJU4c0H8s1m5oBFB2YM0n3HBbxB3ny8DbsRFS8cAQ/L8ujnQomniMjZuuOhcNz8EEGwkUc07HCtAqAFA==}
+
+  '@helia/strings@4.0.3':
+    resolution: {integrity: sha512-O5HOYvrRLxTA7TPtwgH/zBAJZae7CHiFY0ncWjBny/44C52GMheHXrplc3KLB1/PPRCpfUt2oL7Wuj1ag8UEbw==}
 
   '@helia/utils@1.2.2':
     resolution: {integrity: sha512-f8TC+gTQkMTVPaSDB8sSV+8W5/QIMX9XNWY2Xf0Y/WVzGm+Nz5o5wpVTT1kgBpILngXHSs4Xo+6aBQlafL15EA==}
@@ -7517,6 +7523,15 @@ snapshots:
       it-first: 3.0.7
       it-map: 3.1.2
       multiformats: 13.3.2
+      uint8arrays: 5.1.0
+
+  '@helia/strings@4.0.3':
+    dependencies:
+      '@helia/interface': 5.2.1
+      '@libp2p/interface': 2.9.0
+      interface-blockstore: 5.3.1
+      multiformats: 13.3.2
+      progress-events: 1.0.1
       uint8arrays: 5.1.0
 
   '@helia/utils@1.2.2':
