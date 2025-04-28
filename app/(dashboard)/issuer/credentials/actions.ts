@@ -2,7 +2,6 @@
 
 import { eq, and } from 'drizzle-orm'
 import { z } from 'zod'
-import { ethers } from 'ethers'
 
 import { validatedActionWithUser } from '@/lib/auth/middleware'
 import { issueFlareCredential, verifyFdcProof } from '@/lib/contracts/flare'
@@ -221,5 +220,46 @@ export const rejectCredentialAction = validatedActionWithUser(
       )
 
     return { success: 'Credential rejected.' }
+  },
+)
+
+/* -------------------------------------------------------------------------- */
+/*                            U N V E R I F Y                                 */
+/* -------------------------------------------------------------------------- */
+
+export const unverifyCredentialAction = validatedActionWithUser(
+  z.object({ credentialId: z.coerce.number() }),
+  async ({ credentialId }, _, user) => {
+    const [issuer] = await db
+      .select()
+      .from(issuers)
+      .where(eq(issuers.ownerUserId, user.id))
+      .limit(1)
+    if (!issuer) return buildError('Issuer not found.')
+
+    const [cred] = await db
+      .select()
+      .from(candidateCredentials)
+      .where(
+        and(
+          eq(candidateCredentials.id, credentialId),
+          eq(candidateCredentials.issuerId, issuer.id),
+        ),
+      )
+      .limit(1)
+    if (!cred) return buildError('Credential not found for this issuer.')
+    if (cred.status !== CredentialStatus.VERIFIED)
+      return buildError('Only verified credentials can be unverified.')
+
+    await db
+      .update(candidateCredentials)
+      .set({
+        status: CredentialStatus.UNVERIFIED,
+        verified: false,
+        verifiedAt: null,
+      })
+      .where(eq(candidateCredentials.id, cred.id))
+
+    return { success: 'Credential marked unverified.' }
   },
 )
