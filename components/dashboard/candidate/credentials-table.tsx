@@ -1,10 +1,9 @@
 'use client'
 
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
-import { MoreHorizontal, Trash2, FileText, Clipboard, Loader2, ArrowUpDown } from 'lucide-react'
+import { MoreHorizontal, Trash2, FileText, Clipboard, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { deleteCredentialAction } from '@/app/(dashboard)/admin/credentials/actions'
@@ -19,13 +18,14 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
+import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { CandidateCredentialRow } from '@/lib/types/table-rows'
-import { buildLink, getProofTx } from '@/lib/utils'
-
+import { getProofTx } from '@/lib/utils'
 
 /* -------------------------------------------------------------------------- */
 /*                                 PROPS                                      */
 /* -------------------------------------------------------------------------- */
+
 interface CredentialsTableProps {
   rows: CandidateCredentialRow[]
   sort: string
@@ -164,66 +164,47 @@ export default function CandidateCredentialsTable({
   const router = useRouter()
   const bulkActions = buildBulkActions(router)
 
-  /* ----------------------------- Search ----------------------------------- */
-  const [search, setSearch] = React.useState(searchQuery)
-  const debounceRef = React.useRef<NodeJS.Timeout | null>(null)
+  /* -------------------- Centralised navigation helpers -------------------- */
+  const { search, handleSearchChange, sortableHeader } = useTableNavigation({
+    basePath,
+    initialParams,
+    sort,
+    order,
+    searchQuery,
+  })
 
-  function handleSearchChange(value: string) {
-    setSearch(value)
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      const href = buildLink(basePath, initialParams, { q: value, page: 1 })
-      router.push(href, { scroll: false })
-    }, 400)
-  }
-
-  /* --------------------------- Sort headers ------------------------------- */
-  const sortHeader = (label: string, key: string) => {
-    const nextOrder = sort === key && order === 'asc' ? 'desc' : 'asc'
-    const href = buildLink(basePath, initialParams, {
-      sort: key,
-      order: nextOrder,
-      page: 1,
-      q: search,
-    })
-    return (
-      <Link href={href} scroll={false} className='flex items-center gap-1'>
-        {label} <ArrowUpDown className='h-4 w-4' />
-      </Link>
-    )
-  }
-
+  /* ----------------------------- Columns ---------------------------------- */
   const columns = React.useMemo<Column<CandidateCredentialRow>[]>(() => {
     return [
       {
         key: 'title',
-        header: sortHeader('Title', 'title'),
+        header: sortableHeader('Title', 'title'),
         sortable: false,
         render: (v) => <span className='font-medium'>{v as string}</span>,
       },
       {
         key: 'category',
-        header: sortHeader('Category', 'category'),
+        header: sortableHeader('Category', 'category'),
         sortable: false,
         className: 'capitalize',
         render: (v) => v as string,
       },
       {
         key: 'type',
-        header: sortHeader('Type', 'type'),
+        header: sortableHeader('Type', 'type'),
         sortable: false,
         className: 'capitalize',
         render: (v) => v as string,
       },
       {
         key: 'issuer',
-        header: sortHeader('Issuer', 'issuer'),
+        header: sortableHeader('Issuer', 'issuer'),
         sortable: false,
         render: (v) => (v as string | null) || '—',
       },
       {
         key: 'status',
-        header: sortHeader('Status', 'status'),
+        header: sortableHeader('Status', 'status'),
         sortable: false,
         render: (v) => <StatusBadge status={String(v)} />,
       },
@@ -256,8 +237,9 @@ export default function CandidateCredentialsTable({
         render: (_v, row) => <RowActions row={row} />,
       },
     ]
-  }, [sort, order, basePath, initialParams, search])
+  }, [sortableHeader])
 
+  /* ------------------------------- View ---------------------------------- */
   return (
     <DataTable
       columns={columns}
