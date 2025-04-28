@@ -3,26 +3,16 @@
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
-import {
-  FileSignature,
-  XCircle,
-  type LucideProps,
-} from 'lucide-react'
+import { FileSignature, XCircle, type LucideProps } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { rejectCredentialAction } from '@/app/(dashboard)/issuer/credentials/actions'
 import { StatusBadge } from '@/components/ui/status-badge'
-import {
-  DataTable,
-  type Column,
-  type BulkAction,
-} from '@/components/ui/tables/data-table'
-import {
-  TableRowActions,
-  type TableRowAction,
-} from '@/components/ui/tables/row-actions'
+import { DataTable, type Column } from '@/components/ui/tables/data-table'
+import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
 import { CredentialStatus } from '@/lib/db/schema/candidate'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
+import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import { getProofTx } from '@/lib/utils'
 
 /* -------------------------------------------------------------------------- */
@@ -60,34 +50,29 @@ const RejectIcon = (props: LucideProps) => (
 /*                         Bulk-selection actions                             */
 /* -------------------------------------------------------------------------- */
 
-function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowType>[] {
-  const [isPending, startTransition] = React.useTransition()
-
-  async function bulkReject(rows: RowType[]) {
-    const toastId = toast.loading('Rejecting…')
-    const results = await Promise.all(
-      rows.map(async (cred) => {
-        const fd = new FormData()
-        fd.append('credentialId', cred.id.toString())
-        return rejectCredentialAction({}, fd)
-      }),
-    )
-    const errors = results.filter((r) => r?.error).map((r) => r!.error)
-    errors.length
-      ? toast.error(errors.join('\n'), { id: toastId })
-      : toast.success('Credentials rejected.', { id: toastId })
-    router.refresh()
-  }
-
-  return [
+function useBulkReject(router: ReturnType<typeof useRouter>) {
+  return useBulkActions<RowType>([
     {
       label: 'Reject',
       icon: RejectIcon as any,
       variant: 'destructive',
-      onClick: (selected) => startTransition(() => bulkReject(selected)),
-      isDisabled: () => isPending,
+      handler: async (rows) => {
+        const toastId = toast.loading('Rejecting…')
+        const results = await Promise.all(
+          rows.map(async (cred) => {
+            const fd = new FormData()
+            fd.append('credentialId', cred.id.toString())
+            return rejectCredentialAction({}, fd)
+          }),
+        )
+        const errors = results.filter((r) => r?.error).map((r) => r!.error)
+        errors.length
+          ? toast.error(errors.join('\n'), { id: toastId })
+          : toast.success('Credentials rejected.', { id: toastId })
+        router.refresh()
+      },
     },
-  ]
+  ])
 }
 
 /* -------------------------------------------------------------------------- */
@@ -120,7 +105,7 @@ export default function IssuerRequestsTable({
   searchQuery,
 }: Props) {
   const router = useRouter()
-  const bulkActions = buildBulkActions(router)
+  const bulkActions = useBulkReject(router)
   const makeActions = useRowActions()
 
   /* -------------------- Centralised navigation helpers -------------------- */

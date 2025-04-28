@@ -7,9 +7,10 @@ import { Trash2, FolderKanban } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { deletePipelineCandidateAction } from '@/app/(dashboard)/recruiter/pipelines/actions'
-import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
+import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
 import StatusBadge from '@/components/ui/status-badge'
+import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 
 /* -------------------------------------------------------------------------- */
@@ -33,36 +34,6 @@ interface PipelineEntriesTableProps {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                              Bulk actions                                  */
-/* -------------------------------------------------------------------------- */
-
-function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowType>[] {
-  const [isPending, startTransition] = React.useTransition()
-
-  return [
-    {
-      label: 'Remove',
-      icon: Trash2,
-      variant: 'destructive',
-      onClick: (selected) =>
-        startTransition(async () => {
-          const toastId = toast.loading('Removing…')
-          await Promise.all(
-            selected.map(async (r) => {
-              const fd = new FormData()
-              fd.append('pipelineCandidateId', String(r.id))
-              return deletePipelineCandidateAction({}, fd)
-            }),
-          )
-          toast.success('Selected entries removed.', { id: toastId })
-          router.refresh()
-        }),
-      isDisabled: () => isPending,
-    },
-  ]
-}
-
-/* -------------------------------------------------------------------------- */
 /*                                   Table                                    */
 /* -------------------------------------------------------------------------- */
 
@@ -75,7 +46,28 @@ export default function PipelineEntriesTable({
   searchQuery,
 }: PipelineEntriesTableProps) {
   const router = useRouter()
-  const bulkActions = buildBulkActions(router)
+
+  /* ----------------------- Bulk-selection actions ------------------------ */
+  const bulkActions = useBulkActions<RowType>([
+    {
+      label: 'Remove',
+      icon: Trash2,
+      variant: 'destructive',
+      handler: async (selected) => {
+        const toastId = toast.loading('Removing…')
+        await Promise.all(
+          selected.map(async (r) => {
+            const fd = new FormData()
+            fd.append('pipelineCandidateId', String(r.id))
+            return deletePipelineCandidateAction({}, fd)
+          }),
+        )
+        toast.success('Selected entries removed.', { id: toastId })
+        router.refresh()
+      },
+    },
+  ])
+
   const [isPending, startTransition] = React.useTransition()
 
   /* -------------------- Centralised navigation helpers -------------------- */
@@ -137,7 +129,7 @@ export default function PipelineEntriesTable({
         render: (v) => <StatusBadge status={v as string} />,
       },
       {
-        key: 'id', // actions column
+        key: 'id',
         header: '',
         enableHiding: false,
         sortable: false,
