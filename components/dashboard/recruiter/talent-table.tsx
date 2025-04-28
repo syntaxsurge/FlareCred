@@ -1,14 +1,15 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import * as React from 'react'
-
-import { ArrowUpDown } from 'lucide-react'
 
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import type { TalentRow } from '@/lib/types/table-rows'
-import { buildLink } from '@/lib/utils'
+import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
+
+/* -------------------------------------------------------------------------- */
+/*                                   Types                                    */
+/* -------------------------------------------------------------------------- */
 
 interface TalentTableProps {
   rows: TalentRow[]
@@ -31,37 +32,16 @@ export default function TalentTable({
   initialParams,
   searchQuery,
 }: TalentTableProps) {
-  const router = useRouter()
-  const [search, setSearch] = React.useState<string>(searchQuery)
-  const debounceRef = React.useRef<NodeJS.Timeout | null>(null)
+  /* -------------------- Centralised navigation helpers -------------------- */
+  const { search, handleSearchChange, sortableHeader } = useTableNavigation({
+    basePath,
+    initialParams,
+    sort,
+    order,
+    searchQuery,
+  })
 
-  /* --------------------------- Search (server) --------------------------- */
-  function handleSearchChange(value: string) {
-    setSearch(value)
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      const href = buildLink(basePath, initialParams, { q: value, page: 1 })
-      router.push(href, { scroll: false })
-    }, 400)
-  }
-
-  /* --------------------------- Sort helpers ----------------------------- */
-  function sortableHeader(label: string, key: string) {
-    const nextOrder = sort === key && order === 'asc' ? 'desc' : 'asc'
-    const href = buildLink(basePath, initialParams, {
-      sort: key,
-      order: nextOrder,
-      page: 1,
-      q: search,
-    })
-    return (
-      <Link href={href} scroll={false} className='flex items-center gap-1'>
-        {label} <ArrowUpDown className='h-4 w-4' />
-      </Link>
-    )
-  }
-
-  /* --------------------------- Column defs ------------------------------ */
+  /* ----------------------------- Columns ---------------------------------- */
   const columns = React.useMemo<Column<TalentRow>[]>(() => {
     return [
       {
@@ -100,9 +80,9 @@ export default function TalentTable({
         ),
       },
     ]
-  }, [sort, order, basePath, initialParams, search])
+  }, [sortableHeader])
 
-  /* ------------------------------- View --------------------------------- */
+  /* ------------------------------- View ---------------------------------- */
   return (
     <DataTable
       columns={columns}

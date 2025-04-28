@@ -1,11 +1,15 @@
 'use client'
 
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import * as React from 'react'
-
+import { useRouter } from 'next/navigation'
 import { formatDistanceToNow } from 'date-fns'
-import { ArrowUpDown, MoreHorizontal, Pencil, Trash2, Loader2 } from 'lucide-react'
+import Link from 'next/link'
+import {
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+  Loader2,
+} from 'lucide-react'
 import { toast } from 'sonner'
 
 import { removeTeamMember } from '@/app/(auth)/actions'
@@ -28,9 +32,8 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Label } from '@/components/ui/label'
 import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
-import { buildLink } from '@/lib/utils'
+import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import { truncateAddress } from '@/lib/utils/address'
-
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -73,13 +76,9 @@ function EditMemberForm({ row, onDone }: { row: RowType; onDone: () => void }) {
       fd.append('memberId', row.id.toString())
       fd.append('role', role)
       const res = await updateTeamMemberRoleAction({}, fd)
-      if (res?.error) {
-        toast.error(res.error)
-      } else {
-        toast.success(res?.success ?? 'Member updated.')
-        onDone()
-        router.refresh()
-      }
+      res?.error ? toast.error(res.error) : toast.success(res?.success ?? 'Member updated.')
+      onDone()
+      router.refresh()
     })
   }
 
@@ -122,7 +121,6 @@ function EditMemberForm({ row, onDone }: { row: RowType; onDone: () => void }) {
 function RowActions({ row, isOwner }: { row: RowType; isOwner: boolean }) {
   const router = useRouter()
   const [isPending, startTransition] = React.useTransition()
-
   const [menuOpen, setMenuOpen] = React.useState(false)
   const [editOpen, setEditOpen] = React.useState(false)
 
@@ -136,12 +134,8 @@ function RowActions({ row, isOwner }: { row: RowType; isOwner: boolean }) {
       const fd = new FormData()
       fd.append('memberId', row.id.toString())
       const res = await removeTeamMember({}, fd)
-      if (res?.error) {
-        toast.error(res.error)
-      } else {
-        toast.success(res?.success ?? 'Member removed.')
-        router.refresh()
-      }
+      res?.error ? toast.error(res.error) : toast.success(res?.success ?? 'Member removed.')
+      router.refresh()
     })
   }
 
@@ -181,7 +175,9 @@ function RowActions({ row, isOwner }: { row: RowType; isOwner: boolean }) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Member</DialogTitle>
-            <DialogDescription>Modify the member’s role, then save your changes.</DialogDescription>
+            <DialogDescription>
+              Modify the member’s role, then save your changes.
+            </DialogDescription>
           </DialogHeader>
           <EditMemberForm row={row} onDone={() => setEditOpen(false)} />
         </DialogContent>
@@ -236,35 +232,16 @@ export default function MembersTable({
   const router = useRouter()
   const bulkActions = isOwner ? buildBulkActions(router) : []
 
-  /* Search state */
-  const [search, setSearch] = React.useState(searchQuery)
-  const debounceRef = React.useRef<NodeJS.Timeout | null>(null)
+  /* -------------------- Centralised navigation helpers -------------------- */
+  const { search, handleSearchChange, sortableHeader } = useTableNavigation({
+    basePath,
+    initialParams,
+    sort,
+    order,
+    searchQuery,
+  })
 
-  function handleSearchChange(value: string) {
-    setSearch(value)
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      const href = buildLink(basePath, initialParams, { q: value, page: 1 })
-      router.push(href, { scroll: false })
-    }, 400)
-  }
-
-  /* Headers */
-  function sortableHeader(label: string, key: string) {
-    const nextOrder = sort === key && order === 'asc' ? 'desc' : 'asc'
-    const href = buildLink(basePath, initialParams, {
-      sort: key,
-      order: nextOrder,
-      page: 1,
-      q: search,
-    })
-    return (
-      <Link href={href} scroll={false} className='flex items-center gap-1'>
-        {label} <ArrowUpDown className='h-4 w-4' />
-      </Link>
-    )
-  }
-
+  /* --------------------------- Column definitions ------------------------- */
   const columns = React.useMemo<Column<RowType>[]>(() => {
     const base: Column<RowType>[] = [
       {
@@ -283,7 +260,9 @@ export default function MembersTable({
         key: 'walletAddress',
         header: 'Wallet',
         sortable: false,
-        render: (v) => <span className='font-mono text-xs'>{truncateAddress(v as string)}</span>,
+        render: (v) => (
+          <span className='font-mono text-xs'>{truncateAddress(v as string)}</span>
+        ),
       },
       {
         key: 'role',
@@ -309,9 +288,11 @@ export default function MembersTable({
         render: (_v, row) => <RowActions row={row} isOwner={isOwner} />,
       })
     }
-    return base
-  }, [isOwner, sort, order, basePath, initialParams, search])
 
+    return base
+  }, [sortableHeader, isOwner])
+
+  /* ------------------------------- View ---------------------------------- */
   return (
     <DataTable
       columns={columns}
