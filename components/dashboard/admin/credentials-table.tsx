@@ -8,10 +8,7 @@ import { toast } from 'sonner'
 
 import { deleteCredentialAction } from '@/app/(dashboard)/admin/credentials/actions'
 import { StatusBadge } from '@/components/ui/status-badge'
-import {
-  DataTable,
-  type Column,
-} from '@/components/ui/tables/data-table'
+import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
@@ -143,11 +140,11 @@ export default function AdminCredentialsTable({
         render: (v) => <StatusBadge status={String(v)} />,
       },
       {
-        key: 'proof',
+        key: 'vcJson', // Proof column
         header: 'Proof',
         sortable: false,
-        render: (_v, row) => {
-          const proofTx = getProofTx((row as any).vcJson)
+        render: (v) => {
+          const proofTx = getProofTx(v as string | null | undefined)
           return proofTx ? (
             <a
               href={`https://flarescan.com/tx/${proofTx}`}
