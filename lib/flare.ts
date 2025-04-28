@@ -2,81 +2,85 @@ import { ethers } from 'ethers'
 import type { Log, LogDescription } from 'ethers'
 
 /* -------------------------------------------------------------------------- */
-/*                            E N V  &  V A L I D S                           */
+/*                          E N V I R O N M E N T   I O                       */
 /* -------------------------------------------------------------------------- */
 
-function assertEnv(name: string, value: string | undefined): asserts value is string {
-  if (!value) throw new Error(`Environment variable ${name} is not set`)
-}
+type EnvKind = 'string' | 'number' | 'address'
 
-function assertAddress(name: string, value: string | undefined): string {
-  if (!value) throw new Error(`${name} is required`)
-  try {
-    return ethers.getAddress(value)
-  } catch {
-    throw new Error(`${name} is not a valid 0x address`)
+/**
+ * Read and validate an environment variable.
+ *
+ * @param name         Variable to fetch (e.g. `NEXT_PUBLIC_FLARE_RPC_URL`).
+ * @param kind         Desired type: `'string'` | `'number'` | `'address'`.
+ * @param optional     Mark `true` only for non-required vars.
+ */
+function env(
+  name: string,
+  {
+    kind = 'string',
+    optional = false,
+  }: { kind?: EnvKind; optional?: boolean } = {},
+): string | number | undefined {
+  const raw = process.env[name]
+  if ((raw === undefined || raw === '') && !optional) {
+    throw new Error(`Environment variable ${name} is not set`)
+  }
+  if (raw === undefined || raw === '') return undefined
+
+  switch (kind) {
+    case 'number': {
+      const num = Number(raw)
+      if (Number.isNaN(num)) throw new Error(`${name} is not a valid number`)
+      return num
+    }
+    case 'address':
+      try {
+        return ethers.getAddress(raw)
+      } catch {
+        throw new Error(`${name} is not a valid 0x address`)
+      }
+    default:
+      return raw
   }
 }
 
-const {
-  NEXT_PUBLIC_FLARE_RPC_URL,
-  NEXT_PUBLIC_FLARE_CHAIN_ID,
-  NEXT_PUBLIC_DID_REGISTRY_ADDRESS: _NEXT_PUBLIC_DID_REGISTRY_ADDRESS,
-  NEXT_PUBLIC_CREDENTIAL_NFT_ADDRESS: _NEXT_PUBLIC_CREDENTIAL_NFT_ADDRESS,
-  NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS: _NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS,
-  NEXT_PUBLIC_FDC_VERIFIER_ADDRESS: _NEXT_PUBLIC_FDC_VERIFIER_ADDRESS,
-  /* ------------ Oracle & RNG helper addresses --------------------------- */
-  NEXT_PUBLIC_FTSO_HELPER_ADDRESS: _NEXT_PUBLIC_FTSO_HELPER_ADDRESS,
-  NEXT_PUBLIC_RNG_HELPER_ADDRESS: _NEXT_PUBLIC_RNG_HELPER_ADDRESS,
-  /* --------------------------------------------------------------------- */
-  PRIVATE_KEY,
-} = process.env as Record<string, string | undefined>
-
-assertEnv('NEXT_PUBLIC_FLARE_RPC_URL', NEXT_PUBLIC_FLARE_RPC_URL)
-
-const NEXT_PUBLIC_DID_REGISTRY_ADDRESS = assertAddress(
-  'NEXT_PUBLIC_DID_REGISTRY_ADDRESS',
-  _NEXT_PUBLIC_DID_REGISTRY_ADDRESS,
-)
-const NEXT_PUBLIC_CREDENTIAL_NFT_ADDRESS = assertAddress(
-  'NEXT_PUBLIC_CREDENTIAL_NFT_ADDRESS',
-  _NEXT_PUBLIC_CREDENTIAL_NFT_ADDRESS,
-)
-const NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS = assertAddress(
-  'NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS',
-  _NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS,
-)
-const NEXT_PUBLIC_FDC_VERIFIER_ADDRESS = assertAddress(
-  'NEXT_PUBLIC_FDC_VERIFIER_ADDRESS',
-  _NEXT_PUBLIC_FDC_VERIFIER_ADDRESS,
-)
-const NEXT_PUBLIC_FTSO_HELPER_ADDRESS = assertAddress(
-  'NEXT_PUBLIC_FTSO_HELPER_ADDRESS',
-  _NEXT_PUBLIC_FTSO_HELPER_ADDRESS,
-)
-/** ----------------------- RNG helper address ---------------------------- */
-const NEXT_PUBLIC_RNG_HELPER_ADDRESS = assertAddress(
-  'NEXT_PUBLIC_RNG_HELPER_ADDRESS',
-  _NEXT_PUBLIC_RNG_HELPER_ADDRESS,
-)
-/** ---------------------------------------------------------------------- */
-
-const CHAIN_ID = Number(NEXT_PUBLIC_FLARE_CHAIN_ID ?? '114')
-
 /* -------------------------------------------------------------------------- */
-/*                               P R O V I D E R                              */
+/*                                  C O N S T S                               */
 /* -------------------------------------------------------------------------- */
 
-const provider = new ethers.JsonRpcProvider(NEXT_PUBLIC_FLARE_RPC_URL, {
+const FLARE_RPC_URL                = env('NEXT_PUBLIC_FLARE_RPC_URL') as string
+const CHAIN_ID                     = env('NEXT_PUBLIC_FLARE_CHAIN_ID', { kind: 'number' }) as number
+
+const DID_REGISTRY_ADDRESS         = env('NEXT_PUBLIC_DID_REGISTRY_ADDRESS', {
+  kind: 'address',
+}) as string
+const CREDENTIAL_NFT_ADDRESS       = env('NEXT_PUBLIC_CREDENTIAL_NFT_ADDRESS', {
+  kind: 'address',
+}) as string
+const SUBSCRIPTION_MANAGER_ADDRESS = env('NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS', {
+  kind: 'address',
+}) as string
+const FDC_VERIFIER_ADDRESS         = env('NEXT_PUBLIC_FDC_VERIFIER_ADDRESS', {
+  kind: 'address',
+  optional: true,
+}) as string | undefined
+const FTSO_HELPER_ADDRESS          = env('NEXT_PUBLIC_FTSO_HELPER_ADDRESS', {
+  kind: 'address',
+}) as string
+const RNG_HELPER_ADDRESS           = env('NEXT_PUBLIC_RNG_HELPER_ADDRESS', {
+  kind: 'address',
+}) as string
+
+/* -------------------------------------------------------------------------- */
+/*                                P R O V I D E R                             */
+/* -------------------------------------------------------------------------- */
+
+export const provider = new ethers.JsonRpcProvider(FLARE_RPC_URL, {
   name: 'flare',
   chainId: CHAIN_ID,
 })
 
-/* Optional relayer signer — lets the server submit transactions when a
-   PRIVATE_KEY is available (e.g. platform DID generation).               */
-const defaultSigner: ethers.Signer | null = PRIVATE_KEY
-  ? new ethers.Wallet(PRIVATE_KEY, provider)
-  : null
+const contract = (addr: string, abi: readonly string[]) => new ethers.Contract(addr, abi, provider)
 
 /* -------------------------------------------------------------------------- */
 /*                                    ABIs                                    */
@@ -107,56 +111,32 @@ const FDC_VERIFIER_ABI = [
   'function verifyAddress(bytes) view returns (bool)',
 ] as const
 
-/** ------------------ ORACLE HELPER ABI & INTERFACE ----------------------- */
 const FTSO_HELPER_ABI = [
   'function flrUsdPriceWei() view returns (uint256 priceWei, uint256 timestamp)',
 ] as const
-/** ------------------------------------------------------------------------ */
 
-/** ------------------ RNG HELPER ABI & INTERFACE -------------------------- */
-const RNG_HELPER_ABI = [
-  'function randomMod(uint256) view returns (uint256)',
-] as const
-/** ------------------------------------------------------------------------ */
+const RNG_HELPER_ABI = ['function randomMod(uint256) view returns (uint256)'] as const
 
 /* -------------------------------------------------------------------------- */
-/*                            R E A D  C O N T R A C T S                      */
+/*                             R E A D  C O N T R A C T S                     */
 /* -------------------------------------------------------------------------- */
 
-const didRegistryRead = new ethers.Contract(
-  NEXT_PUBLIC_DID_REGISTRY_ADDRESS,
-  DID_REGISTRY_ABI,
-  provider,
-)
-const credentialNftRead = new ethers.Contract(
-  NEXT_PUBLIC_CREDENTIAL_NFT_ADDRESS,
-  CREDENTIAL_NFT_ABI,
-  provider,
-)
-const subscriptionManagerRead = new ethers.Contract(
-  NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS,
-  SUBSCRIPTION_MANAGER_ABI,
-  provider,
-)
-
-const fdcVerifierRead: ethers.Contract | null = NEXT_PUBLIC_FDC_VERIFIER_ADDRESS
-  ? new ethers.Contract(NEXT_PUBLIC_FDC_VERIFIER_ADDRESS, FDC_VERIFIER_ABI, provider)
-  : null
+const didRegistryRead         = contract(DID_REGISTRY_ADDRESS, DID_REGISTRY_ABI)
+const credentialNftRead       = contract(CREDENTIAL_NFT_ADDRESS, CREDENTIAL_NFT_ABI)
+const subscriptionManagerRead = contract(SUBSCRIPTION_MANAGER_ADDRESS, SUBSCRIPTION_MANAGER_ABI)
+const fdcVerifierRead: ethers.Contract | null =
+  FDC_VERIFIER_ADDRESS ? contract(FDC_VERIFIER_ADDRESS, FDC_VERIFIER_ABI) : null
 
 /* -------------------------------------------------------------------------- */
-/*                        O R A C L E   P R I C E   R E A D E R               */
+/*                       P R I C E   &   R N G   H E L P E R S                */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Reads the on-chain FLR/USD price in wei precision along with its timestamp.
- */
-export async function readFlrUsdPriceWei(): Promise<{
-  priceWei: bigint
-  timestamp: number
-}> {
+export async function readFlrUsdPriceWei(): Promise<{ priceWei: bigint; timestamp: number }> {
   const iface = new ethers.Interface(FTSO_HELPER_ABI)
-  const data = iface.encodeFunctionData('flrUsdPriceWei')
-  const raw = await provider.call({ to: NEXT_PUBLIC_FTSO_HELPER_ADDRESS, data })
+  const raw   = await provider.call({
+    to  : FTSO_HELPER_ADDRESS,
+    data: iface.encodeFunctionData('flrUsdPriceWei'),
+  })
   const [priceWei, ts] = iface.decodeFunctionResult(
     'flrUsdPriceWei',
     raw,
@@ -164,196 +144,135 @@ export async function readFlrUsdPriceWei(): Promise<{
   return { priceWei, timestamp: Number(ts) }
 }
 
-/**
- * Convenience helper converting wei-denominated price to a plain USD number.
- */
-export function formatUsd(priceWei: bigint): number {
-  return Number(priceWei) / 1e18
-}
+export const formatUsd = (priceWei: bigint): number => Number(priceWei) / 1e18
 
-/* -------------------------------------------------------------------------- */
-/*                      R N G   R A N D O M   U T I L I T Y                   */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Fetches a verifiable random number bounded to `[0, bound - 1]` using
- * RngHelper.randomMod on-chain, returning the uint256 as a bigint.
- */
 export async function randomMod(bound: number | bigint): Promise<bigint> {
-  if (typeof bound === 'number' && bound <= 0) throw new Error('bound must be positive')
-  if (typeof bound === 'bigint' && bound <= 0n) throw new Error('bound must be positive')
-
+  if ((typeof bound === 'number' && bound <= 0) || (typeof bound === 'bigint' && bound <= 0n)) {
+    throw new Error('bound must be positive')
+  }
   const iface = new ethers.Interface(RNG_HELPER_ABI)
-  const data = iface.encodeFunctionData('randomMod', [BigInt(bound)])
-  const raw = await provider.call({ to: NEXT_PUBLIC_RNG_HELPER_ADDRESS, data })
+  const raw   = await provider.call({
+    to  : RNG_HELPER_ADDRESS,
+    data: iface.encodeFunctionData('randomMod', [BigInt(bound)]),
+  })
   const [rnd] = iface.decodeFunctionResult('randomMod', raw) as unknown as [bigint]
   return rnd
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                   Utils                                    */
+/*                                  U T I L S                                 */
 /* -------------------------------------------------------------------------- */
 
-function toBytes32(input: string): string {
-  // Accept raw 32-byte hex or derive keccak-256 hash of arbitrary data
-  if (ethers.isHexString(input, 32)) return input
-  return ethers.keccak256(ethers.toUtf8Bytes(input))
-}
+const toBytes32 = (input: string) =>
+  ethers.isHexString(input, 32) ? input : ethers.keccak256(ethers.toUtf8Bytes(input))
 
 type SignerArgs = { signer?: ethers.Signer; signerAddress?: string }
 
 function resolveSigner(args?: SignerArgs): ethers.Signer {
   if (args?.signer) return args.signer
   if (args?.signerAddress) {
-    const addr = assertAddress('signerAddress', args.signerAddress)
-    return new ethers.VoidSigner(addr, provider)
+    return new ethers.VoidSigner(ethers.getAddress(args.signerAddress), provider)
   }
-  if (defaultSigner) return defaultSigner
-  throw new Error('No signer available; provide signer or set PRIVATE_KEY')
+  throw new Error('Signer is required – provide signer or signerAddress')
 }
 
 /* -------------------------------------------------------------------------- */
-/*                        F D C   P R O O F   C H E C K                       */
+/*                         F D C   P R O O F   C H E C K                      */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Calls the on-chain FlareCredVerifier to confirm an FDC proof is valid.
- * Throws on failure with the underlying revert reason for precise UI feedback.
- */
-export async function verifyFdcProof(proofType: string, proofData: any): Promise<boolean> {
-  if (!fdcVerifierRead) {
-    throw new Error('FDC verifier contract address is not configured')
-  }
+export async function verifyFdcProof(proofType: string, proofData: unknown): Promise<boolean> {
+  if (!fdcVerifierRead) throw new Error('FDC verifier contract address is not configured')
 
-  /* Resolve method name --------------------------------------------------- */
   const fnMap: Record<string, string> = {
-    EVM: 'verifyEVM',
-    JSON: 'verifyJson',
+    EVM    : 'verifyEVM',
+    JSON   : 'verifyJson',
     PAYMENT: 'verifyPayment',
     ADDRESS: 'verifyAddress',
   }
+
   const fn = fnMap[proofType.toUpperCase()]
   if (!fn) throw new Error(`Unsupported proofType '${proofType}'`)
 
-  /* Normalise proof input -------------------------------------------------- */
-  let arg: any = proofData
+  let arg: unknown = proofData
   if (typeof proofData === 'string') {
     try {
       arg = JSON.parse(proofData)
-    } catch {
-      // keep raw string (e.g. tx-hash) – ABI enc will coerce to bytes
-    }
+    } catch {/* keep raw string */}
   }
 
-  /* Static call – surface revert reasons ---------------------------------- */
   try {
-    // ethers v6: readonly call is already static
     const ok: boolean = await (fdcVerifierRead as any)[fn](arg)
     if (!ok) throw new Error('Proof verification failed')
     return true
   } catch (err: any) {
-    // Bubble revert reason up
     throw new Error(err?.shortMessage || err?.reason || err?.message || 'Proof verification failed')
   }
 }
 
 /* -------------------------------------------------------------------------- */
-/*                               P U B L I C  API                             */
+/*                                P U B L I C  API                            */
 /* -------------------------------------------------------------------------- */
 
-/* ---------- DID ---------- */
 export async function createFlareDID(args?: SignerArgs & { docHash?: string }) {
-  const signer = resolveSigner(args)
-  const writable = new ethers.Contract(
-    NEXT_PUBLIC_DID_REGISTRY_ADDRESS,
-    DID_REGISTRY_ABI,
-    signer,
-  )
-  const docHash = args?.docHash ?? ethers.ZeroHash
-
-  const tx = await writable.createDID(docHash)
-  const receipt = await tx.wait()
-
-  const owner = await signer.getAddress()
-  const did: string = await didRegistryRead.didOf(owner)
-
-  return { did, txHash: receipt.hash }
+  const signer   = resolveSigner(args)
+  const registry = new ethers.Contract(DID_REGISTRY_ADDRESS, DID_REGISTRY_ABI, signer)
+  const receipt  = await (await registry.createDID(args?.docHash ?? ethers.ZeroHash)).wait()
+  return { did: await didRegistryRead.didOf(await signer.getAddress()), txHash: receipt.hash }
 }
 
-/* ---------- Credential NFT ---------- */
 export async function issueFlareCredential(
   args: SignerArgs & { to: string; vcHash: string; uri: string },
 ) {
-  const signer = resolveSigner(args)
-  const writable = new ethers.Contract(
-    NEXT_PUBLIC_CREDENTIAL_NFT_ADDRESS,
-    CREDENTIAL_NFT_ABI,
-    signer,
-  )
+  const signer   = resolveSigner(args)
+  const nftWrite = new ethers.Contract(CREDENTIAL_NFT_ADDRESS, CREDENTIAL_NFT_ABI, signer)
+  const receipt  = await (
+    await nftWrite.mintCredential(
+      ethers.getAddress(args.to),
+      toBytes32(args.vcHash),
+      args.uri,
+    )
+  ).wait()
 
-  const toAddr = ethers.getAddress(args.to)
-  const tx = await writable.mintCredential(toAddr, toBytes32(args.vcHash), args.uri)
-  const receipt = await tx.wait()
+  const parsedLog = receipt.logs
+    .map((l: Log): LogDescription | null => {
+      try {
+        return nftWrite.interface.parseLog(l)
+      } catch {
+        return null
+      }
+    })
+    .find(
+      (desc: LogDescription | null): desc is LogDescription =>
+        !!desc && desc.name === 'CredentialMinted',
+    )
 
-  /* Parse CredentialMinted event for tokenId */
-  const intf = writable.interface
-  const log = receipt.logs.find((l: Log) => {
-    try {
-      const desc = intf.parseLog(l) as LogDescription | null
-      return desc !== null && desc.name === 'CredentialMinted'
-    } catch {
-      return false
-    }
-  })
+  if (!parsedLog) throw new Error('CredentialMinted event not found')
 
-  if (!log) throw new Error('CredentialMinted event not found')
-
-  const parsed = intf.parseLog(log as Log) as LogDescription | null
-  if (!parsed) throw new Error('Failed to parse event log')
-
-  const tokenId = parsed.args.tokenId as bigint
-
-  return { tokenId, txHash: receipt.hash }
+  return { tokenId: parsedLog.args.tokenId as bigint, txHash: receipt.hash }
 }
 
-export async function verifyFlareCredential(tokenId: bigint, expectedVcHash: string) {
-  const stored = await credentialNftRead.getVcHash(tokenId)
-  return stored.toLowerCase() === toBytes32(expectedVcHash).toLowerCase()
-}
-
-/* ---------- Subscription ---------- */
+export const verifyFlareCredential = async (tokenId: bigint, expectedVcHash: string) =>
+  (await credentialNftRead.getVcHash(tokenId)).toLowerCase() ===
+  toBytes32(expectedVcHash).toLowerCase()
 
 export async function paySubscription(
   args: SignerArgs & { planKey: number },
 ): Promise<{ txHash: string; paidUntil: Date }> {
-  const signer = resolveSigner(args)
-  const writable = new ethers.Contract(
-    NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS,
-    SUBSCRIPTION_MANAGER_ABI,
-    signer,
-  )
+  const signer   = resolveSigner(args)
+  const mgrWrite = new ethers.Contract(SUBSCRIPTION_MANAGER_ADDRESS, SUBSCRIPTION_MANAGER_ABI, signer)
 
-  const planKey = args.planKey
-  const price: bigint = await subscriptionManagerRead.planPriceWei(planKey)
+  const price: bigint = await subscriptionManagerRead.planPriceWei(args.planKey)
   if (price === 0n) throw new Error('Unknown plan key')
 
-  const team = await signer.getAddress()
-  const tx = await writable.paySubscription(team, planKey, { value: price })
-  const receipt = await tx.wait()
+  const receipt = await (
+    await mgrWrite.paySubscription(await signer.getAddress(), args.planKey, { value: price })
+  ).wait()
 
-  const paidUntilSec: bigint = await subscriptionManagerRead.paidUntil(team)
-  return { txHash: receipt.hash, paidUntil: new Date(Number(paidUntilSec) * 1000) }
+  const paid = await subscriptionManagerRead.paidUntil(await signer.getAddress())
+  return { txHash: receipt.hash, paidUntil: new Date(Number(paid) * 1000) }
 }
 
-export async function checkSubscription(teamAddress: string): Promise<Date | null> {
-  const addr = ethers.getAddress(teamAddress)
-  const ts: bigint = await subscriptionManagerRead.paidUntil(addr)
-  if (ts === 0n) return null
-  return new Date(Number(ts) * 1000)
+export const checkSubscription = async (team: string): Promise<Date | null> => {
+  const ts = await subscriptionManagerRead.paidUntil(ethers.getAddress(team))
+  return ts === 0n ? null : new Date(Number(ts) * 1000)
 }
-
-/* -------------------------------------------------------------------------- */
-/*                               E X P O R T S                                */
-/* -------------------------------------------------------------------------- */
-
-export { provider }
