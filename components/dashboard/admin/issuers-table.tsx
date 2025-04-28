@@ -1,16 +1,13 @@
 'use client'
 
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
 import {
-  MoreHorizontal,
   ShieldCheck,
   ShieldX,
   XCircle,
   Trash2,
-  Loader2,
   type LucideProps,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -20,16 +17,12 @@ import {
   deleteIssuerAction,
 } from '@/app/(dashboard)/admin/issuers/actions'
 import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuItem,
-} from '@/components/ui/dropdown-menu'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
+import {
+  TableRowActions,
+  type TableRowAction,
+} from '@/components/ui/tables/row-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import { IssuerStatus } from '@/lib/db/schema/issuer'
 import { cn } from '@/lib/utils'
@@ -80,113 +73,11 @@ const RejectIcon = ({ className, ...props }: LucideProps) => (
 )
 
 /* -------------------------------------------------------------------------- */
-/*                               Row Actions                                  */
-/* -------------------------------------------------------------------------- */
-
-function RowActions({ id, status }: { id: number; status: string }) {
-  const router = useRouter()
-  const [isPending, startTransition] = React.useTransition()
-
-  async function mutate(next: keyof typeof IssuerStatus, reason?: string) {
-    startTransition(async () => {
-      const toastId = toast.loading('Updating issuer…')
-      const fd = new FormData()
-      fd.append('issuerId', id.toString())
-      fd.append('status', next)
-      if (reason) fd.append('rejectionReason', reason)
-      const res = await updateIssuerStatusAction({}, fd)
-
-      res?.error
-        ? toast.error(res.error, { id: toastId })
-        : toast.success(res?.success ?? 'Issuer updated.', { id: toastId })
-      router.refresh()
-    })
-  }
-
-  async function destroy() {
-    startTransition(async () => {
-      const toastId = toast.loading('Deleting issuer…')
-      const fd = new FormData()
-      fd.append('issuerId', id.toString())
-      const res = await deleteIssuerAction({}, fd)
-
-      res?.error
-        ? toast.error(res.error, { id: toastId })
-        : toast.success(res?.success ?? 'Issuer deleted.', { id: toastId })
-      router.refresh()
-    })
-  }
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant='ghost' className='h-8 w-8 p-0' disabled={isPending}>
-          {isPending ? (
-            <Loader2 className='h-4 w-4 animate-spin' />
-          ) : (
-            <MoreHorizontal className='h-4 w-4' />
-          )}
-          <span className='sr-only'>Open menu</span>
-        </Button>
-      </DropdownMenuTrigger>
-
-      <DropdownMenuContent align='end' className='rounded-md p-1 shadow-lg'>
-        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-
-        {status !== 'ACTIVE' && (
-          <DropdownMenuItem
-            onClick={() => mutate(IssuerStatus.ACTIVE)}
-            disabled={isPending}
-            className='hover:bg-emerald-500/10 focus:bg-emerald-500/10'
-          >
-            <VerifyIcon />
-            Verify
-          </DropdownMenuItem>
-        )}
-
-        {status === 'ACTIVE' && (
-          <DropdownMenuItem
-            onClick={() => mutate(IssuerStatus.PENDING)}
-            disabled={isPending}
-            className='hover:bg-amber-500/10 focus:bg-amber-500/10'
-          >
-            <UnverifyIcon />
-            Unverify
-          </DropdownMenuItem>
-        )}
-
-        {status !== 'REJECTED' && (
-          <DropdownMenuItem
-            onClick={() => mutate(IssuerStatus.REJECTED, 'Rejected by admin')}
-            disabled={isPending}
-            className='hover:bg-rose-500/10 focus:bg-rose-500/10'
-          >
-            <RejectIcon />
-            Reject
-          </DropdownMenuItem>
-        )}
-
-        <DropdownMenuSeparator />
-
-        <DropdownMenuItem
-          onClick={destroy}
-          disabled={isPending}
-          className='font-semibold text-rose-600 hover:bg-rose-500/10 focus:bg-rose-500/10 dark:text-rose-400'
-        >
-          <Trash2 className='mr-2 h-4 w-4' />
-          Delete
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
-}
-
-/* -------------------------------------------------------------------------- */
-/*                           Bulk-Selection Actions                           */
+/*                           Bulk-selection Actions                           */
 /* -------------------------------------------------------------------------- */
 
 function useBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowType>[] {
-  const [isPending, _] = React.useTransition()
+  const [isPending, startTransition] = React.useTransition()
 
   async function bulkUpdate(
     selected: RowType[],
@@ -261,7 +152,7 @@ export default function AdminIssuersTable({
   const router = useRouter()
   const bulkActions = useBulkActions(router)
 
-  /* -------------------- Centralised navigation helpers -------------------- */
+  /* --------------------- Centralised navigation helpers ------------------- */
   const { search, handleSearchChange, sortableHeader } = useTableNavigation({
     basePath,
     initialParams,
@@ -270,7 +161,89 @@ export default function AdminIssuersTable({
     searchQuery,
   })
 
-  /* ----------------------------- Columns ---------------------------------- */
+  /* ----------------------- Row-level actions builder ---------------------- */
+  const makeActions = React.useCallback(
+    (row: RowType): TableRowAction<RowType>[] => {
+      const actions: TableRowAction<RowType>[] = []
+
+      if (row.status !== 'ACTIVE') {
+        actions.push({
+          label: 'Verify',
+          icon: VerifyIcon as any,
+          onClick: async () => {
+            const toastId = toast.loading('Updating issuer…')
+            const fd = new FormData()
+            fd.append('issuerId', row.id.toString())
+            fd.append('status', IssuerStatus.ACTIVE)
+            const res = await updateIssuerStatusAction({}, fd)
+            res?.error
+              ? toast.error(res.error, { id: toastId })
+              : toast.success(res?.success ?? 'Issuer updated.', { id: toastId })
+            router.refresh()
+          },
+        })
+      }
+
+      if (row.status === 'ACTIVE') {
+        actions.push({
+          label: 'Unverify',
+          icon: UnverifyIcon as any,
+          onClick: async () => {
+            const toastId = toast.loading('Updating issuer…')
+            const fd = new FormData()
+            fd.append('issuerId', row.id.toString())
+            fd.append('status', IssuerStatus.PENDING)
+            const res = await updateIssuerStatusAction({}, fd)
+            res?.error
+              ? toast.error(res.error, { id: toastId })
+              : toast.success(res?.success ?? 'Issuer updated.', { id: toastId })
+            router.refresh()
+          },
+        })
+      }
+
+      if (row.status !== 'REJECTED') {
+        actions.push({
+          label: 'Reject',
+          icon: RejectIcon as any,
+          variant: 'destructive',
+          onClick: async () => {
+            const toastId = toast.loading('Updating issuer…')
+            const fd = new FormData()
+            fd.append('issuerId', row.id.toString())
+            fd.append('status', IssuerStatus.REJECTED)
+            fd.append('rejectionReason', 'Rejected by admin')
+            const res = await updateIssuerStatusAction({}, fd)
+            res?.error
+              ? toast.error(res.error, { id: toastId })
+              : toast.success(res?.success ?? 'Issuer updated.', { id: toastId })
+            router.refresh()
+          },
+        })
+      }
+
+      actions.push({
+        label: 'Delete',
+        icon: Trash2,
+        variant: 'destructive',
+        onClick: async () => {
+          const toastId = toast.loading('Deleting issuer…')
+          const fd = new FormData()
+          fd.append('issuerId', row.id.toString())
+          const res = await deleteIssuerAction({}, fd)
+          res?.error
+            ? toast.error(res.error, { id: toastId })
+            : toast.success(res?.success ?? 'Issuer deleted.', { id: toastId })
+          router.refresh()
+        },
+      })
+
+      return actions
+    },
+    [router],
+  )
+
+  /* ------------------------------- Columns -------------------------------- */
   const columns = React.useMemo<Column<RowType>[]>(() => {
     return [
       {
@@ -316,10 +289,10 @@ export default function AdminIssuersTable({
         header: '',
         enableHiding: false,
         sortable: false,
-        render: (_v, row) => <RowActions id={row.id} status={row.status} />,
+        render: (_v, row) => <TableRowActions row={row} actions={makeActions(row)} />,
       },
     ]
-  }, [sortableHeader])
+  }, [sortableHeader, makeActions])
 
   /* ----------------------------- Render ----------------------------------- */
   return (
