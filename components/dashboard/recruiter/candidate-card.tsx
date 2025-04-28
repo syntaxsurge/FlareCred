@@ -17,17 +17,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { type Stage } from '@/lib/constants/recruiter'
+import type { PipelineCandidateCard as Candidate } from '@/lib/types/components'
 
 import EditCandidateModal from './edit-candidate-modal'
-
-export interface Candidate {
-  id: number
-  candidateId: number
-  name: string
-  email: string
-  stage: Stage
-}
 
 export default function CandidateCard({ candidate }: { candidate: Candidate }) {
   const [dialogOpen, setDialogOpen] = useState(false)

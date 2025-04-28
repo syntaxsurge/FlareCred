@@ -18,12 +18,7 @@ import {
 
 import { startQuizAction } from './actions'
 import { copyToClipboard } from '@/lib/utils'
-
-interface Quiz {
-  id: number
-  title: string
-  description?: string | null
-}
+import type { QuizMeta as Quiz } from '@/lib/types/components'
 
 /* -------------------------------------------------------------------------- */
 /*                                    VIEW                                    */

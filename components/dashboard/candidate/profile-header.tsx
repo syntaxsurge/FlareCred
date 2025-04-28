@@ -16,21 +16,11 @@ import {
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import { truncateAddress } from '@/lib/utils/address'
+import type { ProfileStat as Stat, SocialLink as Social } from '@/lib/types/components'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
 /* -------------------------------------------------------------------------- */
-
-export interface Stat {
-  label: string
-  value: React.ReactNode
-}
-
-export interface Social {
-  href: string
-  icon: React.ElementType
-  label: string
-}
 
 interface ProfileHeaderProps {
   name: string | null
@@ -81,10 +71,10 @@ export default function ProfileHeader({
           {/* Avatar + identity */}
           <div className='flex flex-col items-center gap-4 sm:flex-row sm:items-end'>
             <UserAvatar
-              src={avatarSrc ?? undefined}
               name={name}
               email={email}
               className='ring-background -mt-20 size-28 ring-4 sm:-mt-14'
+              src={avatarSrc ?? undefined}
             />
             <div className='text-center sm:text-left'>
               <h1 className='text-2xl leading-tight font-extrabold'>{name || 'Unnamed'}</h1>

@@ -10,24 +10,16 @@ import { saveHighlightsAction } from '@/app/(dashboard)/candidate/highlights/act
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import type { HighlightCredential } from '@/lib/types/components'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
 /* -------------------------------------------------------------------------- */
 
-export interface Credential {
-  id: number
-  title: string
-  category: 'EXPERIENCE' | 'PROJECT'
-  type: string
-  issuer: string | null
-  fileUrl: string | null
-}
-
 interface Props {
-  selectedExperience: Credential[]
-  selectedProject: Credential[]
-  available: Credential[]
+  selectedExperience: HighlightCredential[]
+  selectedProject: HighlightCredential[]
+  available: HighlightCredential[]
 }
 
 /* -------------------------------------------------------------------------- */
@@ -46,9 +38,9 @@ function reorder<T>(list: T[], startIdx: number, endIdx: number) {
 /* -------------------------------------------------------------------------- */
 
 export default function HighlightsBoard({ selectedExperience, selectedProject, available }: Props) {
-  const [exp, setExp] = useState<Credential[]>(selectedExperience)
-  const [proj, setProj] = useState<Credential[]>(selectedProject)
-  const [pool, setPool] = useState<Credential[]>(available)
+  const [exp, setExp] = useState<HighlightCredential[]>(selectedExperience)
+  const [proj, setProj] = useState<HighlightCredential[]>(selectedProject)
+  const [pool, setPool] = useState<HighlightCredential[]>(available)
 
   const [isPending, startTransition] = useTransition()
 
@@ -134,7 +126,7 @@ export default function HighlightsBoard({ selectedExperience, selectedProject, a
   function renderColumn(
     id: 'experience' | 'project' | 'pool',
     title: string,
-    items: Credential[],
+    items: HighlightCredential[],
     max = 5,
   ) {
     const isPool = id === 'pool'

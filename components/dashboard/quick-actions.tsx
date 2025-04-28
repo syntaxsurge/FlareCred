@@ -3,13 +3,7 @@
 import Link from 'next/link'
 
 import { Button } from '@/components/ui/button'
-
-export type QuickAction = {
-  href: string
-  label: string
-  /** default → filled, outline → outline button */
-  variant?: 'default' | 'outline'
-}
+import type { QuickAction } from '@/lib/types/components'
 
 export function QuickActions({ actions }: { actions: QuickAction[] }) {
   if (!actions.length) return null

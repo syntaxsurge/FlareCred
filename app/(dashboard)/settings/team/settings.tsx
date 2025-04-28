@@ -22,6 +22,7 @@ import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { PLAN_META } from '@/lib/constants/pricing'
 import { useFlareUsdPrice } from '@/lib/hooks/use-flare-usd-price'
+import type { TeamMeta } from '@/lib/types/components'
 
 import { InviteTeamMember } from './invite-team'
 import { CHAIN_ID, SUBSCRIPTION_MANAGER_ADDRESS } from '@/lib/config'
@@ -30,12 +31,6 @@ import { SUBSCRIPTION_MANAGER_ABI } from '@/lib/contracts/abis'
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
 /* -------------------------------------------------------------------------- */
-
-interface TeamMeta {
-  planName: string | null
-  subscriptionPaidUntil: Date | string | null
-  did: string | null
-}
 
 interface SettingsProps {
   team: TeamMeta
