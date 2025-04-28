@@ -6,7 +6,6 @@ import * as React from 'react'
 
 import { formatDistanceToNow } from 'date-fns'
 import {
-  ArrowUpDown,
   MoreHorizontal,
   Loader2,
   CheckCircle2,
@@ -33,7 +32,7 @@ import {
 import { StatusBadge } from '@/components/ui/status-badge'
 import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
 import type { InvitationRow } from '@/lib/types/table-rows'
-import { buildLink } from '@/lib/utils'
+import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 
 /* -------------------------------------------------------------------------- */
 /*                                 PROPS                                      */
@@ -168,7 +167,8 @@ function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<Invi
     rows.every((r) => r.status === 'pending') &&
     new Set(rows.map((r) => r.role)).size === 1
 
-  const canDecline = (rows: InvitationRow[]) => rows.length > 0 && rows.every((r) => r.status === 'pending')
+  const canDecline = (rows: InvitationRow[]) =>
+    rows.length > 0 && rows.every((r) => r.status === 'pending')
 
   return [
     {
@@ -213,34 +213,14 @@ export default function InvitationsTable({
   const router = useRouter()
   const bulkActions = buildBulkActions(router)
 
-  /* ------------------------------ Search ---------------------------------- */
-  const [search, setSearch] = React.useState<string>(searchQuery)
-  const debounceRef = React.useRef<NodeJS.Timeout | null>(null)
-
-  function handleSearchChange(value: string) {
-    setSearch(value)
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      router.push(buildLink(basePath, initialParams, { q: value, page: 1 }), { scroll: false })
-    }, 400)
-  }
-
-  /* -------------------------- Sortable headers ---------------------------- */
-  function sortableHeader(label: string, key: string) {
-    const nextOrder = sort === key && order === 'asc' ? 'desc' : 'asc'
-    const href = buildLink(basePath, initialParams, {
-      sort: key,
-      order: nextOrder,
-      page: 1,
-      q: search,
-    })
-    return (
-      <Link href={href} scroll={false} className='flex items-center gap-1'>
-        {label}
-        <ArrowUpDown className='h-4 w-4' />
-      </Link>
-    )
-  }
+  /* -------------------- Centralised navigation helpers -------------------- */
+  const { search, handleSearchChange, sortableHeader } = useTableNavigation({
+    basePath,
+    initialParams,
+    sort,
+    order,
+    searchQuery,
+  })
 
   /* ----------------------------- Columns ---------------------------------- */
   const columns = React.useMemo<Column<InvitationRow>[]>(() => {
@@ -275,8 +255,9 @@ export default function InvitationsTable({
         key: 'invitedAt',
         header: sortableHeader('Invited', 'invitedAt'),
         sortable: false,
-        render: (v) =>
-          <span>{formatDistanceToNow(new Date(v as Date), { addSuffix: true })}</span>,
+        render: (v) => (
+          <span>{formatDistanceToNow(new Date(v as Date), { addSuffix: true })}</span>
+        ),
       },
       {
         key: 'id',
@@ -286,7 +267,7 @@ export default function InvitationsTable({
         render: (_v, row) => <RowActions row={row} />,
       },
     ]
-  }, [sort, order, basePath, initialParams, search])
+  }, [sortableHeader])
 
   /* ------------------------------ View ------------------------------------ */
   return (

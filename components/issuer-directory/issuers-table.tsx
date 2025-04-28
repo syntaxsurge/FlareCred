@@ -2,10 +2,9 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
-import { ArrowUpDown, MoreHorizontal, Copy as CopyIcon, Eye } from 'lucide-react'
+import { MoreHorizontal, Copy as CopyIcon, Eye } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
@@ -19,7 +18,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
-import { buildLink } from '@/lib/utils'
+import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -119,36 +118,14 @@ export default function IssuersTable({
   initialParams,
   searchQuery,
 }: Props) {
-  const router = useRouter()
-
-  /* -------------------------- Search handling --------------------------- */
-  const [search, setSearch] = React.useState(searchQuery)
-  const debounceRef = React.useRef<NodeJS.Timeout | null>(null)
-
-  function handleSearchChange(value: string) {
-    setSearch(value)
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      const href = buildLink(basePath, initialParams, { q: value, page: 1 })
-      router.push(href, { scroll: false })
-    }, 400)
-  }
-
-  /* ------------------------ Sortable headers ---------------------------- */
-  function sortableHeader(label: string, key: string) {
-    const nextOrder = sort === key && order === 'asc' ? 'desc' : 'asc'
-    const href = buildLink(basePath, initialParams, {
-      sort: key,
-      order: nextOrder,
-      page: 1,
-      q: search,
-    })
-    return (
-      <Link href={href} scroll={false} className='flex items-center gap-1'>
-        {label} <ArrowUpDown className='h-4 w-4' />
-      </Link>
-    )
-  }
+  /* -------------------- Centralised navigation helpers -------------------- */
+  const { search, handleSearchChange, sortableHeader } = useTableNavigation({
+    basePath,
+    initialParams,
+    sort,
+    order,
+    searchQuery,
+  })
 
   /* ----------------------- Column definitions --------------------------- */
   const columns = React.useMemo<Column<RowType>[]>(() => {
@@ -225,7 +202,7 @@ export default function IssuersTable({
         render: (_v, row) => <RowActions row={row} />,
       },
     ]
-  }, [sort, order, basePath, initialParams, search])
+  }, [sortableHeader])
 
   /* ----------------------------- Render ---------------------------------- */
   return (
