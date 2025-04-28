@@ -17,22 +17,12 @@ import {
 } from '@/components/ui/dialog'
 
 import { startQuizAction } from './actions'
+import { copyToClipboard } from '@/lib/utils'
 
 interface Quiz {
   id: number
   title: string
   description?: string | null
-}
-
-/* -------------------------------------------------------------------------- */
-/*                                H E L P E R S                               */
-/* -------------------------------------------------------------------------- */
-
-function copyToClipboard(text: string) {
-  navigator.clipboard
-    .writeText(text)
-    .then(() => toast.success('Seed copied to clipboard'))
-    .catch(() => toast.error('Failed to copy seed'))
 }
 
 /* -------------------------------------------------------------------------- */

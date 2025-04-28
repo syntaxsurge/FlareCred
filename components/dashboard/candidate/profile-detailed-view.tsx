@@ -39,6 +39,8 @@ import {
 } from '@/components/ui/tooltip'
 
 import ProfileHeader from './profile-header'
+import { copyToClipboard, shortenSeed } from '@/lib/utils'
+import { prettyDate } from '@/lib/utils/time'
 
 /* -------------------------------------------------------------------------- */
 /*                                   TYPES                                    */
@@ -143,30 +145,6 @@ const defaultSnapshot: SnapshotMetrics = {
   avgScore: null,
   experienceCount: 0,
   projectCount: 0,
-}
-
-/* -------------------------------------------------------------------------- */
-/*                          U T I L I T Y   H O O K S                         */
-/* -------------------------------------------------------------------------- */
-
-function usePrettyDate(d?: Date | null) {
-  return useMemo(() => {
-    if (!d) return '—'
-    const diff = Math.abs(Date.now() - d.getTime())
-    const threeDays = 1000 * 60 * 60 * 24 * 3
-    return diff < threeDays ? formatDistanceToNow(d, { addSuffix: true }) : format(d, 'PPP')
-  }, [d])
-}
-
-function shortenSeed(seed: string) {
-  return seed.length <= 10 ? seed : `${seed.slice(0, 6)}…${seed.slice(-4)}`
-}
-
-function copyToClipboard(text: string) {
-  navigator.clipboard
-    .writeText(text)
-    .then(() => toast.success('Seed copied to clipboard.'))
-    .catch(() => toast.error('Failed to copy seed.'))
 }
 
 /* -------------------------------------------------------------------------- */
@@ -553,7 +531,7 @@ export default function CandidateDetailedProfileView({
                         )}
 
                         <span className='text-muted-foreground text-xs'>
-                          {usePrettyDate(p.createdAt)}
+                          {useMemo(() => prettyDate(p.createdAt ?? null), [p.createdAt])}
                         </span>
                       </div>
                     </li>

@@ -1,3 +1,5 @@
+import { format, formatDistanceToNow } from 'date-fns'
+
 /**
  * Convert a past date to a short, human-friendly relative time string.
  *
@@ -22,26 +24,6 @@ export function relativeTime(date: Date): string {
 }
 
 /**
- * Return a new `Date` advanced by `n` calendar months.
- *
- * @example
- *   addMonths(new Date('2025-01-31'), 1) // → 2025-02-28 (handles overflow)
- */
-export function addMonths(date: Date, n: number): Date {
-  const d = new Date(date) // clone
-  const day = d.getDate()
-
-  d.setMonth(d.getMonth() + n)
-
-  /* Handle month overflow (e.g. 31 Jan + 1 month → 28/29 Feb) */
-  if (d.getDate() < day) {
-    d.setDate(0) // step back to last day of previous month
-  }
-
-  return d
-}
-
-/**
  * Format a `Date` object as an ISO-8601 string without modification.
  * Provided as a dedicated helper for consistency across the app and
  * to emphasise UTC semantics when serialising timestamps.
@@ -51,4 +33,20 @@ export function addMonths(date: Date, n: number): Date {
  */
 export function formatIso(date: Date): string {
   return date.toISOString()
+}
+
+export function prettyDate(
+  date: Date | null,
+  {
+    placeholder = '—',
+    relativeCutoffMs = 3 * 24 * 60 * 60 * 1_000,
+    formatRelative = (d: Date) => formatDistanceToNow(d, { addSuffix: true }),
+    formatAbsolute = (d: Date) => format(d, 'PPP'),
+  } = {}
+): string {
+  if (!date) return placeholder;
+  const diff = Math.abs(Date.now() - date.getTime());
+  return diff < relativeCutoffMs
+    ? formatRelative(date)
+    : formatAbsolute(date);
 }
