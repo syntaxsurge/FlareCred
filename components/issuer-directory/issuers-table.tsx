@@ -1,23 +1,19 @@
 'use client'
 
 import Image from 'next/image'
-import Link from 'next/link'
 import * as React from 'react'
 
-import { MoreHorizontal, Copy as CopyIcon, Eye } from 'lucide-react'
+import { Eye, Copy as CopyIcon } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-} from '@/components/ui/dropdown-menu'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
+import {
+  TableRowActions,
+  type TableRowAction,
+} from '@/components/ui/tables/row-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 
 /* -------------------------------------------------------------------------- */
@@ -46,50 +42,41 @@ interface Props {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                              Row actions                                   */
+/*                        Per-row actions + dialog UI                         */
 /* -------------------------------------------------------------------------- */
 
-function RowActions({ row }: { row: RowType }) {
-  const [menuOpen, setMenuOpen] = React.useState(false)
+function ActionsCell({ row }: { row: RowType }) {
   const [dialogOpen, setDialogOpen] = React.useState(false)
 
+  /* Build action list once per row */
+  const actions = React.useMemo<TableRowAction<RowType>[]>(() => {
+    return [
+      {
+        label: 'View DID',
+        icon: Eye,
+        onClick: () => setDialogOpen(true),
+        disabled: () => !row.did,
+      },
+    ]
+  }, [row.did])
+
+  /* Copy helper */
   function copyDid() {
     if (!row.did) return
-    navigator.clipboard.writeText(row.did).then(() => {
-      toast.success('DID copied to clipboard')
-    })
-  }
-
-  function openDialog() {
-    /* Close dropdown first so trigger becomes clickable again after dialog closes */
-    setMenuOpen(false)
-    setTimeout(() => setDialogOpen(true), 0)
+    navigator.clipboard.writeText(row.did).then(() => toast.success('DID copied to clipboard'))
   }
 
   return (
     <>
-      <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
-        <DropdownMenuTrigger asChild>
-          <Button variant='ghost' className='h-8 w-8 p-0'>
-            <MoreHorizontal className='h-4 w-4' />
-            <span className='sr-only'>Open actions</span>
-          </Button>
-        </DropdownMenuTrigger>
+      <TableRowActions row={row} actions={actions} />
 
-        <DropdownMenuContent align='end' className='rounded-md p-1 shadow-lg'>
-          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuItem disabled={!row.did} onSelect={openDialog} className='cursor-pointer'>
-            <Eye className='mr-2 h-4 w-4' />
-            View DID
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
+      {/* DID dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Issuer DID</DialogTitle>
           </DialogHeader>
+
           {row.did ? (
             <div className='flex flex-col gap-4'>
               <code className='bg-muted rounded-md px-3 py-2 text-sm break-all'>{row.did}</code>
@@ -127,7 +114,7 @@ export default function IssuersTable({
     searchQuery,
   })
 
-  /* ----------------------- Column definitions --------------------------- */
+  /* ----------------------- Column definitions ----------------------------- */
   const columns = React.useMemo<Column<RowType>[]>(() => {
     return [
       {
@@ -189,9 +176,7 @@ export default function IssuersTable({
         sortable: false,
         render: (v) =>
           v
-            ? new Date(v as string).toLocaleDateString(undefined, {
-                dateStyle: 'medium',
-              })
+            ? new Date(v as string).toLocaleDateString(undefined, { dateStyle: 'medium' })
             : '—',
       },
       {
@@ -199,7 +184,7 @@ export default function IssuersTable({
         header: '',
         enableHiding: false,
         sortable: false,
-        render: (_v, row) => <RowActions row={row} />,
+        render: (_v, row) => <ActionsCell row={row} />,
       },
     ]
   }, [sortableHeader])

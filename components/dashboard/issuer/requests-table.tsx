@@ -1,15 +1,26 @@
 'use client'
 
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
-import { FileSignature, XCircle, type LucideProps } from 'lucide-react'
+import {
+  FileSignature,
+  XCircle,
+  type LucideProps,
+} from 'lucide-react'
 import { toast } from 'sonner'
 
 import { rejectCredentialAction } from '@/app/(dashboard)/issuer/credentials/actions'
 import { StatusBadge } from '@/components/ui/status-badge'
-import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
+import {
+  DataTable,
+  type Column,
+  type BulkAction,
+} from '@/components/ui/tables/data-table'
+import {
+  TableRowActions,
+  type TableRowAction,
+} from '@/components/ui/tables/row-actions'
 import { CredentialStatus } from '@/lib/db/schema/candidate'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import { getProofTx } from '@/lib/utils'
@@ -46,22 +57,6 @@ const RejectIcon = (props: LucideProps) => (
 )
 
 /* -------------------------------------------------------------------------- */
-/*                           Row-level link                                   */
-/* -------------------------------------------------------------------------- */
-
-function RowActions({ row }: { row: RowType }) {
-  return (
-    <Link
-      href={`/issuer/credentials/${row.id}`}
-      className='text-primary hover:bg-muted hover:text-foreground inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium'
-    >
-      <FileSignature className='h-4 w-4' />
-      <span className='hidden sm:inline'>Review & Sign</span>
-    </Link>
-  )
-}
-
-/* -------------------------------------------------------------------------- */
 /*                         Bulk-selection actions                             */
 /* -------------------------------------------------------------------------- */
 
@@ -96,6 +91,23 @@ function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowT
 }
 
 /* -------------------------------------------------------------------------- */
+/*                         Row-level action builder                           */
+/* -------------------------------------------------------------------------- */
+
+function useRowActions(): (row: RowType) => TableRowAction<RowType>[] {
+  return React.useCallback(
+    (row: RowType) => [
+      {
+        label: 'Review & Sign',
+        icon: FileSignature,
+        href: `/issuer/credentials/${row.id}`,
+      },
+    ],
+    [],
+  )
+}
+
+/* -------------------------------------------------------------------------- */
 /*                                   Table                                    */
 /* -------------------------------------------------------------------------- */
 
@@ -109,6 +121,7 @@ export default function IssuerRequestsTable({
 }: Props) {
   const router = useRouter()
   const bulkActions = buildBulkActions(router)
+  const makeActions = useRowActions()
 
   /* -------------------- Centralised navigation helpers -------------------- */
   const { search, handleSearchChange, sortableHeader } = useTableNavigation({
@@ -172,10 +185,10 @@ export default function IssuerRequestsTable({
         header: '',
         enableHiding: false,
         sortable: false,
-        render: (_v, row) => <RowActions row={row} />,
+        render: (_v, row) => <TableRowActions row={row} actions={makeActions(row)} />,
       },
     ]
-  }, [sortableHeader])
+  }, [sortableHeader, makeActions])
 
   /* ----------------------------- Render ---------------------------------- */
   return (
