@@ -1,12 +1,14 @@
 /**
- * Deploys the DIDRegistry contract and (optionally) verifies it.
+ * Deploys the DIDRegistry contract and (optionally) verifies it, then mints an
+ * initial Decentralised Identifier (DID) for the platform so the front-end can
+ * use it immediately.
  *
  * Usage:
  *   pnpm hardhat run blockchain/scripts/deployDIDRegistry.ts --network <network>
  */
 
-import { network, run } from 'hardhat'
-import { adminAddress } from './config'
+import { network, run, ethers } from 'hardhat'
+import { adminAddress, platformAddress } from './config'
 import type { DIDRegistryInstance } from '../typechain-types'
 
 const DIDRegistry = artifacts.require('DIDRegistry')
@@ -18,9 +20,29 @@ async function main(): Promise<void> {
   const registry: DIDRegistryInstance = await DIDRegistry.new(...args)
   console.log(`✅  DIDRegistry deployed at ${registry.address}`)
 
-  /* ------------------------------------------------------------------ */
-  /*                       Optional Etherscan verify                     */
-  /* ------------------------------------------------------------------ */
+  /* -------------------------------------------------------------------- */
+  /*                     Mint platform DID immediately                     */
+  /* -------------------------------------------------------------------- */
+  if (!platformAddress) {
+    console.warn('⚠️  PLATFORM_ADDRESS env var not set – skipping DID mint')
+  } else {
+    try {
+      const ZERO_HASH = ethers.constants.HashZero
+      await registry.createDID(ZERO_HASH, { from: platformAddress })
+      const did = await registry.didOf(platformAddress)
+      console.log(`🎉  Platform DID created → ${did}`)
+      console.log(
+        '\n👉  Add the following to your .env file:\n' +
+          `PLATFORM_ISSUER_DID=${did}\n`,
+      )
+    } catch (err) {
+      console.warn('⚠️  Failed to mint platform DID:', (err as Error).message)
+    }
+  }
+
+  /* -------------------------------------------------------------------- */
+  /*                        Optional explorer verification                 */
+  /* -------------------------------------------------------------------- */
   if (!['hardhat', 'localhost'].includes(network.name)) {
     try {
       await run('verify:verify', {
@@ -29,7 +51,7 @@ async function main(): Promise<void> {
       })
       console.log('🔎  Verified on block-explorer')
     } catch (err) {
-      console.warn('⚠️   Verification skipped / failed:', (err as Error).message)
+      console.warn('⚠️  Verification skipped / failed:', (err as Error).message)
     }
   }
 }
