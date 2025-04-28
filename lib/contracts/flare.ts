@@ -154,7 +154,8 @@ export async function issueFlareCredential(
       }
     })
     .find(
-      (d): d is LogDescription => !!d && d.name === 'CredentialMinted',
+      (d: LogDescription | null): d is LogDescription =>
+        !!d && d.name === 'CredentialMinted',
     )
 
   if (!parsedLog) throw new Error('CredentialMinted event not found')
