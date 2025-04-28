@@ -1,7 +1,11 @@
 /**
  * Centralised domain-level type declarations.
- * Extend this barrel as additional shared interfaces emerge.
+ * Extend this barrel as the shared model surface grows.
  */
+
+/* -------------------------------------------------------------------------- */
+/*                                 Core types                                 */
+/* -------------------------------------------------------------------------- */
 
 /** User / team role identifiers used across the app */
 export type Role = 'candidate' | 'recruiter' | 'issuer' | 'admin'
@@ -18,7 +22,7 @@ export interface Pagination {
   pageSize: number
   /** Base pathname for building links */
   basePath: string
-  /** Querystring params to persist across navigation */
+  /** Query-string params to persist across navigation */
   initialParams: Record<string, string>
 }
 
@@ -29,3 +33,9 @@ export interface Pipeline {
   id: number
   name: string
 }
+
+/* -------------------------------------------------------------------------- */
+/*                            Domain-specific barrels                         */
+/* -------------------------------------------------------------------------- */
+
+export * from './candidate'

@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 
-import { format, formatDistanceToNow } from 'date-fns'
 import {
   Award,
   BarChart4,
@@ -20,116 +19,29 @@ import { toast } from 'sonner'
 import { FaTwitter } from 'react-icons/fa'
 import { SiGithub, SiLinkedin } from 'react-icons/si'
 
-import CredentialsTable, {
-  RowType as CredRow,
-} from '@/components/dashboard/recruiter/credentials-table'
-import PipelineEntriesTable, {
-  RowType as PipeRow,
-} from '@/components/dashboard/recruiter/pipeline-entries-table'
+import CredentialsTable from '@/components/dashboard/recruiter/credentials-table'
+import PipelineEntriesTable from '@/components/dashboard/recruiter/pipeline-entries-table'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import StatusBadge from '@/components/ui/status-badge'
-import type { Pagination } from '@/lib/types'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 import ProfileHeader from './profile-header'
 import { copyToClipboard, shortenSeed } from '@/lib/utils'
 import { prettyDate } from '@/lib/utils/time'
-
-/* -------------------------------------------------------------------------- */
-/*                                   TYPES                                    */
-/* -------------------------------------------------------------------------- */
-
-export interface StatusCounts {
-  verified: number
-  pending: number
-  rejected: number
-  unverified: number
-}
-
-
-
-export interface CredentialsSection {
-  rows: CredRow[]
-  sort: string
-  order: 'asc' | 'desc'
-  pagination: Pagination
-}
-
-export interface PipelineSection {
-  rows: PipeRow[]
-  sort: string
-  order: 'asc' | 'desc'
-  pagination: Pagination
-  addToPipelineForm?: React.ReactNode
-}
-
-export interface QuizAttempt {
-  id: number
-  quizId: number
-  score: number | null
-  maxScore: number | null
-  createdAt: Date
-  seed: string
-}
-
-export interface Experience {
-  id: number
-  title: string
-  company: string | null
-  type?: string | null
-  link?: string | null
-  status?: string | null
-  createdAt: Date
-}
-
-export interface Project {
-  id: number
-  title: string
-  link: string | null
-  description: string | null
-  status?: string | null
-  createdAt: Date
-}
-
-export interface Socials {
-  twitterUrl?: string | null
-  githubUrl?: string | null
-  linkedinUrl?: string | null
-  websiteUrl?: string | null
-}
-
-export interface SnapshotMetrics {
-  uniqueIssuers: number
-  avgScore: number | null
-  experienceCount: number
-  projectCount: number
-}
-
-interface Props {
-  candidateId: number
-  name: string | null
-  email: string
-  avatarSrc?: string | null
-  bio: string | null
-  pipelineSummary?: string
-  statusCounts: StatusCounts
-  passes: QuizAttempt[]
-  snapshot?: SnapshotMetrics
-  credentials: CredentialsSection
-  experiences: Experience[]
-  projects: Project[]
-  socials: Socials
-  pipeline?: PipelineSection
-  showShare?: boolean
-}
+import type {
+  StatusCounts,
+  CredentialsSection,
+  PipelineSection,
+  QuizAttempt,
+  Experience,
+  Project,
+  Socials,
+  SnapshotMetrics,
+} from '@/lib/types'
 
 /* -------------------------------------------------------------------------- */
 /*                         D E F A U L T   V A L U E S                        */
@@ -201,6 +113,24 @@ function HighlightList<T>({
 /*                              M A I N   V I E W                             */
 /* -------------------------------------------------------------------------- */
 
+interface Props {
+  candidateId: number
+  name: string | null
+  email: string
+  avatarSrc?: string | null
+  bio: string | null
+  pipelineSummary?: string
+  statusCounts: StatusCounts
+  passes: QuizAttempt[]
+  snapshot?: SnapshotMetrics
+  credentials: CredentialsSection
+  experiences: Experience[]
+  projects: Project[]
+  socials: Socials
+  pipeline?: PipelineSection
+  showShare?: boolean
+}
+
 export default function CandidateDetailedProfileView({
   candidateId,
   name,
@@ -219,7 +149,10 @@ export default function CandidateDetailedProfileView({
   showShare = true,
 }: Props) {
   const totalCredentials =
-    statusCounts.verified + statusCounts.pending + statusCounts.rejected + statusCounts.unverified
+    statusCounts.verified +
+    statusCounts.pending +
+    statusCounts.rejected +
+    statusCounts.unverified
   const profilePath = `/candidates/${candidateId}`
 
   const socialIcons = [
@@ -227,7 +160,7 @@ export default function CandidateDetailedProfileView({
     { href: socials.githubUrl, icon: SiGithub, label: 'GitHub' },
     { href: socials.linkedinUrl, icon: SiLinkedin, label: 'LinkedIn' },
     { href: socials.websiteUrl, icon: Globe2, label: 'Website' },
-  ].filter((s) => !!s.href) as { href: string; icon: React.ElementType; label: string }[]
+  ].filter(Boolean) as { href: string; icon: React.ElementType; label: string }[]
 
   return (
     <section className='space-y-10'>
@@ -334,7 +267,6 @@ export default function CandidateDetailedProfileView({
               ) : (
                 <ScrollArea className='max-h-[500px] pr-3'>
                   <HighlightList
-                    title='' /* omit header */
                     icon={Briefcase}
                     items={experiences}
                     renderItem={(exp) => (
@@ -382,7 +314,6 @@ export default function CandidateDetailedProfileView({
               ) : (
                 <ScrollArea className='max-h-[500px] pr-3'>
                   <HighlightList
-                    title='' /* omit header */
                     icon={BookOpen}
                     items={projects}
                     renderItem={(proj) => (
