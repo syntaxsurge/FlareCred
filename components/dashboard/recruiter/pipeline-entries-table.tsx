@@ -4,21 +4,21 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
-import { MoreHorizontal, Trash2, FolderKanban, Loader2 } from 'lucide-react'
+import { Trash2, FolderKanban } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { deletePipelineCandidateAction } from '@/app/(dashboard)/recruiter/pipelines/actions'
 import { Button } from '@/components/ui/button'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-  DropdownMenuLabel,
-} from '@/components/ui/dropdown-menu'
+  DataTable,
+  type Column,
+  type BulkAction,
+} from '@/components/ui/tables/data-table'
+import {
+  TableRowActions,
+  type TableRowAction,
+} from '@/components/ui/tables/row-actions'
 import StatusBadge from '@/components/ui/status-badge'
-import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 
 /* -------------------------------------------------------------------------- */
@@ -42,65 +42,12 @@ interface PipelineEntriesTableProps {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                               Row actions                                  */
-/* -------------------------------------------------------------------------- */
-
-function RowActions({ row }: { row: RowType }) {
-  const router = useRouter()
-  const [isPending, startTransition] = React.useTransition()
-
-  function remove() {
-    startTransition(async () => {
-      const fd = new FormData()
-      fd.append('pipelineCandidateId', String(row.id))
-      const res = await deletePipelineCandidateAction({}, fd)
-      res?.error ? toast.error(res.error) : toast.success(res?.success ?? 'Removed from pipeline.')
-      router.refresh()
-    })
-  }
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant='ghost' size='icon' className='h-8 w-8' disabled={isPending}>
-          {isPending ? (
-            <Loader2 className='h-4 w-4 animate-spin' />
-          ) : (
-            <MoreHorizontal className='h-4 w-4' />
-          )}
-          <span className='sr-only'>Open row actions</span>
-        </Button>
-      </DropdownMenuTrigger>
-
-      <DropdownMenuContent align='end' className='rounded-md p-1 shadow-lg'>
-        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-        <DropdownMenuItem asChild>
-          <Link href={`/recruiter/pipelines/${row.pipelineId}`} className='cursor-pointer'>
-            <FolderKanban className='mr-2 h-4 w-4' />
-            View Pipeline
-          </Link>
-        </DropdownMenuItem>
-
-        <DropdownMenuSeparator />
-
-        <DropdownMenuItem
-          onClick={remove}
-          disabled={isPending}
-          className='cursor-pointer font-semibold text-rose-600 hover:bg-rose-500/10 focus:bg-rose-500/10 dark:text-rose-400'
-        >
-          <Trash2 className='mr-2 h-4 w-4' />
-          Remove
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
-}
-
-/* -------------------------------------------------------------------------- */
 /*                              Bulk actions                                  */
 /* -------------------------------------------------------------------------- */
 
-function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowType>[] {
+function buildBulkActions(
+  router: ReturnType<typeof useRouter>,
+): BulkAction<RowType>[] {
   const [isPending, startTransition] = React.useTransition()
 
   return [
@@ -140,6 +87,7 @@ export default function PipelineEntriesTable({
 }: PipelineEntriesTableProps) {
   const router = useRouter()
   const bulkActions = buildBulkActions(router)
+  const [isPending, startTransition] = React.useTransition()
 
   /* -------------------- Centralised navigation helpers -------------------- */
   const { search, handleSearchChange, sortableHeader } = useTableNavigation({
@@ -155,6 +103,34 @@ export default function PipelineEntriesTable({
       page: 'pipePage',
     },
   })
+
+  /* -------------------------- Row-action builder -------------------------- */
+  const makeActions = React.useCallback(
+    (row: RowType): TableRowAction<RowType>[] => [
+      {
+        label: 'View Pipeline',
+        icon: FolderKanban,
+        href: `/recruiter/pipelines/${row.pipelineId}`,
+      },
+      {
+        label: 'Remove',
+        icon: Trash2,
+        variant: 'destructive',
+        onClick: () =>
+          startTransition(async () => {
+            const fd = new FormData()
+            fd.append('pipelineCandidateId', String(row.id))
+            const res = await deletePipelineCandidateAction({}, fd)
+            res?.error
+              ? toast.error(res.error)
+              : toast.success(res?.success ?? 'Removed from pipeline.')
+            router.refresh()
+          }),
+        disabled: () => isPending,
+      },
+    ],
+    [router, startTransition, isPending],
+  )
 
   /* ----------------------------- Columns ---------------------------------- */
   const columns = React.useMemo<Column<RowType>[]>(() => {
@@ -176,10 +152,12 @@ export default function PipelineEntriesTable({
         header: '',
         enableHiding: false,
         sortable: false,
-        render: (_v, row) => <RowActions row={row} />,
+        render: (_v, row) => (
+          <TableRowActions row={row} actions={makeActions(row)} />
+        ),
       },
     ]
-  }, [sortableHeader])
+  }, [sortableHeader, makeActions])
 
   /* ------------------------------- View ---------------------------------- */
   return (
