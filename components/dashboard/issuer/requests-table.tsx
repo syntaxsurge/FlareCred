@@ -65,10 +65,19 @@ function useBulkReject(router: ReturnType<typeof useRouter>) {
             return rejectCredentialAction({}, fd)
           }),
         )
-        const errors = results.filter((r) => r?.error).map((r) => r!.error)
+
+        /* ---------- Extract any error messages safely ---------- */
+        const errors = results
+          .filter(
+            (r): r is { error: string } =>
+              typeof r === 'object' && r !== null && 'error' in r && typeof (r as any).error === 'string',
+          )
+          .map((r) => r.error)
+
         errors.length
           ? toast.error(errors.join('\n'), { id: toastId })
           : toast.success('Credentials rejected.', { id: toastId })
+
         router.refresh()
       },
     },
@@ -146,11 +155,11 @@ export default function IssuerRequestsTable({
         render: (v) => <StatusBadge status={String(v)} />,
       },
       {
-        key: 'proof',
+        key: 'vcJson', /* Proof column uses vcJson key from RowType */
         header: 'Proof',
         sortable: false,
         render: (_v, row) => {
-          const proofTx = getProofTx((row as any).vcJson)
+          const proofTx = getProofTx(row.vcJson)
           return proofTx ? (
             <a
               href={`https://flarescan.com/tx/${proofTx}`}
