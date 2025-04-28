@@ -1,10 +1,9 @@
 'use client'
 
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
-import { MoreHorizontal, Pencil, Trash2, Loader2 } from 'lucide-react'
+import { Pencil, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { deleteUserAction } from '@/app/(dashboard)/admin/users/actions'
@@ -13,19 +12,19 @@ import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from '@/components/ui/dialog'
 import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu'
-import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
+  DataTable,
+  type Column,
+  type BulkAction,
+} from '@/components/ui/tables/data-table'
+import {
+  TableRowActions,
+  type TableRowAction,
+} from '@/components/ui/tables/row-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import { formatDateTime } from '@/lib/utils/time'
 
@@ -52,64 +51,45 @@ interface UsersTableProps {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                               Row Actions                                  */
+/*                           Row-level actions UI                             */
 /* -------------------------------------------------------------------------- */
 
-function RowActions({ row }: { row: RowType }) {
+function UsersRowActions({ row }: { row: RowType }) {
   const router = useRouter()
+  const [editOpen, setEditOpen] = React.useState(false)
   const [isPending, startTransition] = React.useTransition()
 
-  const [menuOpen, setMenuOpen] = React.useState(false)
-  const [editOpen, setEditOpen] = React.useState(false)
-
-  function destroy() {
-    startTransition(async () => {
-      const fd = new FormData()
-      fd.append('userId', row.id.toString())
-      const res = await deleteUserAction({}, fd)
-      if (res?.error) {
-        toast.error(res.error)
-      } else {
-        toast.success(res?.success ?? 'User deleted.')
-        router.refresh()
-      }
-    })
-  }
-
-  function openEditDialog() {
-    setMenuOpen(false)
-    setTimeout(() => setEditOpen(true), 0)
-  }
+  const actions = React.useMemo<TableRowAction<RowType>[]>(
+    () => [
+      {
+        label: 'Edit',
+        icon: Pencil,
+        onClick: () => setEditOpen(true),
+        disabled: () => isPending,
+      },
+      {
+        label: 'Delete',
+        icon: Trash2,
+        variant: 'destructive',
+        onClick: () =>
+          startTransition(async () => {
+            const fd = new FormData()
+            fd.append('userId', row.id.toString())
+            const res = await deleteUserAction({}, fd)
+            res?.error
+              ? toast.error(res.error)
+              : toast.success(res?.success ?? 'User deleted.')
+            router.refresh()
+          }),
+        disabled: () => isPending,
+      },
+    ],
+    [isPending, row.id, router],
+  )
 
   return (
     <>
-      <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
-        <DropdownMenuTrigger asChild>
-          <Button variant='ghost' className='h-8 w-8 p-0' disabled={isPending}>
-            {isPending ? (
-              <Loader2 className='h-4 w-4 animate-spin' />
-            ) : (
-              <MoreHorizontal className='h-4 w-4' />
-            )}
-            <span className='sr-only'>Open menu</span>
-          </Button>
-        </DropdownMenuTrigger>
-
-        <DropdownMenuContent align='end' className='rounded-md p-1 shadow-lg'>
-          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuItem onSelect={openEditDialog} className='cursor-pointer'>
-            <Pencil className='mr-2 h-4 w-4' /> Edit
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={destroy}
-            disabled={isPending}
-            className='cursor-pointer font-semibold text-rose-600 hover:bg-rose-500/10 focus:bg-rose-500/10 dark:text-rose-400'
-          >
-            <Trash2 className='mr-2 h-4 w-4' /> Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <TableRowActions row={row} actions={actions} />
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent>
@@ -132,7 +112,7 @@ function RowActions({ row }: { row: RowType }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                             Bulk actions                                   */
+/*                             Bulk-selection                                 */
 /* -------------------------------------------------------------------------- */
 
 function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowType>[] {
@@ -217,7 +197,7 @@ export default function AdminUsersTable({
         header: '',
         enableHiding: false,
         sortable: false,
-        render: (_v, row) => <RowActions row={row} />,
+        render: (_v, row) => <UsersRowActions row={row} />,
       },
     ]
   }, [sortableHeader])

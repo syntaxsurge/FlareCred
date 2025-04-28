@@ -1,24 +1,21 @@
 'use client'
 
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
-
 import { formatDistanceToNow } from 'date-fns'
-import { Trash2, MoreHorizontal, Loader2, FolderKanban } from 'lucide-react'
+import { Trash2, FolderKanban } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { deletePipelineAction } from '@/app/(dashboard)/recruiter/pipelines/actions'
-import { Button } from '@/components/ui/button'
 import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuLabel,
-} from '@/components/ui/dropdown-menu'
-import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
+  DataTable,
+  type Column,
+  type BulkAction,
+} from '@/components/ui/tables/data-table'
+import {
+  TableRowActions,
+  type TableRowAction,
+} from '@/components/ui/tables/row-actions'
 import type { PipelineRow } from '@/lib/types/table-rows'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 
@@ -66,60 +63,41 @@ function makeBulkActions(router: ReturnType<typeof useRouter>): BulkAction<Pipel
 }
 
 /* -------------------------------------------------------------------------- */
-/*                             Row-level actions                              */
+/*                           Row-level actions UI                             */
 /* -------------------------------------------------------------------------- */
 
-function RowActions({ row }: { row: PipelineRow }) {
+function PipelineRowActions({ row }: { row: PipelineRow }) {
   const router = useRouter()
   const [isPending, startTransition] = React.useTransition()
 
-  function destroy() {
-    startTransition(async () => {
-      const fd = new FormData()
-      fd.append('pipelineId', row.id.toString())
-      const res = await deletePipelineAction({}, fd)
-      if (res?.error) {
-        toast.error(res.error)
-      } else {
-        toast.success(res?.success ?? 'Pipeline deleted.')
-        router.refresh()
-      }
-    })
-  }
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant='ghost' className='h-8 w-8 p-0' disabled={isPending}>
-          {isPending ? (
-            <Loader2 className='h-4 w-4 animate-spin' />
-          ) : (
-            <MoreHorizontal className='h-4 w-4' />
-          )}
-          <span className='sr-only'>Open menu</span>
-        </Button>
-      </DropdownMenuTrigger>
-
-      <DropdownMenuContent align='end' className='rounded-md p-1 shadow-lg'>
-        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-        <DropdownMenuItem asChild>
-          <Link href={`/recruiter/pipelines/${row.id}`} className='cursor-pointer'>
-            <FolderKanban className='mr-2 h-4 w-4' />
-            Open Board
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={destroy}
-          disabled={isPending}
-          className='cursor-pointer font-semibold text-rose-600 hover:bg-rose-500/10 focus:bg-rose-500/10 dark:text-rose-400'
-        >
-          <Trash2 className='mr-2 h-4 w-4' />
-          Delete
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+  const actions = React.useMemo<TableRowAction<PipelineRow>[]>(
+    () => [
+      {
+        label: 'Open Board',
+        icon: FolderKanban,
+        href: `/recruiter/pipelines/${row.id}`,
+      },
+      {
+        label: 'Delete',
+        icon: Trash2,
+        variant: 'destructive',
+        onClick: () =>
+          startTransition(async () => {
+            const fd = new FormData()
+            fd.append('pipelineId', row.id.toString())
+            const res = await deletePipelineAction({}, fd)
+            res?.error
+              ? toast.error(res.error)
+              : toast.success(res?.success ?? 'Pipeline deleted.')
+            router.refresh()
+          }),
+        disabled: () => isPending,
+      },
+    ],
+    [isPending, row.id, router],
   )
+
+  return <TableRowActions row={row} actions={actions} />
 }
 
 /* -------------------------------------------------------------------------- */
@@ -173,7 +151,7 @@ export default function PipelinesTable({
         header: '',
         enableHiding: false,
         sortable: false,
-        render: (_v, row) => <RowActions row={row} />,
+        render: (_v, row) => <PipelineRowActions row={row} />,
       },
     ]
   }, [sortableHeader])
