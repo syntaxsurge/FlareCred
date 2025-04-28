@@ -4,6 +4,7 @@ import React, { useState, useTransition } from 'react'
 import { CheckCircle2, Clipboard, Fingerprint, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { usePublicClient } from 'wagmi'
+import type { Abi } from 'viem'
 
 import PageCard from '@/components/ui/page-card'
 import { Button } from '@/components/ui/button'
@@ -11,7 +12,6 @@ import { StatusBadge } from '@/components/ui/status-badge'
 import { CHAIN_ID, DID_REGISTRY_ADDRESS } from '@/lib/config'
 import { DID_REGISTRY_ABI } from '@/lib/contracts/abis'
 import { extractAddressFromDid } from '@/lib/utils/address'
-
 
 /* -------------------------------------------------------------------------- */
 /*                                   P A G E                                   */
@@ -48,12 +48,12 @@ export default function VerifyDIDPage() {
 
     startTransition(async () => {
       try {
-        const exists: boolean = await publicClient.readContract({
+        const exists: boolean = (await publicClient.readContract({
           address: DID_REGISTRY_ADDRESS,
-          abi: DID_REGISTRY_ABI,
+          abi: DID_REGISTRY_ABI as unknown as Abi,
           functionName: 'hasDID',
           args: [addr],
-        }) as boolean
+        })) as boolean
 
         if (exists) {
           setResult('verified')
