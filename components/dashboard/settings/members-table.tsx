@@ -3,13 +3,7 @@
 import * as React from 'react'
 import { useRouter } from 'next/navigation'
 import { formatDistanceToNow } from 'date-fns'
-import Link from 'next/link'
-import {
-  MoreHorizontal,
-  Pencil,
-  Trash2,
-  Loader2,
-} from 'lucide-react'
+import { Pencil, Trash2, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { removeTeamMember } from '@/app/(auth)/actions'
@@ -22,16 +16,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { Label } from '@/components/ui/label'
 import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
+import { RowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import { truncateAddress } from '@/lib/utils/address'
 
@@ -118,58 +105,44 @@ function EditMemberForm({ row, onDone }: { row: RowType; onDone: () => void }) {
 /*                               Row actions                                  */
 /* -------------------------------------------------------------------------- */
 
-function RowActions({ row, isOwner }: { row: RowType; isOwner: boolean }) {
+function MemberRowActions({ row, isOwner }: { row: RowType; isOwner: boolean }) {
   const router = useRouter()
   const [isPending, startTransition] = React.useTransition()
-  const [menuOpen, setMenuOpen] = React.useState(false)
   const [editOpen, setEditOpen] = React.useState(false)
-
-  function openEditDialog() {
-    setMenuOpen(false)
-    setTimeout(() => setEditOpen(true), 0)
-  }
-
-  function destroy() {
-    startTransition(async () => {
-      const fd = new FormData()
-      fd.append('memberId', row.id.toString())
-      const res = await removeTeamMember({}, fd)
-      res?.error ? toast.error(res.error) : toast.success(res?.success ?? 'Member removed.')
-      router.refresh()
-    })
-  }
 
   if (!isOwner) return null
 
+  const actions = React.useMemo<TableRowAction<RowType>[]>(
+    () => [
+      {
+        label: 'Edit',
+        icon: Pencil,
+        onClick: () => setEditOpen(true),
+        disabled: () => isPending,
+      },
+      {
+        label: 'Remove',
+        icon: Trash2,
+        variant: 'destructive',
+        onClick: () =>
+          startTransition(async () => {
+            const fd = new FormData()
+            fd.append('memberId', row.id.toString())
+            const res = await removeTeamMember({}, fd)
+            res?.error
+              ? toast.error(res.error)
+              : toast.success(res?.success ?? 'Member removed.')
+            router.refresh()
+          }),
+        disabled: () => isPending,
+      },
+    ],
+    [isPending, row.id, router, startTransition],
+  )
+
   return (
     <>
-      <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
-        <DropdownMenuTrigger asChild>
-          <Button variant='ghost' className='h-8 w-8 p-0' disabled={isPending}>
-            {isPending ? (
-              <Loader2 className='h-4 w-4 animate-spin' />
-            ) : (
-              <MoreHorizontal className='h-4 w-4' />
-            )}
-            <span className='sr-only'>Open menu</span>
-          </Button>
-        </DropdownMenuTrigger>
-
-        <DropdownMenuContent align='end' className='rounded-md p-1 shadow-lg'>
-          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuItem onSelect={openEditDialog} className='cursor-pointer'>
-            <Pencil className='mr-2 h-4 w-4' /> Edit
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={destroy}
-            disabled={isPending}
-            className='cursor-pointer font-semibold text-rose-600 hover:bg-rose-500/10 focus:bg-rose-500/10 dark:text-rose-400'
-          >
-            <Trash2 className='mr-2 h-4 w-4' /> Remove
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <RowActions row={row} actions={actions} />
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent>
@@ -232,7 +205,6 @@ export default function MembersTable({
   const router = useRouter()
   const bulkActions = isOwner ? buildBulkActions(router) : []
 
-  /* -------------------- Centralised navigation helpers -------------------- */
   const { search, handleSearchChange, sortableHeader } = useTableNavigation({
     basePath,
     initialParams,
@@ -241,7 +213,6 @@ export default function MembersTable({
     searchQuery,
   })
 
-  /* --------------------------- Column definitions ------------------------- */
   const columns = React.useMemo<Column<RowType>[]>(() => {
     const base: Column<RowType>[] = [
       {
@@ -285,14 +256,13 @@ export default function MembersTable({
         header: '',
         enableHiding: false,
         sortable: false,
-        render: (_v, row) => <RowActions row={row} isOwner={isOwner} />,
+        render: (_v, row) => <MemberRowActions row={row} isOwner={isOwner} />,
       })
     }
 
     return base
   }, [sortableHeader, isOwner])
 
-  /* ------------------------------- View ---------------------------------- */
   return (
     <DataTable
       columns={columns}

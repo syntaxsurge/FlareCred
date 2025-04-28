@@ -21,10 +21,7 @@ import {
   type Column,
   type BulkAction,
 } from '@/components/ui/tables/data-table'
-import {
-  TableRowActions,
-  type TableRowAction,
-} from '@/components/ui/tables/row-actions'
+import { RowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import { formatDateTime } from '@/lib/utils/time'
 
@@ -46,12 +43,11 @@ interface UsersTableProps {
   order: 'asc' | 'desc'
   basePath: string
   initialParams: Record<string, string>
-  /** Current search term (from URL). */
   searchQuery: string
 }
 
 /* -------------------------------------------------------------------------- */
-/*                           Row-level actions UI                             */
+/*                             Row actions UI                                 */
 /* -------------------------------------------------------------------------- */
 
 function UsersRowActions({ row }: { row: RowType }) {
@@ -89,7 +85,7 @@ function UsersRowActions({ row }: { row: RowType }) {
 
   return (
     <>
-      <TableRowActions row={row} actions={actions} />
+      <RowActions row={row} actions={actions} />
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent>
@@ -155,7 +151,6 @@ export default function AdminUsersTable({
   const router = useRouter()
   const bulkActions = buildBulkActions(router)
 
-  /* -------------------- Centralised navigation helpers -------------------- */
   const { search, handleSearchChange, sortableHeader } = useTableNavigation({
     basePath,
     initialParams,
@@ -164,7 +159,6 @@ export default function AdminUsersTable({
     searchQuery,
   })
 
-  /* -------------------------- Column definitions -------------------------- */
   const columns = React.useMemo<Column<RowType>[]>(() => {
     return [
       {
@@ -202,7 +196,6 @@ export default function AdminUsersTable({
     ]
   }, [sortableHeader])
 
-  /* ------------------------------ Render ---------------------------------- */
   return (
     <DataTable
       columns={columns}
