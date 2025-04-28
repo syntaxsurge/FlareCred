@@ -6,12 +6,16 @@ import {TestFtsoV2Interface} from "@flarenetwork/flare-periphery-contracts/costo
 import {IFtsoFeedIdConverter} from "@flarenetwork/flare-periphery-contracts/coston/IFtsoFeedIdConverter.sol";
 
 /// @title FtsoHelper
-/// @notice Lightweight helper for reading FLR/USD feed in wei precision.
-library FtsoHelper {
-    /// @return priceWei 18-decimals FLR/USD price
-    /// @return timestamp last finalised price timestamp
-    function flrUsdPriceWei() internal view returns (uint256 priceWei, uint256 timestamp) {
-        // NOTE: `TestFtsoV2` used on testnets; switch to production interface on mainnet.
+/// @notice Stand-alone helper contract that returns the live FLR/USD price in wei precision.
+/// @dev    Deploy this contract once per network and reference its address in the front-end
+///         NEXT_PUBLIC_FTSO_HELPER_ADDRESS environment variable.
+contract FtsoHelper {
+    /**
+     * @return priceWei   18-decimals FLR/USD price
+     * @return timestamp  Unix timestamp of the last finalised price
+     */
+    function flrUsdPriceWei() external view returns (uint256 priceWei, uint256 timestamp) {
+        // On Coston & Coston2 we rely on the testnet FTSO V2 interface.
         TestFtsoV2Interface ftso = ContractRegistry.getTestFtsoV2();
         IFtsoFeedIdConverter conv = ContractRegistry.getFtsoFeedIdConverter();
         bytes21 feedId = conv.getFeedId(1, "FLR/USD");
