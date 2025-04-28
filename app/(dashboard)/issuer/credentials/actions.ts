@@ -191,3 +191,35 @@ export const approveCredentialAction = validatedActionWithUser(
     return { success: 'Credential verified, proof confirmed, and NFT anchored on Flare.' }
   },
 )
+
+/* -------------------------------------------------------------------------- */
+/*                              R E J E C T                                   */
+/* -------------------------------------------------------------------------- */
+
+export const rejectCredentialAction = validatedActionWithUser(
+  z.object({ credentialId: z.coerce.number() }),
+  async ({ credentialId }, _, user) => {
+    const [issuer] = await db
+      .select()
+      .from(issuers)
+      .where(eq(issuers.ownerUserId, user.id))
+      .limit(1)
+    if (!issuer) return buildError('Issuer not found.')
+
+    await db
+      .update(candidateCredentials)
+      .set({
+        status: CredentialStatus.REJECTED,
+        verified: false,
+        verifiedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(candidateCredentials.id, credentialId),
+          eq(candidateCredentials.issuerId, issuer.id),
+        ),
+      )
+
+    return { success: 'Credential rejected.' }
+  },
+)
