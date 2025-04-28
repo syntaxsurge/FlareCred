@@ -18,7 +18,7 @@ export async function seedUserTeam() {
       name: 'Platform Admin',
       email: 'admin@test.com',
       role: 'admin' as const,
-      walletAddress: '0x000000000000000000000000000000000000A001',
+      walletAddress: process.env.ADMIN_ADDRESS ?? '0x000000000000000000000000000000000000A001',
     },
     {
       name: 'Test Candidate',
