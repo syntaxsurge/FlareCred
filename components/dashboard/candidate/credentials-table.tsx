@@ -11,13 +11,13 @@ import { StatusBadge } from '@/components/ui/status-badge'
 import {
   DataTable,
   type Column,
-  type BulkAction,
 } from '@/components/ui/tables/data-table'
 import {
   TableRowActions,
   type TableRowAction,
 } from '@/components/ui/tables/row-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
+import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import type { CandidateCredentialRow } from '@/lib/types/table-rows'
 import { getProofTx } from '@/lib/utils'
 
@@ -35,46 +35,52 @@ interface CredentialsTableProps {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                               Bulk actions                                 */
+/*                                   Table                                    */
 /* -------------------------------------------------------------------------- */
 
-function buildBulkActions(
-  router: ReturnType<typeof useRouter>,
-): BulkAction<CandidateCredentialRow>[] {
-  const [isPending, startTransition] = React.useTransition()
+export default function CandidateCredentialsTable({
+  rows,
+  sort,
+  order,
+  basePath,
+  initialParams,
+  searchQuery,
+}: CredentialsTableProps) {
+  const router = useRouter()
 
-  return [
+  /* ------------------------ Bulk-selection actions ----------------------- */
+  const bulkActions = useBulkActions<CandidateCredentialRow>([
     {
       label: 'Delete',
       icon: Trash2,
       variant: 'destructive',
-      onClick: (selected) =>
-        startTransition(async () => {
-          const toastId = toast.loading('Deleting credentials…')
-          await Promise.all(
-            selected.map(async (cred) => {
-              const fd = new FormData()
-              fd.append('credentialId', cred.id.toString())
-              return deleteCredentialAction({}, fd)
-            }),
-          )
-          toast.success('Selected credentials deleted.', { id: toastId })
-          router.refresh()
-        }),
-      isDisabled: () => isPending,
+      handler: async (selected) => {
+        const toastId = toast.loading('Deleting credentials…')
+        await Promise.all(
+          selected.map(async (cred) => {
+            const fd = new FormData()
+            fd.append('credentialId', cred.id.toString())
+            return deleteCredentialAction({}, fd)
+          }),
+        )
+        toast.success('Selected credentials deleted.', { id: toastId })
+        router.refresh()
+      },
     },
-  ]
-}
+  ])
 
-/* -------------------------------------------------------------------------- */
-/*                               Row actions                                  */
-/* -------------------------------------------------------------------------- */
+  /* -------------------- Centralised navigation helpers -------------------- */
+  const { search, handleSearchChange, sortableHeader } = useTableNavigation({
+    basePath,
+    initialParams,
+    sort,
+    order,
+    searchQuery,
+  })
 
-function useRowActions(
-  router: ReturnType<typeof useRouter>,
-): (row: CandidateCredentialRow) => TableRowAction<CandidateCredentialRow>[] {
-  return React.useCallback(
-    (row: CandidateCredentialRow) => {
+  /* ----------------------------- Row actions ------------------------------ */
+  const makeActions = React.useCallback(
+    (row: CandidateCredentialRow): TableRowAction<CandidateCredentialRow>[] => {
       const actions: TableRowAction<CandidateCredentialRow>[] = []
 
       if (row.fileUrl) {
@@ -116,32 +122,6 @@ function useRowActions(
     },
     [router],
   )
-}
-
-/* -------------------------------------------------------------------------- */
-/*                                   Table                                    */
-/* -------------------------------------------------------------------------- */
-
-export default function CandidateCredentialsTable({
-  rows,
-  sort,
-  order,
-  basePath,
-  initialParams,
-  searchQuery,
-}: CredentialsTableProps) {
-  const router = useRouter()
-  const bulkActions = buildBulkActions(router)
-  const makeActions = useRowActions(router)
-
-  /* -------------------- Centralised navigation helpers -------------------- */
-  const { search, handleSearchChange, sortableHeader } = useTableNavigation({
-    basePath,
-    initialParams,
-    sort,
-    order,
-    searchQuery,
-  })
 
   /* ----------------------------- Columns ---------------------------------- */
   const columns = React.useMemo<Column<CandidateCredentialRow>[]>(() => {
@@ -179,8 +159,7 @@ export default function CandidateCredentialsTable({
         render: (v) => <StatusBadge status={String(v)} />,
       },
       {
-        /* Use existing vcJson key to satisfy Column typing while presenting Proof UI */
-        key: 'vcJson',
+        key: 'vcJson', /* Proof column */
         header: 'Proof',
         sortable: false,
         render: (_v, row) => {

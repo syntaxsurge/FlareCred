@@ -21,14 +21,14 @@ import { StatusBadge } from '@/components/ui/status-badge'
 import {
   DataTable,
   type Column,
-  type BulkAction,
 } from '@/components/ui/tables/data-table'
 import {
   TableRowActions,
   type TableRowAction,
 } from '@/components/ui/tables/row-actions'
-import type { InvitationRow } from '@/lib/types/table-rows'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
+import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
+import type { InvitationRow } from '@/lib/types/table-rows'
 
 /* -------------------------------------------------------------------------- */
 /*                                 PROPS                                      */
@@ -54,22 +54,30 @@ const DeclineIcon = (props: LucideProps) => (
 )
 
 /* -------------------------------------------------------------------------- */
-/*                             Bulk actions                                   */
+/*                       Bulk-actions hook for invitations                    */
 /* -------------------------------------------------------------------------- */
 
-function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<InvitationRow>[] {
-  const [isPending, startTransition] = React.useTransition()
+function useInvitationBulkActions(router: ReturnType<typeof useRouter>) {
+  /* Predicates */
+  const canAccept = (rows: InvitationRow[]) =>
+    rows.length > 0 &&
+    rows.every((r) => r.status === 'pending') &&
+    new Set(rows.map((r) => r.role)).size === 1
 
+  const canDecline = (rows: InvitationRow[]) =>
+    rows.length > 0 && rows.every((r) => r.status === 'pending')
+
+  /* Shared runner */
   async function runBulk(
     rows: InvitationRow[],
     fn:
       | typeof acceptInvitationAction
       | typeof declineInvitationAction
       | typeof deleteInvitationAction,
-    loadingMsg: string,
-    successMsg: string,
+    loading: string,
+    success: string,
   ) {
-    const toastId = toast.loading(loadingMsg)
+    const toastId = toast.loading(loading)
     const results = await Promise.all(
       rows.map(async (inv) => {
         const fd = new FormData()
@@ -80,44 +88,32 @@ function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<Invi
     const errors = results.filter((r) => r?.error).map((r) => r!.error)
     errors.length
       ? toast.error(errors.join('\n'), { id: toastId })
-      : toast.success(successMsg, { id: toastId })
+      : toast.success(success, { id: toastId })
     router.refresh()
   }
 
-  const canAccept = (rows: InvitationRow[]) =>
-    rows.length > 0 &&
-    rows.every((r) => r.status === 'pending') &&
-    new Set(rows.map((r) => r.role)).size === 1
-
-  const canDecline = (rows: InvitationRow[]) =>
-    rows.length > 0 && rows.every((r) => r.status === 'pending')
-
-  return [
+  return useBulkActions<InvitationRow>([
     {
       label: 'Accept',
       icon: AcceptIcon as any,
-      onClick: (selected) =>
-        startTransition(() => runBulk(selected, acceptInvitationAction, 'Accepting…', 'Invitations accepted.')),
+      handler: (rows) => runBulk(rows, acceptInvitationAction, 'Accepting…', 'Invitations accepted.'),
       isAvailable: canAccept,
-      isDisabled: (rows) => !canAccept(rows) || isPending,
+      isDisabled: (rows) => !canAccept(rows),
     },
     {
       label: 'Decline',
       icon: DeclineIcon as any,
-      onClick: (selected) =>
-        startTransition(() => runBulk(selected, declineInvitationAction, 'Declining…', 'Invitations declined.')),
+      handler: (rows) => runBulk(rows, declineInvitationAction, 'Declining…', 'Invitations declined.'),
       isAvailable: canDecline,
-      isDisabled: (rows) => !canDecline(rows) || isPending,
+      isDisabled: (rows) => !canDecline(rows),
     },
     {
       label: 'Delete',
       icon: Trash2,
       variant: 'destructive',
-      onClick: (selected) =>
-        startTransition(() => runBulk(selected, deleteInvitationAction, 'Deleting…', 'Invitations deleted.')),
-      isDisabled: () => isPending,
+      handler: (rows) => runBulk(rows, deleteInvitationAction, 'Deleting…', 'Invitations deleted.'),
     },
-  ]
+  ])
 }
 
 /* -------------------------------------------------------------------------- */
@@ -185,7 +181,7 @@ export default function InvitationsTable({
   searchQuery,
 }: InvitationsTableProps) {
   const router = useRouter()
-  const bulkActions = buildBulkActions(router)
+  const bulkActions = useInvitationBulkActions(router)
   const makeActions = useRowActions(router)
 
   /* -------------------- Centralised navigation helpers -------------------- */
