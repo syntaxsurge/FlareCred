@@ -1,15 +1,14 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
-import { ArrowUpDown, FileText } from 'lucide-react'
+import { FileText } from 'lucide-react'
 
 import StatusBadge from '@/components/ui/status-badge'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { CredentialStatus } from '@/lib/db/schema/candidate'
-import { buildLink } from '@/lib/utils'
+import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -45,39 +44,18 @@ export default function CredentialsTable({
   initialParams,
   searchQuery,
 }: CredentialsTableProps) {
-  const router = useRouter()
-  const [search, setSearch] = React.useState(searchQuery)
-  const debounceRef = React.useRef<NodeJS.Timeout | null>(null)
+  /* -------------------- Centralised navigation helpers -------------------- */
+  const { search, handleSearchChange, sortableHeader } = useTableNavigation({
+    basePath,
+    initialParams,
+    sort,
+    order,
+    searchQuery,
+  })
 
-  /* --------------------------- Server search ---------------------------- */
-  function handleSearchChange(value: string) {
-    setSearch(value)
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      const href = buildLink(basePath, initialParams, { q: value, page: 1 })
-      router.push(href, { scroll: false })
-    }, 400)
-  }
-
-  /* ----------------------------- Sorting -------------------------------- */
-  function sortableHeader(label: string, key: string) {
-    const nextOrder = sort === key && order === 'asc' ? 'desc' : 'asc'
-    const href = buildLink(basePath, initialParams, {
-      sort: key,
-      order: nextOrder,
-      page: 1,
-      q: search,
-    })
-    return (
-      <Link href={href} scroll={false} className='flex items-center gap-1'>
-        {label} <ArrowUpDown className='h-4 w-4' />
-      </Link>
-    )
-  }
-
-  /* ----------------------------- Columns -------------------------------- */
-  const columns = React.useMemo<Column<RowType>[]>(
-    () => [
+  /* ----------------------------- Columns ---------------------------------- */
+  const columns = React.useMemo<Column<RowType>[]>(() => {
+    return [
       {
         key: 'title',
         header: sortableHeader('Title', 'title'),
@@ -100,7 +78,7 @@ export default function CredentialsTable({
         key: 'status',
         header: sortableHeader('Status', 'status'),
         sortable: false,
-        render: (v) => <StatusBadge status={v as string} />,
+        render: (v) => <StatusBadge status={String(v)} />,
       },
       {
         key: 'fileUrl',
@@ -122,9 +100,8 @@ export default function CredentialsTable({
             '—'
           ),
       },
-    ],
-    [sort, order, basePath, initialParams, search],
-  )
+    ]
+  }, [sortableHeader])
 
   /* ------------------------------- View ---------------------------------- */
   return (

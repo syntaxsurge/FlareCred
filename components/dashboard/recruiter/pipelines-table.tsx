@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
 import { formatDistanceToNow } from 'date-fns'
-import { ArrowUpDown, Trash2, MoreHorizontal, Loader2, FolderKanban } from 'lucide-react'
+import { Trash2, MoreHorizontal, Loader2, FolderKanban } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { deletePipelineAction } from '@/app/(dashboard)/recruiter/pipelines/actions'
@@ -20,8 +20,11 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
 import type { PipelineRow } from '@/lib/types/table-rows'
-import { buildLink } from '@/lib/utils'
+import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 
+/* -------------------------------------------------------------------------- */
+/*                                   Types                                    */
+/* -------------------------------------------------------------------------- */
 
 interface PipelinesTableProps {
   rows: PipelineRow[]
@@ -134,38 +137,18 @@ export default function PipelinesTable({
   const router = useRouter()
   const bulkActions = makeBulkActions(router)
 
-  /* --------------------------- Search (server) --------------------------- */
-  const [search, setSearch] = React.useState(searchQuery)
-  const debounceRef = React.useRef<NodeJS.Timeout | null>(null)
+  /* -------------------- Centralised navigation helpers -------------------- */
+  const { search, handleSearchChange, sortableHeader } = useTableNavigation({
+    basePath,
+    initialParams,
+    sort,
+    order,
+    searchQuery,
+  })
 
-  function handleSearchChange(value: string) {
-    setSearch(value)
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      const href = buildLink(basePath, initialParams, { q: value, page: 1 })
-      router.push(href, { scroll: false })
-    }, 400)
-  }
-
-  /* ----------------------------- Sorting --------------------------------- */
-  function sortableHeader(label: string, key: string) {
-    const nextOrder = sort === key && order === 'asc' ? 'desc' : 'asc'
-    const href = buildLink(basePath, initialParams, {
-      sort: key,
-      order: nextOrder,
-      page: 1,
-      q: search,
-    })
-    return (
-      <Link href={href} scroll={false} className='flex items-center gap-1'>
-        {label} <ArrowUpDown className='h-4 w-4' />
-      </Link>
-    )
-  }
-
-  /* ----------------------------- Columns --------------------------------- */
-  const columns = React.useMemo<Column<PipelineRow>[]>(
-    () => [
+  /* ----------------------------- Columns ---------------------------------- */
+  const columns = React.useMemo<Column<PipelineRow>[]>(() => {
+    return [
       {
         key: 'name',
         header: sortableHeader('Name', 'name'),
@@ -182,7 +165,8 @@ export default function PipelinesTable({
         key: 'createdAt',
         header: sortableHeader('Created', 'createdAt'),
         sortable: false,
-        render: (v) => formatDistanceToNow(new Date(v as string), { addSuffix: true }),
+        render: (v) =>
+          formatDistanceToNow(new Date(v as string), { addSuffix: true }),
       },
       {
         key: 'id',
@@ -191,9 +175,8 @@ export default function PipelinesTable({
         sortable: false,
         render: (_v, row) => <RowActions row={row} />,
       },
-    ],
-    [sort, order, basePath, initialParams, search],
-  )
+    ]
+  }, [sortableHeader])
 
   /* ------------------------------- View ---------------------------------- */
   return (
