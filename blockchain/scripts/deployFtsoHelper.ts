@@ -1,11 +1,12 @@
 /**
- * Deploys the FtsoHelper contract.
+ * Deploys the FtsoHelper contract and records the address in deployment.log.
  *
  * Usage:
  *   pnpm hardhat run blockchain/scripts/deployFtsoHelper.ts --network <network>
  */
 
 import { network, run } from 'hardhat'
+import { updateEnvLog } from './utils/logEnv'
 import type { FtsoHelperInstance } from '../typechain-types'
 
 const FtsoHelper = artifacts.require('FtsoHelper')
@@ -16,7 +17,10 @@ async function main(): Promise<void> {
   const helper: FtsoHelperInstance = await FtsoHelper.new()
   console.log(`✅  FtsoHelper deployed at ${helper.address}`)
 
-  /* Optional block-explorer verification */
+  /* Persist address for env file ----------------------------------------- */
+  updateEnvLog('NEXT_PUBLIC_FTSO_HELPER_ADDRESS', helper.address)
+
+  /* ----------------------- Optional explorer verify --------------------- */
   if (!['hardhat', 'localhost'].includes(network.name)) {
     try {
       await run('verify:verify', {
@@ -28,9 +32,6 @@ async function main(): Promise<void> {
       console.warn('⚠️   Verification skipped / failed:', (err as Error).message)
     }
   }
-
-  console.log('\n👉  Remember to set NEXT_PUBLIC_FTSO_HELPER_ADDRESS in your environment:')
-  console.log(`NEXT_PUBLIC_FTSO_HELPER_ADDRESS=${helper.address}\n`)
 }
 
 main()

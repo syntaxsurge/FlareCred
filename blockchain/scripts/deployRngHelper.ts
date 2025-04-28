@@ -1,11 +1,12 @@
 /**
- * Deploys the RngHelper contract.
+ * Deploys the RngHelper contract and records the address in deployment.log.
  *
  * Usage:
  *   pnpm hardhat run blockchain/scripts/deployRngHelper.ts --network <network>
  */
 
 import { network, run } from 'hardhat'
+import { updateEnvLog } from './utils/logEnv'
 import type { RngHelperInstance } from '../typechain-types'
 
 const RngHelper = artifacts.require('RngHelper')
@@ -16,7 +17,10 @@ async function main(): Promise<void> {
   const helper: RngHelperInstance = await RngHelper.new()
   console.log(`✅  RngHelper deployed at ${helper.address}`)
 
-  /* Optional block-explorer verification */
+  /* Persist address for env file ----------------------------------------- */
+  updateEnvLog('NEXT_PUBLIC_RNG_HELPER_ADDRESS', helper.address)
+
+  /* ----------------------- Optional explorer verify --------------------- */
   if (!['hardhat', 'localhost'].includes(network.name)) {
     try {
       await run('verify:verify', {
@@ -28,9 +32,6 @@ async function main(): Promise<void> {
       console.warn('⚠️   Verification skipped / failed:', (err as Error).message)
     }
   }
-
-  console.log('\n👉  Remember to set NEXT_PUBLIC_RNG_HELPER_ADDRESS in your environment:')
-  console.log(`NEXT_PUBLIC_RNG_HELPER_ADDRESS=${helper.address}\n`)
 }
 
 main()
