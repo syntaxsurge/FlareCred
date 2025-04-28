@@ -33,3 +33,4 @@ export interface Pagination {
 
 export * from './candidate'
 export * from './recruiter'
+export * from './table-rows'

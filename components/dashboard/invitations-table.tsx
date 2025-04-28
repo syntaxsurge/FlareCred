@@ -32,9 +32,21 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
+import type { InvitationRow } from '@/lib/types/table-rows'
+import { buildLink } from '@/lib/utils'
+
+
+interface InvitationsTableProps {
+  rows: InvitationRow[]
+  sort: string
+  order: 'asc' | 'desc'
+  basePath: string
+  initialParams: Record<string, string>
+  searchQuery: string
+}
 
 /* -------------------------------------------------------------------------- */
-/*                              C O L O U R  I C O N S                        */
+/*                              C O L O U R  I C O N S                        */
 /* -------------------------------------------------------------------------- */
 
 const AcceptIcon = (props: LucideProps) => (
@@ -45,47 +57,10 @@ const DeclineIcon = (props: LucideProps) => (
 )
 
 /* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
+/*                           Row-level actions                                */
 /* -------------------------------------------------------------------------- */
 
-export interface RowType {
-  id: number
-  team: string
-  role: string
-  inviter: string | null
-  status: string
-  invitedAt: Date
-}
-
-interface Props {
-  rows: RowType[]
-  sort: string
-  order: 'asc' | 'desc'
-  basePath: string
-  initialParams: Record<string, string>
-  /** Current search term (from URL). */
-  searchQuery: string
-}
-
-/* -------------------------------------------------------------------------- */
-/*                               Helpers                                      */
-/* -------------------------------------------------------------------------- */
-
-function buildLink(basePath: string, init: Record<string, string>, overrides: Record<string, any>) {
-  const sp = new URLSearchParams(init)
-  Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
-  Array.from(sp.entries()).forEach(([k, v]) => {
-    if (v === '') sp.delete(k)
-  })
-  const qs = sp.toString()
-  return `${basePath}${qs ? `?${qs}` : ''}`
-}
-
-/* -------------------------------------------------------------------------- */
-/*                           Row‑level actions                                */
-/* -------------------------------------------------------------------------- */
-
-function RowActions({ row }: { row: RowType }) {
+function RowActions({ row }: { row: InvitationRow }) {
   const router = useRouter()
   const [isPending, startTransition] = React.useTransition()
   const isPendingStatus = row.status === 'pending'
@@ -160,14 +135,14 @@ function RowActions({ row }: { row: RowType }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                             Bulk actions                                   */
+/*                             Bulk actions                                   */
 /* -------------------------------------------------------------------------- */
 
-function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowType>[] {
+function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<InvitationRow>[] {
   const [isPending, startTransition] = React.useTransition()
 
   async function runBulk(
-    rows: RowType[],
+    rows: InvitationRow[],
     fn:
       | typeof acceptInvitationAction
       | typeof declineInvitationAction
@@ -192,12 +167,12 @@ function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowT
     router.refresh()
   }
 
-  const canAccept = (rows: RowType[]) =>
+  const canAccept = (rows: InvitationRow[]) =>
     rows.length > 0 &&
     rows.every((r) => r.status === 'pending') &&
     new Set(rows.map((r) => r.role)).size === 1
 
-  const canDecline = (rows: RowType[]) =>
+  const canDecline = (rows: InvitationRow[]) =>
     rows.length > 0 && rows.every((r) => r.status === 'pending')
 
   return [
@@ -245,7 +220,7 @@ export default function InvitationsTable({
   basePath,
   initialParams,
   searchQuery,
-}: Props) {
+}: InvitationsTableProps) {
   const router = useRouter()
   const bulkActions = buildBulkActions(router)
 
@@ -279,7 +254,7 @@ export default function InvitationsTable({
   }
 
   /* ------------------------ Column definitions --------------------------- */
-  const columns = React.useMemo<Column<RowType>[]>(() => {
+  const columns = React.useMemo<Column<InvitationRow>[]>(() => {
     return [
       {
         key: 'team',

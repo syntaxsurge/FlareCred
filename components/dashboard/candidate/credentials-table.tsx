@@ -19,24 +19,11 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
+import type { CandidateCredentialRow } from '@/lib/types/table-rows'
 
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
 
-export interface RowType {
-  id: number
-  title: string
-  category: string
-  type: string
-  issuer: string | null
-  status: string
-  fileUrl: string | null
-  vcJson: string | null
-}
-
-interface Props {
-  rows: RowType[]
+interface CredentialsTableProps {
+  rows: CandidateCredentialRow[]
   sort: string
   order: 'asc' | 'desc'
   basePath: string
@@ -76,7 +63,7 @@ function getProofTx(vcJson: string | null | undefined): string | null {
 /*                               Row actions                                  */
 /* -------------------------------------------------------------------------- */
 
-function RowActions({ row }: { row: RowType }) {
+function RowActions({ row }: { row: CandidateCredentialRow }) {
   const router = useRouter()
   const [isPending, startTransition] = React.useTransition()
 
@@ -158,7 +145,7 @@ function RowActions({ row }: { row: RowType }) {
 /*                               Bulk actions                                 */
 /* -------------------------------------------------------------------------- */
 
-function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowType>[] {
+function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<CandidateCredentialRow>[] {
   const [isPending, startTransition] = React.useTransition()
 
   return [
@@ -195,7 +182,7 @@ export default function CandidateCredentialsTable({
   basePath,
   initialParams,
   searchQuery,
-}: Props) {
+}: CredentialsTableProps) {
   const router = useRouter()
   const bulkActions = buildBulkActions(router)
 
@@ -228,7 +215,7 @@ export default function CandidateCredentialsTable({
     )
   }
 
-  const columns = React.useMemo<Column<RowType>[]>(() => {
+  const columns = React.useMemo<Column<CandidateCredentialRow>[]>(() => {
     return [
       {
         key: 'title',

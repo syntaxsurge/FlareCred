@@ -7,22 +7,10 @@ import * as React from 'react'
 import { ArrowUpDown } from 'lucide-react'
 
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
-
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
-
-export interface RowType {
-  id: number
-  name: string | null
-  email: string
-  bio: string | null
-  verified: number
-  topScore: number | null
-}
+import type { TalentRow } from '@/lib/types/table-rows'
 
 interface TalentTableProps {
-  rows: RowType[]
+  rows: TalentRow[]
   sort: string
   order: 'asc' | 'desc'
   basePath: string
@@ -31,7 +19,7 @@ interface TalentTableProps {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                               Helpers                                      */
+/*                               Helpers                                      */
 /* -------------------------------------------------------------------------- */
 
 function buildLink(basePath: string, init: Record<string, string>, overrides: Record<string, any>) {
@@ -87,7 +75,7 @@ export default function TalentTable({
   }
 
   /* --------------------------- Column defs ------------------------------ */
-  const columns = React.useMemo<Column<RowType>[]>(() => {
+  const columns = React.useMemo<Column<TalentRow>[]>(() => {
     return [
       {
         key: 'name',

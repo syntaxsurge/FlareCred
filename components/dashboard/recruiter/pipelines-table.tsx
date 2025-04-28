@@ -16,23 +16,14 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuLabel /* NEW */,
+  DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
 import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
+import type { PipelineRow } from '@/lib/types/table-rows'
 
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
-
-export interface RowType {
-  id: number
-  name: string
-  description: string | null
-  createdAt: string
-}
 
 interface PipelinesTableProps {
-  rows: RowType[]
+  rows: PipelineRow[]
   sort: string
   order: 'asc' | 'desc'
   basePath: string
@@ -41,7 +32,7 @@ interface PipelinesTableProps {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                               Helpers                                      */
+/*                               Helpers                                      */
 /* -------------------------------------------------------------------------- */
 
 function buildLink(basePath: string, init: Record<string, string>, overrides: Record<string, any>) {
@@ -55,10 +46,10 @@ function buildLink(basePath: string, init: Record<string, string>, overrides: Re
 }
 
 /* -------------------------------------------------------------------------- */
-/*                            Bulk delete helper                              */
+/*                            Bulk delete helper                              */
 /* -------------------------------------------------------------------------- */
 
-function makeBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowType>[] {
+function makeBulkActions(router: ReturnType<typeof useRouter>): BulkAction<PipelineRow>[] {
   const [isPending, startTransition] = React.useTransition()
 
   return [
@@ -85,13 +76,12 @@ function makeBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowTy
 }
 
 /* -------------------------------------------------------------------------- */
-/*                             Row‑level actions                              */
+/*                             Row-level actions                              */
 /* -------------------------------------------------------------------------- */
 
-function RowActions({ row }: { row: RowType }) {
+function RowActions({ row }: { row: PipelineRow }) {
   const router = useRouter()
   const [isPending, startTransition] = React.useTransition()
-  const [menuOpen, setMenuOpen] = React.useState(false)
 
   function destroy() {
     startTransition(async () => {
@@ -108,7 +98,7 @@ function RowActions({ row }: { row: RowType }) {
   }
 
   return (
-    <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+    <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant='ghost' className='h-8 w-8 p-0' disabled={isPending}>
           {isPending ? (
@@ -121,7 +111,7 @@ function RowActions({ row }: { row: RowType }) {
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align='end' className='rounded-md p-1 shadow-lg'>
-        <DropdownMenuLabel>Actions</DropdownMenuLabel> {/* NEW */}
+        <DropdownMenuLabel>Actions</DropdownMenuLabel>
         <DropdownMenuItem asChild>
           <Link href={`/recruiter/pipelines/${row.id}`} className='cursor-pointer'>
             <FolderKanban className='mr-2 h-4 w-4' />
@@ -187,7 +177,7 @@ export default function PipelinesTable({
   }
 
   /* ----------------------------- Columns --------------------------------- */
-  const columns = React.useMemo<Column<RowType>[]>(
+  const columns = React.useMemo<Column<PipelineRow>[]>(
     () => [
       {
         key: 'name',
@@ -208,7 +198,6 @@ export default function PipelinesTable({
         render: (v) => formatDistanceToNow(new Date(v as string), { addSuffix: true }),
       },
       {
-        /* use existing `id` key (valid keyof RowType) for actions column */
         key: 'id',
         header: '',
         enableHiding: false,

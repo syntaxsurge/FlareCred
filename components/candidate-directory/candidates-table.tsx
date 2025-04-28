@@ -9,37 +9,16 @@ import { ArrowUpDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { UserAvatar } from '@/components/ui/user-avatar'
+import type { CandidateDirectoryRow } from '@/lib/types/table-rows'
+import { buildLink } from '@/lib/utils'
 
-/* -------------------------------------------------------------------------- */
-/*                                 T Y P E S                                  */
-/* -------------------------------------------------------------------------- */
-
-export interface RowType {
-  id: number
-  name: string | null
-  email: string
-  verified: number
-}
-
-interface Props {
-  rows: RowType[]
+interface CandidatesTableProps {
+  rows: CandidateDirectoryRow[]
   sort: string
   order: 'asc' | 'desc'
   basePath: string
   initialParams: Record<string, string>
   searchQuery: string
-}
-
-/* -------------------------------------------------------------------------- */
-/*                               H E L P E R S                                */
-/* -------------------------------------------------------------------------- */
-
-function buildLink(base: string, init: Record<string, string>, overrides: Record<string, any>) {
-  const sp = new URLSearchParams(init)
-  Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
-  Array.from(sp.entries()).forEach(([k, v]) => !v && sp.delete(k))
-  const qs = sp.toString()
-  return `${base}${qs ? `?${qs}` : ''}`
 }
 
 /* -------------------------------------------------------------------------- */
@@ -53,7 +32,7 @@ export default function CandidatesTable({
   basePath,
   initialParams,
   searchQuery,
-}: Props) {
+}: CandidatesTableProps) {
   const router = useRouter()
   const [search, setSearch] = React.useState(searchQuery)
   const debounce = React.useRef<NodeJS.Timeout | null>(null)
@@ -85,7 +64,7 @@ export default function CandidatesTable({
   }
 
   /* ------------------------------- Columns ------------------------------ */
-  const columns = React.useMemo<Column<RowType>[]>(
+  const columns = React.useMemo<Column<CandidateDirectoryRow>[]>(
     () => [
       {
         key: 'name',
