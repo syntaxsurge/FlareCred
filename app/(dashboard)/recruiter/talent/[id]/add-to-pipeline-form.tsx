@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
+import type { Pipeline } from '@/lib/types'
+
 import { ActionButton } from '@/components/ui/action-button'
 import {
   Select,
@@ -17,11 +19,6 @@ import { addCandidateToPipelineAction } from '../../pipelines/actions'
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
 /* -------------------------------------------------------------------------- */
-
-interface Pipeline {
-  id: number
-  name: string
-}
 
 interface Props {
   candidateId: number

@@ -30,6 +30,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import StatusBadge from '@/components/ui/status-badge'
+import type { Pagination } from '@/lib/types'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
@@ -53,13 +54,7 @@ export interface StatusCounts {
   unverified: number
 }
 
-export interface Pagination {
-  page: number
-  hasNext: boolean
-  pageSize: number
-  basePath: string
-  initialParams: Record<string, string>
-}
+
 
 export interface CredentialsSection {
   rows: CredRow[]
