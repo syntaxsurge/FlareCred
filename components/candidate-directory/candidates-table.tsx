@@ -1,16 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import * as React from 'react'
-
-import { ArrowUpDown } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { UserAvatar } from '@/components/ui/user-avatar'
+import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { CandidateDirectoryRow } from '@/lib/types/table-rows'
-import { buildLink } from '@/lib/utils'
 
 interface CandidatesTableProps {
   rows: CandidateDirectoryRow[]
@@ -21,10 +18,6 @@ interface CandidatesTableProps {
   searchQuery: string
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                   Table                                    */
-/* -------------------------------------------------------------------------- */
-
 export default function CandidatesTable({
   rows,
   sort,
@@ -33,39 +26,22 @@ export default function CandidatesTable({
   initialParams,
   searchQuery,
 }: CandidatesTableProps) {
-  const router = useRouter()
-  const [search, setSearch] = React.useState(searchQuery)
-  const debounce = React.useRef<NodeJS.Timeout | null>(null)
+  /* ---------------------------------------------------------------------- */
+  /* Centralised navigation helpers                                         */
+  /* ---------------------------------------------------------------------- */
+  const { search, handleSearchChange, sortableHeader } = useTableNavigation({
+    basePath,
+    initialParams,
+    sort,
+    order,
+    searchQuery,
+  })
 
-  /* --------------------------- Server-side search ------------------------ */
-  function handleSearchChange(value: string) {
-    setSearch(value)
-    if (debounce.current) clearTimeout(debounce.current)
-    debounce.current = setTimeout(() => {
-      router.push(buildLink(basePath, initialParams, { q: value, page: 1 }), { scroll: false })
-    }, 400)
-  }
-
-  /* --------------------------- Sortable headers ------------------------- */
-  function sortableHeader(label: string, key: string) {
-    const next = sort === key && order === 'asc' ? 'desc' : 'asc'
-    const href = buildLink(basePath, initialParams, {
-      sort: key,
-      order: next,
-      page: 1,
-      q: search,
-    })
-    return (
-      <Link href={href} scroll={false} className='flex items-center gap-1'>
-        {label}
-        <ArrowUpDown className='h-4 w-4' />
-      </Link>
-    )
-  }
-
-  /* ------------------------------- Columns ------------------------------ */
-  const columns = React.useMemo<Column<CandidateDirectoryRow>[]>(
-    () => [
+  /* ---------------------------------------------------------------------- */
+  /* Column definitions                                                     */
+  /* ---------------------------------------------------------------------- */
+  const columns = React.useMemo<Column<CandidateDirectoryRow>[]>(() => {
+    return [
       {
         key: 'name',
         header: sortableHeader('Name', 'name'),
@@ -101,11 +77,12 @@ export default function CandidatesTable({
           </Button>
         ),
       },
-    ],
-    [sort, order, basePath, initialParams, search],
-  )
+    ]
+  }, [sortableHeader])
 
-  /* ------------------------------- View --------------------------------- */
+  /* ---------------------------------------------------------------------- */
+  /* Render                                                                 */
+  /* ---------------------------------------------------------------------- */
   return (
     <DataTable
       columns={columns}

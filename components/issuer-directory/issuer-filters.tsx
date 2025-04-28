@@ -1,8 +1,6 @@
 'use client'
 
-import { buildLink } from '@/lib/utils'
-import { useRouter } from 'next/navigation'
-import * as React from 'react'
+import { useFilterNavigation } from '@/lib/hooks/use-filter-navigation'
 
 interface Props {
   basePath: string
@@ -13,10 +11,6 @@ interface Props {
   selectedIndustry: string
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                   View                                     */
-/* -------------------------------------------------------------------------- */
-
 export default function IssuerFilters({
   basePath,
   initialParams,
@@ -25,18 +19,16 @@ export default function IssuerFilters({
   selectedCategory,
   selectedIndustry,
 }: Props) {
-  const router = useRouter()
-
-  function handleChange(type: 'category' | 'industry', value: string) {
-    const href = buildLink(basePath, initialParams, { [type]: value })
-    router.push(href, { scroll: false })
-  }
+  const handleChange = useFilterNavigation(basePath, initialParams)
 
   return (
     <div className='flex flex-wrap items-center gap-4'>
       {/* Category */}
       <div className='flex flex-col gap-1'>
-        <label htmlFor='category' className='text-muted-foreground text-xs font-medium uppercase'>
+        <label
+          htmlFor='category'
+          className='text-muted-foreground text-xs font-medium uppercase'
+        >
           Category
         </label>
         <select
@@ -56,7 +48,10 @@ export default function IssuerFilters({
 
       {/* Industry */}
       <div className='flex flex-col gap-1'>
-        <label htmlFor='industry' className='text-muted-foreground text-xs font-medium uppercase'>
+        <label
+          htmlFor='industry'
+          className='text-muted-foreground text-xs font-medium uppercase'
+        >
           Industry
         </label>
         <select
