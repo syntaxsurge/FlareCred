@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
-import { MoreHorizontal, Trash2, Loader2 } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { deleteCredentialAction } from '@/app/(dashboard)/admin/credentials/actions'
@@ -18,6 +18,10 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
+import {
+  TableRowActions,
+  type TableRowAction,
+} from '@/components/ui/tables/row-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import { getProofTx } from '@/lib/utils'
 
@@ -43,51 +47,6 @@ interface CredentialsTableProps {
   initialParams: Record<string, string>
   /** Current search term (from URL). */
   searchQuery: string
-}
-
-/* -------------------------------------------------------------------------- */
-/*                              Row-level actions                             */
-/* -------------------------------------------------------------------------- */
-
-function RowActions({ id }: { id: number }) {
-  const router = useRouter()
-  const [isPending, startTransition] = React.useTransition()
-
-  async function destroy() {
-    startTransition(async () => {
-      const fd = new FormData()
-      fd.append('credentialId', id.toString())
-      const res = await deleteCredentialAction({}, fd)
-      res?.error ? toast.error(res.error) : toast.success(res?.success ?? 'Credential deleted.')
-      router.refresh()
-    })
-  }
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant='ghost' className='h-8 w-8 p-0' disabled={isPending}>
-          {isPending ? (
-            <Loader2 className='h-4 w-4 animate-spin' />
-          ) : (
-            <MoreHorizontal className='h-4 w-4' />
-          )}
-          <span className='sr-only'>Open menu</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align='end' className='rounded-md p-1 shadow-lg'>
-        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={destroy}
-          disabled={isPending}
-          className='cursor-pointer font-semibold text-rose-600 hover:bg-rose-500/10 focus:bg-rose-500/10 dark:text-rose-400'
-        >
-          <Trash2 className='mr-2 h-4 w-4' /> Delete
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
 }
 
 /* -------------------------------------------------------------------------- */
@@ -142,6 +101,27 @@ export default function AdminCredentialsTable({
     order,
     searchQuery,
   })
+
+  /* ----------------------- Re-usable row actions -------------------------- */
+  const makeActions = React.useCallback(
+    (row: RowType): TableRowAction<RowType>[] => [
+      {
+        label: 'Delete',
+        icon: Trash2,
+        variant: 'destructive',
+        onClick: async () => {
+          const fd = new FormData()
+          fd.append('credentialId', row.id.toString())
+          const res = await deleteCredentialAction({}, fd)
+          res?.error
+            ? toast.error(res.error)
+            : toast.success(res?.success ?? 'Credential deleted.')
+          router.refresh()
+        },
+      },
+    ],
+    [router],
+  )
 
   /* ------------------------------ Columns --------------------------------- */
   const columns = React.useMemo<Column<RowType>[]>(() => {
@@ -204,10 +184,10 @@ export default function AdminCredentialsTable({
         header: '',
         enableHiding: false,
         sortable: false,
-        render: (_v, row) => <RowActions id={row.id} />,
+        render: (_v, row) => <TableRowActions row={row} actions={makeActions(row)} />,
       },
     ]
-  }, [sortableHeader])
+  }, [sortableHeader, makeActions])
 
   /* ------------------------------ Render ---------------------------------- */
   return (
