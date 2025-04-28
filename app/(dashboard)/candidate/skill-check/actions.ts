@@ -9,7 +9,7 @@ import { quizAttempts, skillQuizzes, candidates } from '@/lib/db/schema/candidat
 import { teams, teamMembers } from '@/lib/db/schema/core'
 
 import { openAIAssess } from './openai'
-import { NEXT_PUBLIC_PLATFORM_ISSUER_DID } from '@/lib/config'
+import { PLATFORM_ISSUER_DID } from '@/lib/config'
 import { extractAddressFromDid, toBytes32 } from '@/lib/utils/address'
 
 /* -------------------------------------------------------------------------- */
@@ -75,7 +75,7 @@ export async function startQuizAction(formData: FormData) {
     const vcPayload = {
       '@context': ['https://www.w3.org/2018/credentials/v1'],
       type: ['VerifiableCredential', 'SkillPassVC'],
-      issuer: NEXT_PUBLIC_PLATFORM_ISSUER_DID,
+      issuer: PLATFORM_ISSUER_DID,
       issuanceDate: new Date().toISOString(),
       credentialSubject: {
         id: subjectDid,

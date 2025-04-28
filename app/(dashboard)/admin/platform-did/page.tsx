@@ -4,7 +4,7 @@ import { KeyRound } from 'lucide-react'
 import PageCard from '@/components/ui/page-card'
 import { getUser } from '@/lib/db/queries/queries'
 import UpdateDidForm from './update-did-form'
-import { NEXT_PUBLIC_PLATFORM_ISSUER_DID } from '@/lib/config'
+import { PLATFORM_ISSUER_DID } from '@/lib/config'
 
 export const revalidate = 0
 
@@ -23,7 +23,7 @@ export default async function PlatformDidPage() {
         Paste an existing DID or generate a fresh one below. The value is stored in the environment
         file and utilised for credential issuance on the Flare Network.
       </p>
-      <UpdateDidForm defaultDid={NEXT_PUBLIC_PLATFORM_ISSUER_DID} />
+      <UpdateDidForm defaultDid={PLATFORM_ISSUER_DID} />
     </PageCard>
   )
 }
