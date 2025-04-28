@@ -10,11 +10,9 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
-import {
-  TableRowActions,
-  type TableRowAction,
-} from '@/components/ui/tables/row-actions'
+import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
+import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -114,6 +112,26 @@ export default function IssuersTable({
     searchQuery,
   })
 
+  /* ----------------------- Bulk-selection actions ------------------------- */
+  const bulkActions = useBulkActions<RowType>([
+    {
+      label: 'Copy DIDs',
+      icon: CopyIcon,
+      handler: async (selected) => {
+        const dids = selected.map((r) => r.did).filter(Boolean).join('\\n')
+        if (!dids) {
+          toast.error('No DIDs available in the selection.')
+          return
+        }
+        await navigator.clipboard.writeText(dids)
+        toast.success('DIDs copied to clipboard')
+      },
+      /* Show when at least one row has a DID */
+      isAvailable: (rows) => rows.some((r) => !!r.did),
+      isDisabled: (rows) => rows.every((r) => !r.did),
+    },
+  ])
+
   /* ----------------------- Column definitions ----------------------------- */
   const columns = React.useMemo<Column<RowType>[]>(() => {
     return [
@@ -197,6 +215,7 @@ export default function IssuersTable({
       filterKey='name'
       filterValue={search}
       onFilterChange={handleSearchChange}
+      bulkActions={bulkActions}
       pageSize={rows.length}
       pageSizeOptions={[rows.length]}
       hidePagination

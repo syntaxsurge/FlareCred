@@ -7,17 +7,11 @@ import { Trash2, FolderKanban } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { deletePipelineAction } from '@/app/(dashboard)/recruiter/pipelines/actions'
-import {
-  DataTable,
-  type Column,
-  type BulkAction,
-} from '@/components/ui/tables/data-table'
-import {
-  TableRowActions,
-  type TableRowAction,
-} from '@/components/ui/tables/row-actions'
-import type { PipelineRow } from '@/lib/types/table-rows'
+import { DataTable, type Column } from '@/components/ui/tables/data-table'
+import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
+import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
+import type { PipelineRow } from '@/lib/types/table-rows'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -33,37 +27,7 @@ interface PipelinesTableProps {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                            Bulk delete helper                              */
-/* -------------------------------------------------------------------------- */
-
-function makeBulkActions(router: ReturnType<typeof useRouter>): BulkAction<PipelineRow>[] {
-  const [isPending, startTransition] = React.useTransition()
-
-  return [
-    {
-      label: 'Delete',
-      icon: Trash2,
-      variant: 'destructive',
-      onClick: (selected) =>
-        startTransition(async () => {
-          const toastId = toast.loading('Deleting pipelines…')
-          await Promise.all(
-            selected.map(async (p) => {
-              const fd = new FormData()
-              fd.append('pipelineId', p.id.toString())
-              return deletePipelineAction({}, fd)
-            }),
-          )
-          toast.success('Selected pipelines deleted.', { id: toastId })
-          router.refresh()
-        }),
-      isDisabled: () => isPending,
-    },
-  ]
-}
-
-/* -------------------------------------------------------------------------- */
-/*                           Row-level actions UI                             */
+/*                         Row-level actions component                        */
 /* -------------------------------------------------------------------------- */
 
 function PipelineRowActions({ row }: { row: PipelineRow }) {
@@ -113,7 +77,27 @@ export default function PipelinesTable({
   searchQuery,
 }: PipelinesTableProps) {
   const router = useRouter()
-  const bulkActions = makeBulkActions(router)
+
+  /* --------------------------- Bulk-selection hook ------------------------- */
+  const bulkActions = useBulkActions<PipelineRow>([
+    {
+      label: 'Delete',
+      icon: Trash2,
+      variant: 'destructive',
+      handler: async (selected) => {
+        const toastId = toast.loading('Deleting pipelines…')
+        await Promise.all(
+          selected.map(async (p) => {
+            const fd = new FormData()
+            fd.append('pipelineId', p.id.toString())
+            return deletePipelineAction({}, fd)
+          }),
+        )
+        toast.success('Selected pipelines deleted.', { id: toastId })
+        router.refresh()
+      },
+    },
+  ])
 
   /* -------------------- Centralised navigation helpers -------------------- */
   const { search, handleSearchChange, sortableHeader } = useTableNavigation({
