@@ -26,20 +26,39 @@ export function normaliseAddress(value: string): string {
   return ethers.getAddress(value.trim())
 }
 
-/* -------------------------------------------------------------------------- */
-/*                         E N C O D I N G   H E L P E R                       */
-/* -------------------------------------------------------------------------- */
+/**
+ * Extracts an Ethereum address from a DID (`did:flare:0x…`) or a raw address (`0x…`).
+ * Accepts a string, an empty string, or null; returns a checksummed address string or null if invalid.
+ *
+ * @param value - The input containing a DID, raw address, an empty string, or null.
+ * @returns A `0x…` checksummed address string, or null if input is null, empty after trimming, or invalid.
+ */
+export function extractAddressFromDid(value: string | null): `0x${string}` | null {
+  if (!value) return null
+
+  const trimmed = value.trim();
+  if (trimmed === '') return null;
+
+  const didMatch = trimmed.match(/^did:flare:(0x[0-9a-fA-F]{40})$/);
+  if (didMatch) return didMatch[1] as `0x${string}`;
+
+  const rawMatch = trimmed.match(/^0x[0-9a-fA-F]{40}$/);
+  if (rawMatch) return rawMatch[0] as `0x${string}`;
+
+  return null;
+}
 
 /**
- * Return a 32-byte hex string: if `input` is already 32-byte hex it is returned
- * unchanged; otherwise the keccak-256 hash of its UTF-8 bytes is produced.
+ * Ensures a 32-byte hex string:
+ * - If `input` is already a 0x-prefixed 32-byte hex, it’s returned unchanged.
+ * - Otherwise, returns the keccak-256 hash of its UTF-8 bytes.
  *
- * @example
- *   toBytes32('hello')      // → keccak256('hello')
- *   toBytes32('0x…32bytes') // → unchanged
+ * @param input  Any string to hash or a 0x…32-byte hex to pass through.
+ * @returns      A 0x…32-byte hex string.
  */
 export function toBytes32(input: string): string {
-  return ethers.isHexString(input, 32)
-    ? input
-    : ethers.keccak256(ethers.toUtf8Bytes(input))
+  const trimmed = input.trim()
+  return ethers.isHexString(trimmed, 32)
+    ? trimmed
+    : ethers.keccak256(ethers.toUtf8Bytes(trimmed))
 }

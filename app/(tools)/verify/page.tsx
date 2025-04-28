@@ -4,38 +4,14 @@ import React, { useState, useTransition } from 'react'
 import { CheckCircle2, Clipboard, Fingerprint, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { usePublicClient } from 'wagmi'
-import { parseAbi } from 'viem'
 
 import PageCard from '@/components/ui/page-card'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/ui/status-badge'
+import { CHAIN_ID, DID_REGISTRY_ADDRESS } from '@/lib/config'
+import { DID_REGISTRY_ABI } from '@/lib/abis'
+import { extractAddressFromDid } from '@/lib/utils/address'
 
-/* -------------------------------------------------------------------------- */
-/*                              C O N S T A N T S                             */
-/* -------------------------------------------------------------------------- */
-
-/** Deployed DIDRegistry address (exposed via env) */
-const REGISTRY_ADDRESS = process.env
-  .NEXT_PUBLIC_DID_REGISTRY_ADDRESS as `0x${string}` | undefined
-
-/** Target Flare chain ID (defaults to Coston2 test-net = 114) */
-const TARGET_CHAIN_ID = Number(process.env.NEXT_PUBLIC_FLARE_CHAIN_ID ?? '114')
-
-const DID_REGISTRY_ABI = parseAbi(['function hasDID(address owner) view returns (bool)'])
-
-/* -------------------------------------------------------------------------- */
-/*                                 U T I L S                                  */
-/* -------------------------------------------------------------------------- */
-
-/** Accepts `did:flare:0x…` or raw `0x…`; returns a checksummed address or null. */
-function extractAddress(value: string): `0x${string}` | null {
-  const trimmed = value.trim()
-  const didMatch = trimmed.match(/^did:flare:(0x[0-9a-fA-F]{40})$/)
-  if (didMatch) return didMatch[1] as `0x${string}`
-  const rawMatch = trimmed.match(/^0x[0-9a-fA-F]{40}$/)
-  if (rawMatch) return rawMatch[0] as `0x${string}`
-  return null
-}
 
 /* -------------------------------------------------------------------------- */
 /*                                   P A G E                                   */
@@ -43,7 +19,7 @@ function extractAddress(value: string): `0x${string}` | null {
 
 export default function VerifyDIDPage() {
   /** Bind an RPC client to the Flare network defined in env */
-  const publicClient = usePublicClient({ chainId: TARGET_CHAIN_ID })
+  const publicClient = usePublicClient({ chainId: CHAIN_ID })
 
   const [input, setInput] = useState('')
   const [result, setResult] = useState<'verified' | 'unregistered' | 'error' | null>(null)
@@ -59,12 +35,12 @@ export default function VerifyDIDPage() {
       toast.error('Unsupported chain — please connect to the configured Flare network.')
       return
     }
-    if (!REGISTRY_ADDRESS) {
+    if (!DID_REGISTRY_ADDRESS) {
       toast.error('DID Registry address is not configured.')
       return
     }
 
-    const addr = extractAddress(input)
+    const addr = extractAddressFromDid(input)
     if (!addr) {
       toast.error('Enter a valid Flare DID or 0x address.')
       return
@@ -73,11 +49,11 @@ export default function VerifyDIDPage() {
     startTransition(async () => {
       try {
         const exists: boolean = await publicClient.readContract({
-          address: REGISTRY_ADDRESS,
+          address: DID_REGISTRY_ADDRESS,
           abi: DID_REGISTRY_ABI,
           functionName: 'hasDID',
           args: [addr],
-        })
+        }) as boolean
 
         if (exists) {
           setResult('verified')

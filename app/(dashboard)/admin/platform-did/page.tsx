@@ -4,6 +4,7 @@ import { KeyRound } from 'lucide-react'
 import PageCard from '@/components/ui/page-card'
 import { getUser } from '@/lib/db/queries/queries'
 import UpdateDidForm from './update-did-form'
+import { PLATFORM_ISSUER_DID } from '@/lib/config'
 
 export const revalidate = 0
 
@@ -11,8 +12,6 @@ export default async function PlatformDidPage() {
   const user = await getUser()
   if (!user) redirect('/connect-wallet')
   if (user.role !== 'admin') redirect('/dashboard')
-
-  const existingDid = process.env.PLATFORM_ISSUER_DID ?? null
 
   return (
     <PageCard
@@ -24,7 +23,7 @@ export default async function PlatformDidPage() {
         Paste an existing DID or generate a fresh one below. The value is stored in the environment
         file and utilised for credential issuance on the Flare Network.
       </p>
-      <UpdateDidForm defaultDid={existingDid} />
+      <UpdateDidForm defaultDid={PLATFORM_ISSUER_DID} />
     </PageCard>
   )
 }

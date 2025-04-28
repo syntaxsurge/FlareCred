@@ -21,10 +21,6 @@ export function relativeTime(date: Date): string {
   return date.toLocaleDateString()
 }
 
-/* -------------------------------------------------------------------------- */
-/*                               D A T E  U T I L S                           */
-/* -------------------------------------------------------------------------- */
-
 /**
  * Return a new `Date` advanced by `n` calendar months.
  *

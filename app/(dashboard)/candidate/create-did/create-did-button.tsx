@@ -9,27 +9,11 @@ import {
   useWalletClient,
   usePublicClient,
 } from 'wagmi'
-import { parseAbi } from 'viem'
 
 import { Button } from '@/components/ui/button'
 import { createDidAction } from './actions'
-
-/* -------------------------------------------------------------------------- */
-/*                                CONSTANTS                                   */
-/* -------------------------------------------------------------------------- */
-
-/** Deployed DIDRegistry address (must be set as NEXT_PUBLIC_DID_REGISTRY_ADDRESS) */
-const REGISTRY_ADDRESS = process.env
-  .NEXT_PUBLIC_DID_REGISTRY_ADDRESS as `0x${string}` | undefined
-
-/** Target Flare chain ID (defaults to Coston2 test-net = 114) */
-const TARGET_CHAIN_ID = Number(process.env.NEXT_PUBLIC_FLARE_CHAIN_ID ?? '114')
-
-/** Parsed ABI for the DIDRegistry (viem expects objects, not raw strings) */
-const DID_REGISTRY_ABI = parseAbi(['function createDID(bytes32 docHash)'])
-
-/** 32-byte zero hash (no initial document) */
-const ZERO_HASH = `0x${'0'.repeat(64)}` as const
+import { CHAIN_ID, DID_REGISTRY_ADDRESS } from '@/lib/config'
+import { DID_REGISTRY_ABI } from '@/lib/abis'
 
 /* -------------------------------------------------------------------------- */
 /*                               COMPONENT                                    */
@@ -57,7 +41,7 @@ export function CreateDidButton() {
     if (pending) return
 
     /* Basic pre-flight checks */
-    if (!REGISTRY_ADDRESS) {
+    if (!DID_REGISTRY_ADDRESS) {
       toast.error('DID Registry address not configured.')
       return
     }
@@ -71,18 +55,18 @@ export function CreateDidButton() {
 
     try {
       /* Ensure the user is on the correct chain */
-      if (chain?.id !== TARGET_CHAIN_ID) {
+      if (chain?.id !== CHAIN_ID) {
         toast.loading('Switching to Flare network…', { id: toastId })
-        await switchChainAsync({ chainId: TARGET_CHAIN_ID })
+        await switchChainAsync({ chainId: CHAIN_ID })
       }
 
       /* Ask the wallet to sign & send the tx */
       toast.loading('Requesting signature…', { id: toastId })
       const hash = await walletClient.writeContract({
-        address: REGISTRY_ADDRESS,
+        address: DID_REGISTRY_ADDRESS,
         abi: DID_REGISTRY_ABI,
         functionName: 'createDID',
-        args: [ZERO_HASH],
+        args: [],
       })
 
       toast.loading(`Tx sent: ${hash.slice(0, 10)}…`, { id: toastId })

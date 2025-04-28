@@ -1,7 +1,6 @@
 'use server'
 
 import { eq } from 'drizzle-orm'
-import { ethers } from 'ethers'
 
 import { issueFlareCredential } from '@/lib/flare'
 import { db } from '@/lib/db/drizzle'
@@ -10,19 +9,8 @@ import { quizAttempts, skillQuizzes, candidates } from '@/lib/db/schema/candidat
 import { teams, teamMembers } from '@/lib/db/schema/core'
 
 import { openAIAssess } from './openai'
-
-/* -------------------------------------------------------------------------- */
-/*                               U T I L S                                    */
-/* -------------------------------------------------------------------------- */
-
-function didToAddress(did: string | null): string | null {
-  const m = did?.match(/^did:flare:(0x[0-9a-fA-F]{40})$/)
-  return m ? m[1] : null
-}
-
-function toVcHash(json: string): string {
-  return ethers.keccak256(ethers.toUtf8Bytes(json))
-}
+import { PLATFORM_ISSUER_DID } from '@/lib/config'
+import { extractAddressFromDid, toBytes32 } from '@/lib/utils/address'
 
 /* -------------------------------------------------------------------------- */
 /*                               A C T I O N                                  */
@@ -84,11 +72,10 @@ export async function startQuizAction(formData: FormData) {
 
   if (passed) {
     /* Build VC JSON ------------------------------------------------------- */
-    const issuerDid = process.env.PLATFORM_ISSUER_DID || ''
     const vcPayload = {
       '@context': ['https://www.w3.org/2018/credentials/v1'],
       type: ['VerifiableCredential', 'SkillPassVC'],
-      issuer: issuerDid,
+      issuer: PLATFORM_ISSUER_DID,
       issuanceDate: new Date().toISOString(),
       credentialSubject: {
         id: subjectDid,
@@ -98,9 +85,9 @@ export async function startQuizAction(formData: FormData) {
       },
     }
     const vcJsonText = JSON.stringify(vcPayload)
-    const vcHash = toVcHash(vcJsonText)
+    const vcHash = toBytes32(vcJsonText)
 
-    const to = didToAddress(subjectDid)
+    const to = extractAddressFromDid(subjectDid)
     if (!to) {
       message += ' (Invalid subject DID for anchoring.)'
     } else {

@@ -1,5 +1,3 @@
-#!/usr/bin/env ts-node
-
 /**
  * GitHub Metrics Worker
  * ---------------------
@@ -21,25 +19,24 @@ import { create as createIpfs } from 'ipfs-http-client'
 import { formatIso } from '../lib/utils/time.js'
 import process from 'node:process'
 import crypto from 'node:crypto'
+import { GITHUB_TOKEN, IPFS_PINATA_KEY, IPFS_PINATA_SECRET } from '@/lib/config.js'
 
 /* -------------------------------------------------------------------------- */
 /*                         C L I   &   E N V   P A R S E                      */
 /* -------------------------------------------------------------------------- */
 
-const arg = process.argv[2] ?? process.env.GITHUB_REPO
+const arg = process.argv[2] ?? null
 if (!arg || !/^[\w.-]+\/[\w.-]+$/.test(arg)) {
   console.error('❌  Usage: pnpm run worker:github -- <owner>/<repo>')
   process.exit(1)
 }
 const [owner, repo] = arg.split('/') as [string, string]
 
-const githubToken = process.env.GITHUB_TOKEN
-
 /* -------------------------------------------------------------------------- */
 /*                          G I T H U B   F E T C H                           */
 /* -------------------------------------------------------------------------- */
 
-const octokit = new Octokit(githubToken ? { auth: githubToken } : {})
+const octokit = new Octokit({ auth: GITHUB_TOKEN })
 
 console.log(`ℹ️  Fetching repository data for ${owner}/${repo} …`)
 
@@ -120,11 +117,8 @@ console.log('ℹ️  Pinning proof JSON to IPFS …')
  * the PSA endpoint, otherwise we fall back to unauthenticated Infura gateway.
  */
 function createPinningClient() {
-  const pinataKey = process.env.IPFS_PINATA_KEY
-  const pinataSecret = process.env.IPFS_PINATA_SECRET
-
-  if (pinataKey && pinataSecret) {
-    const auth = Buffer.from(`${pinataKey}:${pinataSecret}`).toString('base64')
+  if (IPFS_PINATA_KEY && IPFS_PINATA_SECRET) {
+    const auth = Buffer.from(`${IPFS_PINATA_KEY}:${IPFS_PINATA_SECRET}`).toString('base64')
     return createIpfs({
       url: 'https://api.pinata.cloud/psa',
       headers: { Authorization: `Basic ${auth}` },

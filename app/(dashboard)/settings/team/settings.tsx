@@ -12,7 +12,6 @@ import {
   useWalletClient,
   usePublicClient,
 } from 'wagmi'
-import { parseAbi } from 'viem'
 import { toast } from 'sonner'
 import { useState } from 'react'
 
@@ -25,19 +24,8 @@ import { PLAN_META } from '@/lib/constants/pricing'
 import { useFlareUsdPrice } from '@/hooks/useFlareUsdPrice'
 
 import { InviteTeamMember } from './invite-team'
-
-/* -------------------------------------------------------------------------- */
-/*                               Constants                                    */
-/* -------------------------------------------------------------------------- */
-
-const NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS = process.env
-  .NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS as `0x${string}` | undefined
-
-const TARGET_CHAIN_ID = Number(process.env.NEXT_PUBLIC_FLARE_CHAIN_ID ?? '114')
-
-const SUBSCRIPTION_MANAGER_ABI = parseAbi([
-  'function paySubscription(address team,uint8 planKey) payable',
-])
+import { CHAIN_ID, SUBSCRIPTION_MANAGER_ADDRESS } from '@/lib/config'
+import { SUBSCRIPTION_MANAGER_ABI } from '@/lib/abis'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -91,7 +79,7 @@ function RenewSubscriptionButton({ planName }: { planName: 'base' | 'plus' }) {
       return
     }
 
-    if (!NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS) {
+    if (!SUBSCRIPTION_MANAGER_ADDRESS) {
       toast.error('Subscription manager address missing.')
       return
     }
@@ -105,15 +93,15 @@ function RenewSubscriptionButton({ planName }: { planName: 'base' | 'plus' }) {
 
     try {
       /* Network */
-      if (chain?.id !== TARGET_CHAIN_ID) {
+      if (chain?.id !== CHAIN_ID) {
         toast.loading('Switching network…', { id: toastId })
-        await switchChainAsync({ chainId: TARGET_CHAIN_ID })
+        await switchChainAsync({ chainId: CHAIN_ID })
       }
 
       /* Contract call */
       toast.loading('Awaiting wallet signature…', { id: toastId })
       const txHash = await walletClient.writeContract({
-        address: NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS,
+        address: SUBSCRIPTION_MANAGER_ADDRESS,
         abi: SUBSCRIPTION_MANAGER_ABI,
         functionName: 'paySubscription',
         args: [address, planKey],

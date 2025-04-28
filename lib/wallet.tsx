@@ -11,6 +11,7 @@ import '@rainbow-me/rainbowkit/styles.css'
 import { WagmiProvider, http } from 'wagmi'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useTheme } from 'next-themes'
+import { WALLETCONNECT_PROJECT_ID } from './config'
 
 /* -------------------------------------------------------------------------- */
 /*                                    CHAINS                                  */
@@ -48,10 +49,7 @@ export const coston2 = {
 /*                         R A I N B O W K I T  /  W A G M I                  */
 /* -------------------------------------------------------------------------- */
 
-const projectId =
-  process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ??
-  '00000000000000000000000000000000'
-
+const projectId = WALLETCONNECT_PROJECT_ID
 const wagmiConfig = getDefaultConfig({
   appName: 'FlareCred',
   projectId,

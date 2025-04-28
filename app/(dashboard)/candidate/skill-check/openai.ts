@@ -1,5 +1,6 @@
 'use server'
 
+import { OPENAI_API_KEY } from '@/lib/config'
 import OpenAI from 'openai'
 
 /**
@@ -7,14 +8,14 @@ import OpenAI from 'openai'
  * Otherwise, ask GPT-4o to grade the answer 0-100.
  */
 const openAiClient = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY ?? '',
+  apiKey: OPENAI_API_KEY,
 })
 
 export async function openAIAssess(
   answer: string,
   quizTitle: string,
 ): Promise<{ aiScore: number }> {
-  if (!process.env.OPENAI_API_KEY) {
+  if (!OPENAI_API_KEY) {
     return { aiScore: Math.floor(Math.random() * 100) }
   }
 

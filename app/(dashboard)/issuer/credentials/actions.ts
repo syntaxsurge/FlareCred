@@ -15,24 +15,8 @@ import {
 import { users, teams, teamMembers } from '@/lib/db/schema/core'
 import { issuers } from '@/lib/db/schema/issuer'
 import { isGithubRepoCredential } from '@/lib/constants/credential'
-
-/* -------------------------------------------------------------------------- */
-/*                               U T I L S                                    */
-/* -------------------------------------------------------------------------- */
-
-function buildError(message: string) {
-  return { error: message }
-}
-
-function didToAddress(did: string | null | undefined): string | null {
-  if (!did) return null
-  const m = did.match(/^did:flare:(0x[0-9a-fA-F]{40})$/)
-  return m ? m[1] : null
-}
-
-function toVcHash(json: string): string {
-  return ethers.keccak256(ethers.toUtf8Bytes(json))
-}
+import { extractAddressFromDid, toBytes32 } from '@/lib/utils/address'
+import { buildError } from '@/lib/utils'
 
 /* -------------------------------------------------------------------------- */
 /*                       A P P R O V E  /  S I G N  V C                       */
@@ -150,10 +134,10 @@ export const approveCredentialAction = validatedActionWithUser(
       } as const
 
       vcJsonText = JSON.stringify(vcPayload)
-      const vcHash = toVcHash(vcJsonText)
+      const vcHash = toBytes32(vcJsonText)
 
       /* Anchor on Flare ---------------------------------------------------- */
-      const to = didToAddress(subjectDid)
+      const to = extractAddressFromDid(subjectDid)
       if (!to) return buildError('Malformed subject DID.')
 
       try {

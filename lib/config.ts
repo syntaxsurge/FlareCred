@@ -4,6 +4,11 @@ import { getEnv } from '@/lib/utils/env'
 /*                       E N V I R O N M E N T   C O N F I G                  */
 /* -------------------------------------------------------------------------- */
 
+export const OPENAI_API_KEY = getEnv('OPENAI_API_KEY') as string
+export const GITHUB_TOKEN = getEnv('GITHUB_TOKEN') as string
+export const IPFS_PINATA_KEY = getEnv('IPFS_PINATA_KEY') as string
+export const IPFS_PINATA_SECRET = getEnv('IPFS_PINATA_SECRET') as string
+
 export const FLARE_RPC_URL = getEnv('NEXT_PUBLIC_FLARE_RPC_URL') as string
 
 export const CHAIN_ID = getEnv('NEXT_PUBLIC_FLARE_CHAIN_ID', {
@@ -37,3 +42,5 @@ export const RNG_HELPER_ADDRESS = getEnv('NEXT_PUBLIC_RNG_HELPER_ADDRESS', {
 }) as `0x${string}`
 
 export const PLATFORM_ISSUER_DID = getEnv('PLATFORM_ISSUER_DID') as string
+
+export const WALLETCONNECT_PROJECT_ID = getEnv('NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID') as string
