@@ -8,10 +8,7 @@ import { toast } from 'sonner'
 
 import { deleteCredentialAction } from '@/app/(dashboard)/admin/credentials/actions'
 import { StatusBadge } from '@/components/ui/status-badge'
-import {
-  DataTable,
-  type Column,
-} from '@/components/ui/tables/data-table'
+import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import {
   TableRowActions,
   type TableRowAction,
@@ -83,6 +80,7 @@ export default function CandidateCredentialsTable({
     (row: CandidateCredentialRow): TableRowAction<CandidateCredentialRow>[] => {
       const actions: TableRowAction<CandidateCredentialRow>[] = []
 
+      /* View-file link ----------------------------------------------------- */
       if (row.fileUrl) {
         actions.push({
           label: 'View file',
@@ -91,23 +89,28 @@ export default function CandidateCredentialsTable({
         })
       }
 
+      /* Copy VC JSON ------------------------------------------------------- */
       if (row.vcJson) {
         actions.push({
           label: 'Copy VC JSON',
           icon: Clipboard,
-          onClick: () =>
-            navigator.clipboard
-              .writeText(row.vcJson!)
-              .then(() => toast.success('VC JSON copied to clipboard'))
-              .catch(() => toast.error('Copy failed')),
+          onClick: async (_row) => {
+            try {
+              await navigator.clipboard.writeText(row.vcJson!)
+              toast.success('VC JSON copied to clipboard')
+            } catch {
+              toast.error('Copy failed')
+            }
+          },
         })
       }
 
+      /* Delete ------------------------------------------------------------- */
       actions.push({
         label: 'Delete',
         icon: Trash2,
         variant: 'destructive',
-        onClick: async () => {
+        onClick: async (_row) => {
           const fd = new FormData()
           fd.append('credentialId', row.id.toString())
           const res = await deleteCredentialAction({}, fd)
@@ -159,7 +162,7 @@ export default function CandidateCredentialsTable({
         render: (v) => <StatusBadge status={String(v)} />,
       },
       {
-        key: 'vcJson', /* Proof column */
+        key: 'vcJson',
         header: 'Proof',
         sortable: false,
         render: (_v, row) => {
