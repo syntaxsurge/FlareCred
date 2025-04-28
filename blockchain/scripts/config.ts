@@ -9,7 +9,6 @@
  *   ADMIN_ADDRESS       → receives DEFAULT_ADMIN_ROLE and ADMIN_ROLE
  *   ISSUER_ADDRESSES    → comma-separated list that will be granted ISSUER_ROLE
  *   PLATFORM_ADDRESS    → account that obtains PLATFORM_ROLE
- *   VERIFIER_ADDRESS    → deployed FlareCredVerifier delegate address
  * ────────────────────────────────────────────────────────────────────────────
  */
 
@@ -33,25 +32,17 @@ const uniq = <T>(arr: T[]) => Array.from(new Set(arr))
 
 const env = process.env as Record<string, string | undefined>
 
-/**
- * Deterministic "burner” accounts used only when the corresponding env
- * variable is absent. They make Hardhat scripts work out-of-the-box in
- * local dev but are **not** suitable for testnet / mainnet deployments.
- */
-const DEFAULT_ADMIN = '0x000000000000000000000000000000000000dEaD'
-const DEFAULT_PLATFORM = '0x000000000000000000000000000000000000BEEF'
-
 /* -------------------------------------------------------------------------- */
 /*                             C O R E  R O L E S                             */
 /* -------------------------------------------------------------------------- */
 
 export const adminAddress = env.ADMIN_ADDRESS
   ? normalise(env.ADMIN_ADDRESS)
-  : DEFAULT_ADMIN
+  : ''
 
 export const platformAddress = env.PLATFORM_ADDRESS
   ? normalise(env.PLATFORM_ADDRESS)
-  : DEFAULT_PLATFORM
+  : ''
 
 /* -------------------------------------------------------------------------- */
 /*                         I S S U E R   A D D R E S S E S                    */
@@ -68,12 +59,3 @@ export const issuerAddresses: string[] = uniq(
     .filter((s) => s.length > 0)
     .map(normalise),
 ).filter((a) => a !== adminAddress && a !== platformAddress)
-
-/* -------------------------------------------------------------------------- */
-/*                      F D C   V E R I F I E R   D E L E G A T E             */
-/* -------------------------------------------------------------------------- */
-
-/** Address of the deployed FlareCredVerifier contract (empty string for local dev). */
-export const verifierAddress = env.VERIFIER_ADDRESS
-  ? normalise(env.VERIFIER_ADDRESS)
-  : ''

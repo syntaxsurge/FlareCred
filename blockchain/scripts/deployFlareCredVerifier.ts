@@ -28,9 +28,6 @@ async function main(): Promise<void> {
       console.warn('⚠️   Verification skipped / failed:', (err as Error).message)
     }
   }
-
-  console.log('\n👉  Remember to set VERIFIER_ADDRESS in your environment:')
-  console.log(`VERIFIER_ADDRESS=${verifier.address}\n`)
 }
 
 main()
