@@ -6,6 +6,7 @@
  */
 
 import { network, run } from 'hardhat'
+import { updateEnvLog } from './utils/logEnv'
 import type { FlareCredVerifierInstance } from '../typechain-types'
 
 const FlareCredVerifier = artifacts.require('FlareCredVerifier')
@@ -16,7 +17,10 @@ async function main(): Promise<void> {
   const verifier: FlareCredVerifierInstance = await FlareCredVerifier.new()
   console.log(`✅  FlareCredVerifier deployed at ${verifier.address}`)
 
-  /* --------------------------- Etherscan verify --------------------------- */
+  /* Persist address for env ------------------------------------------ */
+  updateEnvLog('NEXT_PUBLIC_FDC_VERIFIER_ADDRESS', verifier.address)
+
+  /* --------------------------- Explorer verify --------------------------- */
   if (!['hardhat', 'localhost'].includes(network.name)) {
     try {
       await run('verify:verify', {

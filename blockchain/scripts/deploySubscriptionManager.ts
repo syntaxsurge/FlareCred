@@ -1,5 +1,6 @@
 import { network, run, ethers } from 'hardhat'
 import { adminAddress, platformAddress } from './config'
+import { updateEnvLog } from './utils/logEnv'
 
 const SubscriptionManager = artifacts.require('SubscriptionManager')
 
@@ -15,6 +16,9 @@ async function main(): Promise<void> {
   const args: [string, bigint, bigint] = [adminAddress, basePrice, plusPrice]
   const mgr = await SubscriptionManager.new(...args)
   console.log(`✅  SubscriptionManager deployed at ${mgr.address}`)
+
+  /* Persist address for env ------------------------------------------ */
+  updateEnvLog('NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS', mgr.address)
 
   /* ------------------------------ Verify ----------------------------- */
   if (!['hardhat', 'localhost'].includes(network.name)) {

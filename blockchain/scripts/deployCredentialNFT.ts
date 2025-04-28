@@ -7,6 +7,7 @@
 
 import { network, run } from 'hardhat'
 import { adminAddress, issuerAddresses, platformAddress } from './config'
+import { updateEnvLog } from './utils/logEnv'
 import type { CredentialNFTInstance } from '../typechain-types'
 
 const CredentialNFT = artifacts.require('CredentialNFT')
@@ -17,6 +18,9 @@ async function main(): Promise<void> {
 
   const nft: CredentialNFTInstance = await CredentialNFT.new(...args)
   console.log(`✅  CredentialNFT deployed at ${nft.address}`)
+
+  /* Persist address for env -------------------------------------------- */
+  updateEnvLog('NEXT_PUBLIC_CREDENTIAL_NFT_ADDRESS', nft.address)
 
   /* ------------------------------------------------------------------ */
   /*                       Optional Etherscan verify                     */
@@ -34,7 +38,7 @@ async function main(): Promise<void> {
   }
 
   /* ------------------------------------------------------------------ */
-  /*                      Seed initial on-chain roles                   */
+  /*                      Seed initial on-chain roles                    */
   /* ------------------------------------------------------------------ */
   const ISSUER_ROLE = await nft.ISSUER_ROLE()
   const PLATFORM_ROLE = await nft.PLATFORM_ROLE()

@@ -10,6 +10,7 @@
 import { network, run, ethers } from 'hardhat'
 import { adminAddress, platformAddress } from './config'
 import type { DIDRegistryInstance } from '../typechain-types'
+import { updateEnvLog } from './utils/logEnv'
 
 const DIDRegistry = artifacts.require('DIDRegistry')
 
@@ -19,6 +20,9 @@ async function main(): Promise<void> {
 
   const registry: DIDRegistryInstance = await DIDRegistry.new(...args)
   console.log(`✅  DIDRegistry deployed at ${registry.address}`)
+
+  /* Persist address for front-end env ------------------------------------ */
+  updateEnvLog('NEXT_PUBLIC_DID_REGISTRY_ADDRESS', registry.address)
 
   /* -------------------------------------------------------------------- */
   /*                     Mint platform DID immediately                     */
@@ -31,10 +35,9 @@ async function main(): Promise<void> {
       await registry.createDID(ZERO_HASH, { from: platformAddress })
       const did = await registry.didOf(platformAddress)
       console.log(`🎉  Platform DID created → ${did}`)
-      console.log(
-        '\n👉  Add the following to your .env file:\n' +
-          `PLATFORM_ISSUER_DID=${did}\n`,
-      )
+
+      /* Persist DID for env file ---------------------------------------- */
+      updateEnvLog('PLATFORM_ISSUER_DID', did)
     } catch (err) {
       console.warn('⚠️  Failed to mint platform DID:', (err as Error).message)
     }
