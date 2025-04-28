@@ -25,3 +25,21 @@ export function isValidAddress(value: string | null | undefined): boolean {
 export function normaliseAddress(value: string): string {
   return ethers.getAddress(value.trim())
 }
+
+/* -------------------------------------------------------------------------- */
+/*                         E N C O D I N G   H E L P E R                       */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Return a 32-byte hex string: if `input` is already 32-byte hex it is returned
+ * unchanged; otherwise the keccak-256 hash of its UTF-8 bytes is produced.
+ *
+ * @example
+ *   toBytes32('hello')      // → keccak256('hello')
+ *   toBytes32('0x…32bytes') // → unchanged
+ */
+export function toBytes32(input: string): string {
+  return ethers.isHexString(input, 32)
+    ? input
+    : ethers.keccak256(ethers.toUtf8Bytes(input))
+}

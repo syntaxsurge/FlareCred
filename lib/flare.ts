@@ -9,74 +9,33 @@ import {
   FTSO_HELPER_ABI,
   RNG_HELPER_ABI,
 } from '@/lib/abis'
+import { getEnv } from '@/lib/utils/env'
+import { toBytes32 } from '@/lib/utils/address'
 
 /* -------------------------------------------------------------------------- */
 /*                          E N V I R O N M E N T   I O                       */
 /* -------------------------------------------------------------------------- */
 
-type EnvKind = 'string' | 'number' | 'address'
+const FLARE_RPC_URL                = getEnv('NEXT_PUBLIC_FLARE_RPC_URL') as string
+const CHAIN_ID                     = getEnv('NEXT_PUBLIC_FLARE_CHAIN_ID', { kind: 'number' }) as number
 
-/**
- * Read and validate an environment variable.
- *
- * @param name         Variable to fetch (e.g. `NEXT_PUBLIC_FLARE_RPC_URL`).
- * @param kind         Desired type: `'string' | 'number' | 'address'`.
- * @param optional     Mark `true` only for non-required vars.
- */
-function env(
-  name: string,
-  {
-    kind = 'string',
-    optional = false,
-  }: { kind?: EnvKind; optional?: boolean } = {},
-): string | number | undefined {
-  const raw = process.env[name]
-  if ((raw === undefined || raw === '') && !optional) {
-    throw new Error(`Environment variable ${name} is not set`)
-  }
-  if (raw === undefined || raw === '') return undefined
-
-  switch (kind) {
-    case 'number': {
-      const num = Number(raw)
-      if (Number.isNaN(num)) throw new Error(`${name} is not a valid number`)
-      return num
-    }
-    case 'address':
-      try {
-        return ethers.getAddress(raw)
-      } catch {
-        throw new Error(`${name} is not a valid 0x address`)
-      }
-    default:
-      return raw
-  }
-}
-
-/* -------------------------------------------------------------------------- */
-/*                                  C O N S T S                               */
-/* -------------------------------------------------------------------------- */
-
-const FLARE_RPC_URL                = env('NEXT_PUBLIC_FLARE_RPC_URL') as string
-const CHAIN_ID                     = env('NEXT_PUBLIC_FLARE_CHAIN_ID', { kind: 'number' }) as number
-
-const DID_REGISTRY_ADDRESS         = env('NEXT_PUBLIC_DID_REGISTRY_ADDRESS', {
+const DID_REGISTRY_ADDRESS         = getEnv('NEXT_PUBLIC_DID_REGISTRY_ADDRESS', {
   kind: 'address',
 }) as string
-const CREDENTIAL_NFT_ADDRESS       = env('NEXT_PUBLIC_CREDENTIAL_NFT_ADDRESS', {
+const CREDENTIAL_NFT_ADDRESS       = getEnv('NEXT_PUBLIC_CREDENTIAL_NFT_ADDRESS', {
   kind: 'address',
 }) as string
-const SUBSCRIPTION_MANAGER_ADDRESS = env('NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS', {
+const SUBSCRIPTION_MANAGER_ADDRESS = getEnv('NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS', {
   kind: 'address',
 }) as string
-const FDC_VERIFIER_ADDRESS         = env('NEXT_PUBLIC_FDC_VERIFIER_ADDRESS', {
+const FDC_VERIFIER_ADDRESS         = getEnv('NEXT_PUBLIC_FDC_VERIFIER_ADDRESS', {
   kind: 'address',
   optional: true,
 }) as string | undefined
-const FTSO_HELPER_ADDRESS          = env('NEXT_PUBLIC_FTSO_HELPER_ADDRESS', {
+const FTSO_HELPER_ADDRESS          = getEnv('NEXT_PUBLIC_FTSO_HELPER_ADDRESS', {
   kind: 'address',
 }) as string
-const RNG_HELPER_ADDRESS           = env('NEXT_PUBLIC_RNG_HELPER_ADDRESS', {
+const RNG_HELPER_ADDRESS           = getEnv('NEXT_PUBLIC_RNG_HELPER_ADDRESS', {
   kind: 'address',
 }) as string
 
@@ -136,9 +95,6 @@ export async function randomMod(bound: number | bigint): Promise<bigint> {
 /* -------------------------------------------------------------------------- */
 /*                                  U T I L S                                 */
 /* -------------------------------------------------------------------------- */
-
-const toBytes32 = (input: string) =>
-  ethers.isHexString(input, 32) ? input : ethers.keccak256(ethers.toUtf8Bytes(input))
 
 type SignerArgs = { signer?: ethers.Signer; signerAddress?: string }
 
