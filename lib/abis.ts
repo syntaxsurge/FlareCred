@@ -1,40 +1,26 @@
 /**
- * Centralised contract ABIs used across the FlareCred frontend.
+ * Centralised contract ABIs imported from Hardhat build artifacts.
  *
- * These arrays are declared as <code>const</code> so that TypeScript infers literal
- * string types, preserving full type-safety when they are consumed by
- * ethers.js or viem helpers.
+ * Reading the artefacts produced during `hardhat compile` keeps the UI in sync
+ * with the latest Solidity interfaces while avoiding manual ABI duplication.
  */
 
-export const DID_REGISTRY_ABI = [
-  'function createDID(bytes32 docHash) external',
-  'function didOf(address owner) view returns (string)',
-] as const;
+import type { Abi } from 'viem'
 
-export const CREDENTIAL_NFT_ABI = [
-  'event CredentialMinted(address indexed to,uint256 indexed tokenId,bytes32 vcHash,string uri)',
-  'function mintCredential(address to,bytes32 vcHash,string uri) external returns (uint256)',
-  'function getVcHash(uint256 tokenId) external view returns (bytes32)',
-] as const;
+import DIDRegistryArtifact from '../blockchain/artifacts/contracts/DIDRegistry.sol/DIDRegistry.json'
+import CredentialNFTArtifact from '../blockchain/artifacts/contracts/CredentialNFT.sol/CredentialNFT.json'
+import SubscriptionManagerArtifact from '../blockchain/artifacts/contracts/SubscriptionManager.sol/SubscriptionManager.json'
+import FlareCredVerifierArtifact from '../blockchain/artifacts/contracts/FlareCredVerifier.sol/FlareCredVerifier.json'
+import FtsoHelperArtifact from '../blockchain/artifacts/contracts/FtsoHelper.sol/FtsoHelper.json'
+import RngHelperArtifact from '../blockchain/artifacts/contracts/RngHelper.sol/RngHelper.json'
 
-export const SUBSCRIPTION_MANAGER_ABI = [
-  'function paySubscription(address team,uint8 planKey) payable',
-  'function paidUntil(address team) view returns (uint256)',
-  'function planPriceWei(uint8) view returns (uint256)',
-  'event SubscriptionPaid(address indexed team,uint8 planKey,uint256 paidUntil)',
-] as const;
+/* -------------------------------------------------------------------------- */
+/*                                   EXPORTS                                  */
+/* -------------------------------------------------------------------------- */
 
-export const FDC_VERIFIER_ABI = [
-  'function verifyEVM(bytes) view returns (bool)',
-  'function verifyJson(bytes) view returns (bool)',
-  'function verifyPayment(bytes) view returns (bool)',
-  'function verifyAddress(bytes) view returns (bool)',
-] as const;
-
-export const FTSO_HELPER_ABI = [
-  'function flrUsdPriceWei() view returns (uint256 priceWei, uint256 timestamp)',
-] as const;
-
-export const RNG_HELPER_ABI = [
-  'function randomMod(uint256) view returns (uint256)',
-] as const;
+export const DID_REGISTRY_ABI: Abi = DIDRegistryArtifact.abi as Abi
+export const CREDENTIAL_NFT_ABI: Abi = CredentialNFTArtifact.abi as Abi
+export const SUBSCRIPTION_MANAGER_ABI: Abi = SubscriptionManagerArtifact.abi as Abi
+export const FDC_VERIFIER_ABI: Abi = FlareCredVerifierArtifact.abi as Abi
+export const FTSO_HELPER_ABI: Abi = FtsoHelperArtifact.abi as Abi
+export const RNG_HELPER_ABI: Abi = RngHelperArtifact.abi as Abi
