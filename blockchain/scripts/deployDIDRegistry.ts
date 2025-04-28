@@ -31,7 +31,7 @@ async function main(): Promise<void> {
       await registry.adminCreateDID(platformAddress, ZeroHash, { from: adminAddress })
       const did = await registry.didOf(platformAddress)
       console.log(`🎉  Platform DID created → ${did}`)
-      updateEnvLog('PLATFORM_ISSUER_DID', did)
+      updateEnvLog('NEXT_PUBLIC_PLATFORM_ISSUER_DID', did)
     } catch (err) {
       console.warn('⚠️  Failed to mint platform DID:', (err as Error).message)
     }

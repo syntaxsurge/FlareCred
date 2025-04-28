@@ -41,7 +41,7 @@ export const upsertPlatformDidAction = validatedActionWithUser(
     }
 
     try {
-      await upsertEnv('PLATFORM_ISSUER_DID', newDid!)
+      await upsertEnv('NEXT_PUBLIC_PLATFORM_ISSUER_DID', newDid!)
     } catch (err: any) {
       return { error: `Failed to update .env: ${String(err)}` }
     }

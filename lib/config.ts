@@ -41,6 +41,6 @@ export const RNG_HELPER_ADDRESS = getEnv('NEXT_PUBLIC_RNG_HELPER_ADDRESS', {
   kind: 'address',
 }) as `0x${string}`
 
-export const PLATFORM_ISSUER_DID = getEnv('PLATFORM_ISSUER_DID') as string
+export const NEXT_PUBLIC_PLATFORM_ISSUER_DID = getEnv('NEXT_PUBLIC_PLATFORM_ISSUER_DID') as string
 
 export const WALLETCONNECT_PROJECT_ID = getEnv('NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID') as string
