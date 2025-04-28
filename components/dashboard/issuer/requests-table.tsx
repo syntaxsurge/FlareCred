@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
-import { FileSignature, XCircle, type LucideProps } from 'lucide-react'
+import { FileSignature } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { rejectCredentialAction } from '@/app/(dashboard)/issuer/credentials/actions'
@@ -14,6 +14,7 @@ import { CredentialStatus } from '@/lib/db/schema/candidate'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import { getProofTx } from '@/lib/utils'
+import { RejectIcon } from '@/components/ui/colored-icons'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -39,14 +40,6 @@ interface Props {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                 Icons                                      */
-/* -------------------------------------------------------------------------- */
-
-const RejectIcon = (props: LucideProps) => (
-  <XCircle {...props} className='mr-2 h-4 w-4 text-rose-600 dark:text-rose-400' />
-)
-
-/* -------------------------------------------------------------------------- */
 /*                         Bulk-selection actions                             */
 /* -------------------------------------------------------------------------- */
 
@@ -54,7 +47,7 @@ function useBulkReject(router: ReturnType<typeof useRouter>) {
   return useBulkActions<RowType>([
     {
       label: 'Reject',
-      icon: RejectIcon as any,
+      icon: RejectIcon,
       variant: 'destructive',
       handler: async (rows) => {
         const toastId = toast.loading('Rejecting…')

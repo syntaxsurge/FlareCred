@@ -3,13 +3,7 @@
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
-import {
-  ShieldCheck,
-  ShieldX,
-  XCircle,
-  Trash2,
-  type LucideProps,
-} from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import {
@@ -23,10 +17,14 @@ import {
   TableRowActions,
   type TableRowAction,
 } from '@/components/ui/tables/row-actions'
+import {
+  VerifyIcon,
+  UnverifyIcon,
+  RejectIcon,
+} from '@/components/ui/colored-icons'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import { IssuerStatus } from '@/lib/db/schema/issuer'
-import { cn } from '@/lib/utils'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -52,28 +50,6 @@ interface IssuersTableProps {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                            C O L O R  E D   I C O N S                      */
-/* -------------------------------------------------------------------------- */
-
-const VerifyIcon = ({ className, ...props }: LucideProps) => (
-  <ShieldCheck
-    {...props}
-    className={cn('mr-2 h-4 w-4 text-emerald-600 dark:text-emerald-400', className)}
-  />
-)
-
-const UnverifyIcon = ({ className, ...props }: LucideProps) => (
-  <ShieldX
-    {...props}
-    className={cn('mr-2 h-4 w-4 text-amber-600 dark:text-amber-400', className)}
-  />
-)
-
-const RejectIcon = ({ className, ...props }: LucideProps) => (
-  <XCircle {...props} className={cn('mr-2 h-4 w-4 text-rose-600 dark:text-rose-400', className)} />
-)
-
-/* -------------------------------------------------------------------------- */
 /*                                   Table                                    */
 /* -------------------------------------------------------------------------- */
 
@@ -91,7 +67,7 @@ export default function AdminIssuersTable({
   const bulkActions = useBulkActions<RowType>([
     {
       label: 'Verify',
-      icon: VerifyIcon as any,
+      icon: VerifyIcon,
       handler: async (selected) => {
         const toastId = toast.loading('Updating issuers…')
         await Promise.all(
@@ -108,7 +84,7 @@ export default function AdminIssuersTable({
     },
     {
       label: 'Unverify',
-      icon: UnverifyIcon as any,
+      icon: UnverifyIcon,
       handler: async (selected) => {
         const toastId = toast.loading('Updating issuers…')
         await Promise.all(
@@ -125,7 +101,7 @@ export default function AdminIssuersTable({
     },
     {
       label: 'Reject',
-      icon: RejectIcon as any,
+      icon: RejectIcon,
       variant: 'destructive',
       handler: async (selected) => {
         const toastId = toast.loading('Updating issuers…')
@@ -178,7 +154,7 @@ export default function AdminIssuersTable({
       if (row.status !== 'ACTIVE') {
         actions.push({
           label: 'Verify',
-          icon: VerifyIcon as any,
+          icon: VerifyIcon,
           onClick: async () => {
             const toastId = toast.loading('Updating issuer…')
             const fd = new FormData()
@@ -196,7 +172,7 @@ export default function AdminIssuersTable({
       if (row.status === 'ACTIVE') {
         actions.push({
           label: 'Unverify',
-          icon: UnverifyIcon as any,
+          icon: UnverifyIcon,
           onClick: async () => {
             const toastId = toast.loading('Updating issuer…')
             const fd = new FormData()
@@ -214,7 +190,7 @@ export default function AdminIssuersTable({
       if (row.status !== 'REJECTED') {
         actions.push({
           label: 'Reject',
-          icon: RejectIcon as any,
+          icon: RejectIcon,
           variant: 'destructive',
           onClick: async () => {
             const toastId = toast.loading('Updating issuer…')

@@ -4,12 +4,7 @@ import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
 import { formatDistanceToNow } from 'date-fns'
-import {
-  CheckCircle2,
-  XCircle,
-  Trash2,
-  type LucideProps,
-} from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import {
@@ -26,6 +21,7 @@ import {
   TableRowActions,
   type TableRowAction,
 } from '@/components/ui/tables/row-actions'
+import { AcceptIcon, DeclineIcon } from '@/components/ui/colored-icons'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import type { InvitationRow } from '@/lib/types/table-rows'
@@ -41,17 +37,6 @@ interface InvitationsTableProps {
   initialParams: Record<string, string>
   searchQuery: string
 }
-
-/* -------------------------------------------------------------------------- */
-/*                         COLOURED ICON COMPONENTS                           */
-/* -------------------------------------------------------------------------- */
-
-const AcceptIcon = (props: LucideProps) => (
-  <CheckCircle2 {...props} className='mr-2 h-4 w-4 text-emerald-600 dark:text-emerald-400' />
-)
-const DeclineIcon = (props: LucideProps) => (
-  <XCircle {...props} className='mr-2 h-4 w-4 text-amber-600 dark:text-amber-400' />
-)
 
 /* -------------------------------------------------------------------------- */
 /*                       Bulk-actions hook for invitations                    */
@@ -95,14 +80,14 @@ function useInvitationBulkActions(router: ReturnType<typeof useRouter>) {
   return useBulkActions<InvitationRow>([
     {
       label: 'Accept',
-      icon: AcceptIcon as any,
+      icon: AcceptIcon,
       handler: (rows) => runBulk(rows, acceptInvitationAction, 'Accepting…', 'Invitations accepted.'),
       isAvailable: canAccept,
       isDisabled: (rows) => !canAccept(rows),
     },
     {
       label: 'Decline',
-      icon: DeclineIcon as any,
+      icon: DeclineIcon,
       handler: (rows) => runBulk(rows, declineInvitationAction, 'Declining…', 'Invitations declined.'),
       isAvailable: canDecline,
       isDisabled: (rows) => !canDecline(rows),
@@ -145,12 +130,12 @@ function useRowActions(
       if (isAwaiting) {
         actions.push({
           label: 'Accept',
-          icon: AcceptIcon as any,
+          icon: AcceptIcon,
           onClick: () => runAction(acceptInvitationAction, 'Invitation accepted.'),
         })
         actions.push({
           label: 'Decline',
-          icon: DeclineIcon as any,
+          icon: DeclineIcon,
           onClick: () => runAction(declineInvitationAction, 'Invitation declined.'),
         })
       }
