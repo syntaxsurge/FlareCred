@@ -1,5 +1,6 @@
 'use client'
 
+import * as React from 'react'
 import { cn } from '@/lib/utils'
 import {
   CheckCircle2,
@@ -10,41 +11,51 @@ import {
 } from 'lucide-react'
 
 /**
- * Shared coloured icon variants.
- * Import these wrappers instead of redefining coloured icons in table components.
+ * Utility that wraps a Lucide icon with default colour classes while preserving ref support.
  */
+function withColor(
+  Base: React.ForwardRefExoticComponent<
+    Omit<LucideProps, 'ref'> & React.RefAttributes<SVGSVGElement>
+  >,
+  defaultClasses: string,
+) {
+  return React.forwardRef<SVGSVGElement, LucideProps>(
+    ({ className, ...props }, ref) => (
+      <Base ref={ref} {...props} className={cn(defaultClasses, className)} />
+    ),
+  )
+}
 
-export const AcceptIcon = ({ className, ...props }: LucideProps) => (
-  <CheckCircle2
-    {...props}
-    className={cn('mr-2 h-4 w-4 text-emerald-600 dark:text-emerald-400', className)}
-  />
-)
+/* -------------------------------------------------------------------------- */
+/*                               Coloured Icons                               */
+/* -------------------------------------------------------------------------- */
 
-export const DeclineIcon = ({ className, ...props }: LucideProps) => (
-  <XCircle
-    {...props}
-    className={cn('mr-2 h-4 w-4 text-amber-600 dark:text-amber-400', className)}
-  />
+export const AcceptIcon = withColor(
+  CheckCircle2,
+  'mr-2 h-4 w-4 text-emerald-600 dark:text-emerald-400',
 )
+AcceptIcon.displayName = 'AcceptIcon'
 
-export const VerifyIcon = ({ className, ...props }: LucideProps) => (
-  <ShieldCheck
-    {...props}
-    className={cn('mr-2 h-4 w-4 text-emerald-600 dark:text-emerald-400', className)}
-  />
+export const DeclineIcon = withColor(
+  XCircle,
+  'mr-2 h-4 w-4 text-amber-600 dark:text-amber-400',
 )
+DeclineIcon.displayName = 'DeclineIcon'
 
-export const UnverifyIcon = ({ className, ...props }: LucideProps) => (
-  <ShieldX
-    {...props}
-    className={cn('mr-2 h-4 w-4 text-amber-600 dark:text-amber-400', className)}
-  />
+export const VerifyIcon = withColor(
+  ShieldCheck,
+  'mr-2 h-4 w-4 text-emerald-600 dark:text-emerald-400',
 )
+VerifyIcon.displayName = 'VerifyIcon'
 
-export const RejectIcon = ({ className, ...props }: LucideProps) => (
-  <XCircle
-    {...props}
-    className={cn('mr-2 h-4 w-4 text-rose-600 dark:text-rose-400', className)}
-  />
+export const UnverifyIcon = withColor(
+  ShieldX,
+  'mr-2 h-4 w-4 text-amber-600 dark:text-amber-400',
 )
+UnverifyIcon.displayName = 'UnverifyIcon'
+
+export const RejectIcon = withColor(
+  XCircle,
+  'mr-2 h-4 w-4 text-rose-600 dark:text-rose-400',
+)
+RejectIcon.displayName = 'RejectIcon'
