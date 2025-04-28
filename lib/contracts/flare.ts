@@ -2,112 +2,65 @@ import { ethers } from 'ethers'
 import type { Log, LogDescription, InterfaceAbi } from 'ethers'
 
 import {
+  provider,
+  didRegistry,
+  credentialNft,
+  subscriptionManager,
+  ftsoHelper,
+  rngHelper,
+  fdcVerifier,
+} from './index'
+
+import {
   DID_REGISTRY_ABI,
   CREDENTIAL_NFT_ABI,
   SUBSCRIPTION_MANAGER_ABI,
-  FDC_VERIFIER_ABI,
-  FTSO_HELPER_ABI,
-  RNG_HELPER_ABI,
 } from '@/lib/contracts/abis'
+
 import {
-  FLARE_RPC_URL,
-  CHAIN_ID,
   DID_REGISTRY_ADDRESS,
   CREDENTIAL_NFT_ADDRESS,
   SUBSCRIPTION_MANAGER_ADDRESS,
-  FDC_VERIFIER_ADDRESS,
-  FTSO_HELPER_ADDRESS,
-  RNG_HELPER_ADDRESS,
 } from '@/lib/config'
+
 import { toBytes32 } from '@/lib/utils/address'
 
 /* -------------------------------------------------------------------------- */
-/*                                P R O V I D E R                             */
+/*                         F T S O   &   R N G   W R A P P E R S              */
 /* -------------------------------------------------------------------------- */
 
-export const provider = new ethers.JsonRpcProvider(FLARE_RPC_URL, {
-  name: 'flare',
-  chainId: CHAIN_ID,
-})
-
-const contract = (addr: string, abi: InterfaceAbi) =>
-  new ethers.Contract(addr, abi, provider)
-
-/* -------------------------------------------------------------------------- */
-/*                             R E A D  C O N T R A C T S                     */
-/* -------------------------------------------------------------------------- */
-
-const didRegistryRead = contract(DID_REGISTRY_ADDRESS, DID_REGISTRY_ABI)
-const credentialNftRead = contract(CREDENTIAL_NFT_ADDRESS, CREDENTIAL_NFT_ABI)
-const subscriptionManagerRead = contract(
-  SUBSCRIPTION_MANAGER_ADDRESS,
-  SUBSCRIPTION_MANAGER_ABI,
-)
-const fdcVerifierRead: ethers.Contract | null = FDC_VERIFIER_ADDRESS
-  ? contract(FDC_VERIFIER_ADDRESS, FDC_VERIFIER_ABI)
-  : null
-
-/* -------------------------------------------------------------------------- */
-/*                       P R I C E   &   R N G   H E L P E R S                */
-/* -------------------------------------------------------------------------- */
-
+/**
+ * Return the live FLR/USD oracle price in wei and its last-updated timestamp.
+ */
 export async function readFlrUsdPriceWei(): Promise<{
   priceWei: bigint
   timestamp: number
 }> {
-  const iface = new ethers.Interface(FTSO_HELPER_ABI)
-  const raw = await provider.call({
-    to: FTSO_HELPER_ADDRESS,
-    data: iface.encodeFunctionData('flrUsdPriceWei'),
-  })
-  const [priceWei, ts] = iface.decodeFunctionResult(
-    'flrUsdPriceWei',
-    raw,
-  ) as unknown as [bigint, bigint]
+  const [priceWei, ts] = (await ftsoHelper.flrUsdPriceWei()) as [bigint, bigint]
   return { priceWei, timestamp: Number(ts) }
 }
 
+/** Convenience helper to convert a wei-denominated FLR price to USD. */
 export const formatUsd = (priceWei: bigint): number => Number(priceWei) / 1e18
 
+/**
+ * Return a provably random number ∈ [0, bound) derived from Flare RNG.
+ */
 export async function randomMod(bound: number | bigint): Promise<bigint> {
-  if (
-    (typeof bound === 'number' && bound <= 0) ||
-    (typeof bound === 'bigint' && bound <= 0n)
-  ) {
-    throw new Error('bound must be positive')
-  }
-  const iface = new ethers.Interface(RNG_HELPER_ABI)
-  const raw = await provider.call({
-    to: RNG_HELPER_ADDRESS,
-    data: iface.encodeFunctionData('randomMod', [BigInt(bound)]),
-  })
-  const [rnd] = iface.decodeFunctionResult('randomMod', raw) as unknown as [bigint]
-  return rnd
+  const b = typeof bound === 'number' ? BigInt(bound) : bound
+  if (b <= 0n) throw new Error('bound must be positive')
+  return (await rngHelper.randomMod(b)) as bigint
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                  U T I L S                                 */
-/* -------------------------------------------------------------------------- */
-
-type SignerArgs = { signer?: ethers.Signer; signerAddress?: string }
-
-function resolveSigner(args?: SignerArgs): ethers.Signer {
-  if (args?.signer) return args.signer
-  if (args?.signerAddress) {
-    return new ethers.VoidSigner(ethers.getAddress(args.signerAddress), provider)
-  }
-  throw new Error('Signer is required – provide signer or signerAddress')
-}
-
-/* -------------------------------------------------------------------------- */
-/*                         F D C   P R O O F   C H E C K                      */
+/*                               F D C  P R O O F S                           */
 /* -------------------------------------------------------------------------- */
 
 export async function verifyFdcProof(
   proofType: string,
   proofData: unknown,
 ): Promise<boolean> {
-  if (!fdcVerifierRead)
+  if (!fdcVerifier)
     throw new Error('FDC verifier contract address is not configured')
 
   const fnMap: Record<string, string> = {
@@ -116,7 +69,6 @@ export async function verifyFdcProof(
     PAYMENT: 'verifyPayment',
     ADDRESS: 'verifyAddress',
   }
-
   const fn = fnMap[proofType.toUpperCase()]
   if (!fn) throw new Error(`Unsupported proofType '${proofType}'`)
 
@@ -130,7 +82,7 @@ export async function verifyFdcProof(
   }
 
   try {
-    const ok: boolean = await (fdcVerifierRead as any)[fn](arg)
+    const ok: boolean = await (fdcVerifier as any)[fn](arg)
     if (!ok) throw new Error('Proof verification failed')
     return true
   } catch (err: any) {
@@ -141,26 +93,39 @@ export async function verifyFdcProof(
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                P U B L I C  API                            */
+/*                                W R I T E   A P I                           */
 /* -------------------------------------------------------------------------- */
+
+type SignerArgs = { signer?: ethers.Signer; signerAddress?: string }
+
+function resolveSigner({ signer, signerAddress }: SignerArgs = {}): ethers.Signer {
+  if (signer) return signer
+  if (signerAddress) return new ethers.VoidSigner(ethers.getAddress(signerAddress), provider)
+  throw new Error('Signer is required – provide signer or signerAddress')
+}
+
+/* ----------------------------- DID  -------------------------------------- */
 
 export async function createFlareDID(
   args?: SignerArgs & { docHash?: string },
 ) {
   const signer = resolveSigner(args)
-  const registry = new ethers.Contract(
+  const registryWrite = new ethers.Contract(
     DID_REGISTRY_ADDRESS,
-    DID_REGISTRY_ABI,
+    DID_REGISTRY_ABI as InterfaceAbi,
     signer,
   )
   const receipt = await (
-    await registry.createDID(args?.docHash ?? ethers.ZeroHash)
+    await registryWrite.createDID(args?.docHash ?? ethers.ZeroHash)
   ).wait()
+
   return {
-    did: await didRegistryRead.didOf(await signer.getAddress()),
+    did: await didRegistry.didOf(await signer.getAddress()),
     txHash: receipt.hash,
   }
 }
+
+/* ---------------------- Credential NFT ----------------------------------- */
 
 export async function issueFlareCredential(
   args: SignerArgs & { to: string; vcHash: string; uri: string },
@@ -168,7 +133,7 @@ export async function issueFlareCredential(
   const signer = resolveSigner(args)
   const nftWrite = new ethers.Contract(
     CREDENTIAL_NFT_ADDRESS,
-    CREDENTIAL_NFT_ABI,
+    CREDENTIAL_NFT_ABI as InterfaceAbi,
     signer,
   )
   const receipt = await (
@@ -179,6 +144,7 @@ export async function issueFlareCredential(
     )
   ).wait()
 
+  /* Extract event for tokenId */
   const parsedLog = receipt.logs
     .map((l: Log): LogDescription | null => {
       try {
@@ -188,8 +154,7 @@ export async function issueFlareCredential(
       }
     })
     .find(
-      (desc: LogDescription | null): desc is LogDescription =>
-        !!desc && desc.name === 'CredentialMinted',
+      (d): d is LogDescription => !!d && d.name === 'CredentialMinted',
     )
 
   if (!parsedLog) throw new Error('CredentialMinted event not found')
@@ -197,12 +162,17 @@ export async function issueFlareCredential(
   return { tokenId: parsedLog.args.tokenId as bigint, txHash: receipt.hash }
 }
 
-export const verifyFlareCredential = async (
+export async function verifyFlareCredential(
   tokenId: bigint,
   expectedVcHash: string,
-) =>
-  (await credentialNftRead.getVcHash(tokenId)).toLowerCase() ===
-  toBytes32(expectedVcHash).toLowerCase()
+): Promise<boolean> {
+  return (
+    (await credentialNft.getVcHash(tokenId)).toLowerCase() ===
+    toBytes32(expectedVcHash).toLowerCase()
+  )
+}
+
+/* ------------------------ Subscription ----------------------------------- */
 
 export async function paySubscription(
   args: SignerArgs & { planKey: number },
@@ -210,11 +180,11 @@ export async function paySubscription(
   const signer = resolveSigner(args)
   const mgrWrite = new ethers.Contract(
     SUBSCRIPTION_MANAGER_ADDRESS,
-    SUBSCRIPTION_MANAGER_ABI,
+    SUBSCRIPTION_MANAGER_ABI as InterfaceAbi,
     signer,
   )
 
-  const price: bigint = await subscriptionManagerRead.planPriceWei(args.planKey)
+  const price: bigint = await subscriptionManager.planPriceWei(args.planKey)
   if (price === 0n) throw new Error('Unknown plan key')
 
   const receipt = await (
@@ -223,11 +193,11 @@ export async function paySubscription(
     })
   ).wait()
 
-  const paid = await subscriptionManagerRead.paidUntil(await signer.getAddress())
+  const paid = await subscriptionManager.paidUntil(await signer.getAddress())
   return { txHash: receipt.hash, paidUntil: new Date(Number(paid) * 1000) }
 }
 
-export const checkSubscription = async (team: string): Promise<Date | null> => {
-  const ts = await subscriptionManagerRead.paidUntil(ethers.getAddress(team))
+export async function checkSubscription(team: string): Promise<Date | null> {
+  const ts: bigint = await subscriptionManager.paidUntil(ethers.getAddress(team))
   return ts === 0n ? null : new Date(Number(ts) * 1000)
 }
