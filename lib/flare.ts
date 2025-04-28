@@ -1,5 +1,5 @@
 import { ethers } from 'ethers'
-import type { Log, LogDescription } from 'ethers'
+import type { Log, LogDescription, InterfaceAbi } from 'ethers'
 
 import {
   DID_REGISTRY_ABI,
@@ -30,7 +30,7 @@ export const provider = new ethers.JsonRpcProvider(FLARE_RPC_URL, {
   chainId: CHAIN_ID,
 })
 
-const contract = (addr: string, abi: readonly string[]) =>
+const contract = (addr: string, abi: InterfaceAbi) =>
   new ethers.Contract(addr, abi, provider)
 
 /* -------------------------------------------------------------------------- */
