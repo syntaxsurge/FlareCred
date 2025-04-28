@@ -8,25 +8,16 @@ import {
   useWalletClient,
   usePublicClient,
 } from 'wagmi'
-import { parseAbi } from 'viem'
 import { toast } from 'sonner'
 import { ArrowRight, Loader2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { useFlareUsdPrice } from '@/hooks/useFlareUsdPrice'
-
-/* -------------------------------------------------------------------------- */
-/*                                 CONSTANTS                                  */
-/* -------------------------------------------------------------------------- */
-
-const NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS = process.env
-  .NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS as `0x${string}` | undefined
-
-const TARGET_CHAIN_ID = Number(process.env.NEXT_PUBLIC_FLARE_CHAIN_ID ?? '114')
-
-const SUBSCRIPTION_MANAGER_ABI = parseAbi([
-  'function paySubscription(address team,uint8 planKey) payable',
-])
+import {
+  SUBSCRIPTION_MANAGER_ADDRESS,
+  CHAIN_ID,
+} from '@/lib/config'
+import { SUBSCRIPTION_MANAGER_ABI } from '@/lib/abis'
 
 /* -------------------------------------------------------------------------- */
 /*                                   PROPS                                    */
@@ -66,7 +57,7 @@ export function SubmitButton({ planKey, priceWei }: Props) {
       return
     }
 
-    if (!NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS) {
+    if (!SUBSCRIPTION_MANAGER_ADDRESS) {
       toast.error('Subscription manager address missing.')
       return
     }
@@ -81,15 +72,15 @@ export function SubmitButton({ planKey, priceWei }: Props) {
 
     try {
       /* Chain check / switch ------------------------------------------------ */
-      if (chain?.id !== TARGET_CHAIN_ID) {
+      if (chain?.id !== CHAIN_ID) {
         toast.loading('Switching network…', { id: toastId })
-        await switchChainAsync({ chainId: TARGET_CHAIN_ID })
+        await switchChainAsync({ chainId: CHAIN_ID })
       }
 
       /* Write contract ------------------------------------------------------ */
       toast.loading('Awaiting wallet signature…', { id: toastId })
       const txHash = await walletClient.writeContract({
-        address: NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS,
+        address: SUBSCRIPTION_MANAGER_ADDRESS,
         abi: SUBSCRIPTION_MANAGER_ABI,
         functionName: 'paySubscription',
         args: [address, planKey],
@@ -103,7 +94,10 @@ export function SubmitButton({ planKey, priceWei }: Props) {
       toast.success('Subscription activated ✅', { id: toastId })
       router.refresh()
     } catch (err: any) {
-      toast.error(err?.shortMessage || err?.message || 'Transaction failed.', { id: toastId })
+      toast.error(
+        err?.shortMessage || err?.message || 'Transaction failed.',
+        { id: toastId },
+      )
     } finally {
       setPending(false)
     }
@@ -129,7 +123,9 @@ export function SubmitButton({ planKey, priceWei }: Props) {
           </>
         )}
       </Button>
-      {usdLabel && <span className='text-muted-foreground text-xs'>{usdLabel}</span>}
+      {usdLabel && (
+        <span className='text-muted-foreground text-xs'>{usdLabel}</span>
+      )}
     </div>
   )
 }

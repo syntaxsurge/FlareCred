@@ -9,35 +9,17 @@ import {
   FTSO_HELPER_ABI,
   RNG_HELPER_ABI,
 } from '@/lib/abis'
-import { getEnv } from '@/lib/utils/env'
+import {
+  FLARE_RPC_URL,
+  CHAIN_ID,
+  DID_REGISTRY_ADDRESS,
+  CREDENTIAL_NFT_ADDRESS,
+  SUBSCRIPTION_MANAGER_ADDRESS,
+  FDC_VERIFIER_ADDRESS,
+  FTSO_HELPER_ADDRESS,
+  RNG_HELPER_ADDRESS,
+} from '@/lib/config'
 import { toBytes32 } from '@/lib/utils/address'
-
-/* -------------------------------------------------------------------------- */
-/*                          E N V I R O N M E N T   I O                       */
-/* -------------------------------------------------------------------------- */
-
-const FLARE_RPC_URL                = getEnv('NEXT_PUBLIC_FLARE_RPC_URL') as string
-const CHAIN_ID                     = getEnv('NEXT_PUBLIC_FLARE_CHAIN_ID', { kind: 'number' }) as number
-
-const DID_REGISTRY_ADDRESS         = getEnv('NEXT_PUBLIC_DID_REGISTRY_ADDRESS', {
-  kind: 'address',
-}) as string
-const CREDENTIAL_NFT_ADDRESS       = getEnv('NEXT_PUBLIC_CREDENTIAL_NFT_ADDRESS', {
-  kind: 'address',
-}) as string
-const SUBSCRIPTION_MANAGER_ADDRESS = getEnv('NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS', {
-  kind: 'address',
-}) as string
-const FDC_VERIFIER_ADDRESS         = getEnv('NEXT_PUBLIC_FDC_VERIFIER_ADDRESS', {
-  kind: 'address',
-  optional: true,
-}) as string | undefined
-const FTSO_HELPER_ADDRESS          = getEnv('NEXT_PUBLIC_FTSO_HELPER_ADDRESS', {
-  kind: 'address',
-}) as string
-const RNG_HELPER_ADDRESS           = getEnv('NEXT_PUBLIC_RNG_HELPER_ADDRESS', {
-  kind: 'address',
-}) as string
 
 /* -------------------------------------------------------------------------- */
 /*                                P R O V I D E R                             */
@@ -48,26 +30,34 @@ export const provider = new ethers.JsonRpcProvider(FLARE_RPC_URL, {
   chainId: CHAIN_ID,
 })
 
-const contract = (addr: string, abi: readonly string[]) => new ethers.Contract(addr, abi, provider)
+const contract = (addr: string, abi: readonly string[]) =>
+  new ethers.Contract(addr, abi, provider)
 
 /* -------------------------------------------------------------------------- */
 /*                             R E A D  C O N T R A C T S                     */
 /* -------------------------------------------------------------------------- */
 
-const didRegistryRead         = contract(DID_REGISTRY_ADDRESS, DID_REGISTRY_ABI)
-const credentialNftRead       = contract(CREDENTIAL_NFT_ADDRESS, CREDENTIAL_NFT_ABI)
-const subscriptionManagerRead = contract(SUBSCRIPTION_MANAGER_ADDRESS, SUBSCRIPTION_MANAGER_ABI)
-const fdcVerifierRead: ethers.Contract | null =
-  FDC_VERIFIER_ADDRESS ? contract(FDC_VERIFIER_ADDRESS, FDC_VERIFIER_ABI) : null
+const didRegistryRead = contract(DID_REGISTRY_ADDRESS, DID_REGISTRY_ABI)
+const credentialNftRead = contract(CREDENTIAL_NFT_ADDRESS, CREDENTIAL_NFT_ABI)
+const subscriptionManagerRead = contract(
+  SUBSCRIPTION_MANAGER_ADDRESS,
+  SUBSCRIPTION_MANAGER_ABI,
+)
+const fdcVerifierRead: ethers.Contract | null = FDC_VERIFIER_ADDRESS
+  ? contract(FDC_VERIFIER_ADDRESS, FDC_VERIFIER_ABI)
+  : null
 
 /* -------------------------------------------------------------------------- */
 /*                       P R I C E   &   R N G   H E L P E R S                */
 /* -------------------------------------------------------------------------- */
 
-export async function readFlrUsdPriceWei(): Promise<{ priceWei: bigint; timestamp: number }> {
+export async function readFlrUsdPriceWei(): Promise<{
+  priceWei: bigint
+  timestamp: number
+}> {
   const iface = new ethers.Interface(FTSO_HELPER_ABI)
-  const raw   = await provider.call({
-    to  : FTSO_HELPER_ADDRESS,
+  const raw = await provider.call({
+    to: FTSO_HELPER_ADDRESS,
     data: iface.encodeFunctionData('flrUsdPriceWei'),
   })
   const [priceWei, ts] = iface.decodeFunctionResult(
@@ -80,12 +70,15 @@ export async function readFlrUsdPriceWei(): Promise<{ priceWei: bigint; timestam
 export const formatUsd = (priceWei: bigint): number => Number(priceWei) / 1e18
 
 export async function randomMod(bound: number | bigint): Promise<bigint> {
-  if ((typeof bound === 'number' && bound <= 0) || (typeof bound === 'bigint' && bound <= 0n)) {
+  if (
+    (typeof bound === 'number' && bound <= 0) ||
+    (typeof bound === 'bigint' && bound <= 0n)
+  ) {
     throw new Error('bound must be positive')
   }
   const iface = new ethers.Interface(RNG_HELPER_ABI)
-  const raw   = await provider.call({
-    to  : RNG_HELPER_ADDRESS,
+  const raw = await provider.call({
+    to: RNG_HELPER_ADDRESS,
     data: iface.encodeFunctionData('randomMod', [BigInt(bound)]),
   })
   const [rnd] = iface.decodeFunctionResult('randomMod', raw) as unknown as [bigint]
@@ -110,12 +103,16 @@ function resolveSigner(args?: SignerArgs): ethers.Signer {
 /*                         F D C   P R O O F   C H E C K                      */
 /* -------------------------------------------------------------------------- */
 
-export async function verifyFdcProof(proofType: string, proofData: unknown): Promise<boolean> {
-  if (!fdcVerifierRead) throw new Error('FDC verifier contract address is not configured')
+export async function verifyFdcProof(
+  proofType: string,
+  proofData: unknown,
+): Promise<boolean> {
+  if (!fdcVerifierRead)
+    throw new Error('FDC verifier contract address is not configured')
 
   const fnMap: Record<string, string> = {
-    EVM    : 'verifyEVM',
-    JSON   : 'verifyJson',
+    EVM: 'verifyEVM',
+    JSON: 'verifyJson',
     PAYMENT: 'verifyPayment',
     ADDRESS: 'verifyAddress',
   }
@@ -127,7 +124,9 @@ export async function verifyFdcProof(proofType: string, proofData: unknown): Pro
   if (typeof proofData === 'string') {
     try {
       arg = JSON.parse(proofData)
-    } catch {/* keep raw string */}
+    } catch {
+      /* keep raw string */
+    }
   }
 
   try {
@@ -135,7 +134,9 @@ export async function verifyFdcProof(proofType: string, proofData: unknown): Pro
     if (!ok) throw new Error('Proof verification failed')
     return true
   } catch (err: any) {
-    throw new Error(err?.shortMessage || err?.reason || err?.message || 'Proof verification failed')
+    throw new Error(
+      err?.shortMessage || err?.reason || err?.message || 'Proof verification failed',
+    )
   }
 }
 
@@ -143,19 +144,34 @@ export async function verifyFdcProof(proofType: string, proofData: unknown): Pro
 /*                                P U B L I C  API                            */
 /* -------------------------------------------------------------------------- */
 
-export async function createFlareDID(args?: SignerArgs & { docHash?: string }) {
-  const signer   = resolveSigner(args)
-  const registry = new ethers.Contract(DID_REGISTRY_ADDRESS, DID_REGISTRY_ABI, signer)
-  const receipt  = await (await registry.createDID(args?.docHash ?? ethers.ZeroHash)).wait()
-  return { did: await didRegistryRead.didOf(await signer.getAddress()), txHash: receipt.hash }
+export async function createFlareDID(
+  args?: SignerArgs & { docHash?: string },
+) {
+  const signer = resolveSigner(args)
+  const registry = new ethers.Contract(
+    DID_REGISTRY_ADDRESS,
+    DID_REGISTRY_ABI,
+    signer,
+  )
+  const receipt = await (
+    await registry.createDID(args?.docHash ?? ethers.ZeroHash)
+  ).wait()
+  return {
+    did: await didRegistryRead.didOf(await signer.getAddress()),
+    txHash: receipt.hash,
+  }
 }
 
 export async function issueFlareCredential(
   args: SignerArgs & { to: string; vcHash: string; uri: string },
 ) {
-  const signer   = resolveSigner(args)
-  const nftWrite = new ethers.Contract(CREDENTIAL_NFT_ADDRESS, CREDENTIAL_NFT_ABI, signer)
-  const receipt  = await (
+  const signer = resolveSigner(args)
+  const nftWrite = new ethers.Contract(
+    CREDENTIAL_NFT_ADDRESS,
+    CREDENTIAL_NFT_ABI,
+    signer,
+  )
+  const receipt = await (
     await nftWrite.mintCredential(
       ethers.getAddress(args.to),
       toBytes32(args.vcHash),
@@ -181,21 +197,30 @@ export async function issueFlareCredential(
   return { tokenId: parsedLog.args.tokenId as bigint, txHash: receipt.hash }
 }
 
-export const verifyFlareCredential = async (tokenId: bigint, expectedVcHash: string) =>
+export const verifyFlareCredential = async (
+  tokenId: bigint,
+  expectedVcHash: string,
+) =>
   (await credentialNftRead.getVcHash(tokenId)).toLowerCase() ===
   toBytes32(expectedVcHash).toLowerCase()
 
 export async function paySubscription(
   args: SignerArgs & { planKey: number },
 ): Promise<{ txHash: string; paidUntil: Date }> {
-  const signer   = resolveSigner(args)
-  const mgrWrite = new ethers.Contract(SUBSCRIPTION_MANAGER_ADDRESS, SUBSCRIPTION_MANAGER_ABI, signer)
+  const signer = resolveSigner(args)
+  const mgrWrite = new ethers.Contract(
+    SUBSCRIPTION_MANAGER_ADDRESS,
+    SUBSCRIPTION_MANAGER_ABI,
+    signer,
+  )
 
   const price: bigint = await subscriptionManagerRead.planPriceWei(args.planKey)
   if (price === 0n) throw new Error('Unknown plan key')
 
   const receipt = await (
-    await mgrWrite.paySubscription(await signer.getAddress(), args.planKey, { value: price })
+    await mgrWrite.paySubscription(await signer.getAddress(), args.planKey, {
+      value: price,
+    })
   ).wait()
 
   const paid = await subscriptionManagerRead.paidUntil(await signer.getAddress())
