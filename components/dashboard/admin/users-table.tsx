@@ -26,6 +26,8 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
 import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
+import { buildLink } from '@/lib/utils'
+import { formatDateTime } from '@/lib/utils/time'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -47,32 +49,6 @@ interface UsersTableProps {
   initialParams: Record<string, string>
   /** Current search term (from URL). */
   searchQuery: string
-}
-
-/* -------------------------------------------------------------------------- */
-/*                               Helpers                                      */
-/* -------------------------------------------------------------------------- */
-
-function buildLink(basePath: string, init: Record<string, string>, overrides: Record<string, any>) {
-  const sp = new URLSearchParams(init)
-  Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
-  Array.from(sp.entries()).forEach(([k, v]) => {
-    if (v === '') sp.delete(k) // tidy URL
-  })
-  const qs = sp.toString()
-  return `${basePath}${qs ? `?${qs}` : ''}`
-}
-
-function formatDateTime(iso: string) {
-  const d = new Date(iso)
-  return d.toLocaleString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  })
 }
 
 /* -------------------------------------------------------------------------- */

@@ -20,7 +20,7 @@ import {
 import { StatusBadge } from '@/components/ui/status-badge'
 import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
 import type { CandidateCredentialRow } from '@/lib/types/table-rows'
-import { buildLink } from '@/lib/utils'
+import { buildLink, getProofTx } from '@/lib/utils'
 
 
 /* -------------------------------------------------------------------------- */
@@ -33,20 +33,6 @@ interface CredentialsTableProps {
   basePath: string
   initialParams: Record<string, string>
   searchQuery: string
-}
-
-/**
- * Extracts <tx-hash> from a vcJson string if present, else returns null.
- */
-function getProofTx(vcJson: string | null | undefined): string | null {
-  if (!vcJson) return null
-  try {
-    const obj = JSON.parse(vcJson)
-    if (typeof obj.proofTx === 'string') return obj.proofTx
-  } catch {
-    /* ignore malformed JSON */
-  }
-  return null
 }
 
 /* -------------------------------------------------------------------------- */

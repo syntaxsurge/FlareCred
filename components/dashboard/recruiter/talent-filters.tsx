@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 
 import { Slider } from '@/components/ui/slider'
+import { buildLink } from '@/lib/utils'
 
 interface TalentFiltersProps {
   basePath: string
@@ -14,22 +15,6 @@ interface TalentFiltersProps {
   verifiedOnly: boolean
 }
 
-/* -------------------------------------------------------------------------- */
-/*                               Helpers                                      */
-/* -------------------------------------------------------------------------- */
-
-function buildLink(basePath: string, init: Record<string, string>, overrides: Record<string, any>) {
-  const sp = new URLSearchParams(init)
-  Object.entries(overrides).forEach(([k, v]) => {
-    if (v === '' || v === false || v === undefined || v === null) {
-      sp.delete(k)
-    } else {
-      sp.set(k, String(v))
-    }
-  })
-  const qs = sp.toString()
-  return `${basePath}${qs ? `?${qs}` : ''}`
-}
 
 /* -------------------------------------------------------------------------- */
 /*                                   View                                     */

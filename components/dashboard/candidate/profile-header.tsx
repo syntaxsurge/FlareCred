@@ -15,14 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { UserAvatar } from '@/components/ui/user-avatar'
-
-/* -------------------------------------------------------------------------- */
-/*                               Utilities                                    */
-/* -------------------------------------------------------------------------- */
-
-function truncateAddress(addr: string) {
-  return addr.length <= 10 ? addr : `${addr.slice(0, 6)}…${addr.slice(-4)}`
-}
+import { truncateAddress } from '@/lib/utils/address'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */

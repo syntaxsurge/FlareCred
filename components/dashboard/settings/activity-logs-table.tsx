@@ -21,6 +21,7 @@ import {
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { ActivityType } from '@/lib/db/schema'
 import { relativeTime } from '@/lib/utils/time'
+import { buildLink } from '@/lib/utils'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -59,24 +60,6 @@ const iconMap: Record<ActivityType, LucideIcon> = {
   [ActivityType.INVITE_TEAM_MEMBER]: Mail,
   [ActivityType.ACCEPT_INVITATION]: CheckCircle,
   [ActivityType.SUBSCRIPTION_PAID]: Coins,
-}
-
-/* -------------------------------------------------------------------------- */
-/*                                    Util                                    */
-/* -------------------------------------------------------------------------- */
-
-function buildLink(
-  basePath: string,
-  init: Record<string, string>,
-  overrides: Record<string, any>,
-) {
-  const sp = new URLSearchParams(init)
-  Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
-  Array.from(sp.entries()).forEach(([k, v]) => {
-    if (v === '') sp.delete(k) // tidy URL
-  })
-  const qs = sp.toString()
-  return `${basePath}${qs ? `?${qs}` : ''}`
 }
 
 function formatAction(action: ActivityType): string {

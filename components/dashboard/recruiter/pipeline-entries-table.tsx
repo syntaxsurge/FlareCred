@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import StatusBadge from '@/components/ui/status-badge'
 import { DataTable, type BulkAction, type Column } from '@/components/ui/tables/data-table'
+import { buildLink } from '@/lib/utils'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -38,18 +39,6 @@ interface PipelineEntriesTableProps {
   basePath: string
   initialParams: Record<string, string>
   searchQuery: string
-}
-
-/* -------------------------------------------------------------------------- */
-/*                               Helpers                                      */
-/* -------------------------------------------------------------------------- */
-
-function buildLink(basePath: string, init: Record<string, string>, overrides: Record<string, any>) {
-  const sp = new URLSearchParams(init)
-  Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
-  Array.from(sp.entries()).forEach(([k, v]) => !v && sp.delete(k))
-  const qs = sp.toString()
-  return `${basePath}${qs ? `?${qs}` : ''}`
 }
 
 /* ------------------------------- Row actions ------------------------------ */

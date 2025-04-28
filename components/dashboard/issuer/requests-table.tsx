@@ -11,6 +11,7 @@ import { rejectCredentialAction } from '@/app/(dashboard)/issuer/credentials/act
 import { StatusBadge } from '@/components/ui/status-badge'
 import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
 import { CredentialStatus } from '@/lib/db/schema/candidate'
+import { buildLink, getProofTx } from '@/lib/utils'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -33,34 +34,6 @@ interface Props {
   initialParams: Record<string, string>
   /** Current search term (from URL). */
   searchQuery: string
-}
-
-/* -------------------------------------------------------------------------- */
-/*                                 Helpers                                    */
-/* -------------------------------------------------------------------------- */
-
-function buildLink(basePath: string, init: Record<string, string>, overrides: Record<string, any>) {
-  const sp = new URLSearchParams(init)
-  Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
-  Array.from(sp.entries()).forEach(([k, v]) => {
-    if (v === '') sp.delete(k)
-  })
-  const qs = sp.toString()
-  return `${basePath}${qs ? `?${qs}` : ''}`
-}
-
-/**
- * Parses vcJson and returns proofTx if it exists.
- */
-function getProofTx(vcJson: string | null | undefined): string | null {
-  if (!vcJson) return null
-  try {
-    const obj = JSON.parse(vcJson)
-    if (typeof obj.proofTx === 'string') return obj.proofTx
-  } catch {
-    /* ignore */
-  }
-  return null
 }
 
 /* -------------------------------------------------------------------------- */

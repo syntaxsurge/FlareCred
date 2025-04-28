@@ -28,29 +28,9 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Label } from '@/components/ui/label'
 import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
+import { buildLink } from '@/lib/utils'
+import { truncateAddress } from '@/lib/utils/address'
 
-/* -------------------------------------------------------------------------- */
-/*                                Utilities                                   */
-/* -------------------------------------------------------------------------- */
-
-function truncateAddress(addr?: string | null) {
-  if (!addr) return '—'
-  return addr.length <= 10 ? addr : `${addr.slice(0, 6)}…${addr.slice(-4)}`
-}
-
-function buildLink(
-  basePath: string,
-  init: Record<string, string>,
-  overrides: Record<string, any>,
-) {
-  const sp = new URLSearchParams(init)
-  Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
-  Array.from(sp.entries()).forEach(([k, v]) => {
-    if (v === '') sp.delete(k)
-  })
-  const qs = sp.toString()
-  return `${basePath}${qs ? `?${qs}` : ''}`
-}
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */

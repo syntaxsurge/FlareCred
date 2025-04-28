@@ -1,5 +1,6 @@
 'use client'
 
+import { buildLink } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
@@ -10,25 +11,6 @@ interface Props {
   industries: string[]
   selectedCategory: string
   selectedIndustry: string
-}
-
-/* -------------------------------------------------------------------------- */
-/*                                Helpers                                     */
-/* -------------------------------------------------------------------------- */
-
-function buildLink(basePath: string, init: Record<string, string>, overrides: Record<string, any>) {
-  const sp = new URLSearchParams(init)
-  Object.entries(overrides).forEach(([k, v]) => {
-    if (v === '' || v == null) {
-      sp.delete(k) // remove when blank / reset
-    } else {
-      sp.set(k, String(v))
-    }
-  })
-  // Always reset to first page on filter change
-  sp.delete('page')
-  const qs = sp.toString()
-  return `${basePath}${qs ? `?${qs}` : ''}`
 }
 
 /* -------------------------------------------------------------------------- */

@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
+import { buildLink } from '@/lib/utils'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -42,26 +43,7 @@ interface Props {
   order: 'asc' | 'desc'
   basePath: string
   initialParams: Record<string, string>
-  /** Current search term (from URL). */
   searchQuery: string
-}
-
-/* -------------------------------------------------------------------------- */
-/*                               Helpers                                      */
-/* -------------------------------------------------------------------------- */
-
-function buildLink(basePath: string, init: Record<string, string>, overrides: Record<string, any>) {
-  const sp = new URLSearchParams(init)
-  Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
-  Array.from(sp.entries()).forEach(([k, v]) => {
-    if (v === '') sp.delete(k)
-  })
-  const qs = sp.toString()
-  return `${basePath}${qs ? `?${qs}` : ''}`
-}
-
-function prettify(text: string) {
-  return text.replaceAll('_', ' ').toLowerCase()
 }
 
 /* -------------------------------------------------------------------------- */
@@ -209,7 +191,7 @@ export default function IssuersTable({
         header: sortableHeader('Category', 'category'),
         sortable: false,
         className: 'capitalize',
-        render: (v) => prettify(String(v)),
+        render: (v) => String(v),
       },
       {
         key: 'industry',

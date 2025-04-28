@@ -34,3 +34,17 @@ export function buildLink(
   const qs = sp.toString()
   return `${basePath}${qs ? `?${qs}` : ''}`
 }
+
+/**
+ * Parses vcJson and returns proofTx if it exists.
+ */
+export function getProofTx(vcJson: string | null | undefined): string | null {
+  if (!vcJson) return null
+  try {
+    const obj = JSON.parse(vcJson)
+    if (typeof obj.proofTx === 'string') return obj.proofTx
+  } catch {
+    /* ignore */
+  }
+  return null
+}

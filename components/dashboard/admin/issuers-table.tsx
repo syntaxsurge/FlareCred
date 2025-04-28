@@ -32,7 +32,7 @@ import {
 import { StatusBadge } from '@/components/ui/status-badge'
 import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
 import { IssuerStatus } from '@/lib/db/schema/issuer'
-import { cn } from '@/lib/utils'
+import { buildLink, cn } from '@/lib/utils'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -55,20 +55,6 @@ interface IssuersTableProps {
   basePath: string
   initialParams: Record<string, string>
   searchQuery: string
-}
-
-/* -------------------------------------------------------------------------- */
-/*                               Helpers                                      */
-/* -------------------------------------------------------------------------- */
-
-function buildLink(basePath: string, init: Record<string, string>, overrides: Record<string, any>) {
-  const sp = new URLSearchParams(init)
-  Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
-  Array.from(sp.entries()).forEach(([k, v]) => {
-    if (v === '') sp.delete(k) // tidy URL
-  })
-  const qs = sp.toString()
-  return `${basePath}${qs ? `?${qs}` : ''}`
 }
 
 /* -------------------------------------------------------------------------- */
