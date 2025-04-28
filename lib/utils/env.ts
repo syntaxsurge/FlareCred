@@ -1,17 +1,17 @@
 import { ethers } from 'ethers'
 
-import fs from 'fs/promises'
-import path from 'path'
+export type EnvKind = 'string' | 'number' | 'address'
 
-type EnvKind = 'string' | 'number' | 'address'
-const ENV_PATH = path.resolve(process.cwd(), '.env')
+/* Detect browser runtime to avoid referencing Node APIs on the client */
+const isBrowser = typeof window !== 'undefined'
 
 /**
  * Read and validate an environment variable.
  *
- * @param name     Variable to fetch (e.g. `NEXT_PUBLIC_FLARE_RPC_URL`).
- * @param options  Validation options.
- * @throws         If the variable is missing (unless `optional`) or fails validation.
+ * In the browser we first look for the key inside `window.__NEXT_PUBLIC_ENV__`,
+ * which is hydrated at runtime via <PublicEnvScript>. This removes the need to
+ * inline public variables during the build step while still allowing secret
+ * server-only vars to throw when missing.
  */
 export function getEnv(
   name: string,
@@ -20,8 +20,18 @@ export function getEnv(
     optional = false,
   }: { kind?: EnvKind; optional?: boolean } = {},
 ): string | number | undefined {
-  const raw = process.env[name]
+  let raw: string | undefined
+
+  if (isBrowser) {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    raw = (window as any).__NEXT_PUBLIC_ENV__?.[name] ?? process.env[name]
+  } else {
+    raw = process.env[name]
+  }
+
+  /* Skip hard failure on the client – secrets are server-only */
   if ((raw === undefined || raw === '') && !optional) {
+    if (isBrowser) return undefined
     throw new Error(`Environment variable ${name} is not set`)
   }
   if (raw === undefined || raw === '') return undefined
@@ -43,21 +53,33 @@ export function getEnv(
   }
 }
 
+/**
+ * Add or update a KEY=value entry in the project’s .env file (server only).
+ */
+export async function upsertEnv(key: string, value: string): Promise<void> {
+  if (isBrowser) {
+    throw new Error('upsertEnv can only be invoked on the server')
+  }
 
-export async function upsertEnv(key: string, value: string) {
+  /* Dynamically import Node core modules so they are tree-shaken from client bundles */
+  const fs = await import('node:fs/promises')
+  const path = await import('node:path')
+
+  const ENV_PATH = path.resolve(process.cwd(), '.env')
+
   let contents = ''
   try {
     contents = await fs.readFile(ENV_PATH, 'utf8')
   } catch {
-    /* .env may not exist yet – will create */
+    /* .env does not exist yet – will be created */
   }
 
   const lines = contents.split('\n')
-  const regex = new RegExp(`^${key}=.*$`)
+  const pattern = new RegExp(`^${key}=.*$`)
   let found = false
 
   const newLines = lines.map((ln) => {
-    if (regex.test(ln)) {
+    if (pattern.test(ln)) {
       found = true
       return `${key}=${value}`
     }

@@ -10,6 +10,7 @@ import { ThemeProvider } from '@/components/theme-provider'
 import { UserProvider } from '@/lib/auth'
 import { Web3Provider } from '@/lib/wallet'
 import { getUser } from '@/lib/db/queries/queries'
+import PublicEnvScript from '@/components/public-env-script'
 
 export const metadata: Metadata = {
   title: 'FlareCred',
@@ -24,9 +25,8 @@ export const viewport: Viewport = {
 const manrope = Manrope({ subsets: ['latin'] })
 
 /**
- * Root layout — now resolves the authenticated user on the server and
- * passes the resulting promise to UserProvider so client components
- * (e.g. dashboard sidebar) can immediately render role-based UI.
+ * Root layout — resolves the authenticated user server-side and injects
+ * runtime NEXT_PUBLIC_* variables for client usage.
  */
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   /* Resolve the current user once on the server */
@@ -64,13 +64,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               }}
             />
 
-            {/* Forward the resolved user promise to downstream client components */}
             <UserProvider userPromise={userPromise}>
               <SiteHeader />
               <main className='mx-auto max-w-7xl px-4 py-4 md:px-6'>{children}</main>
             </UserProvider>
           </ThemeProvider>
         </Web3Provider>
+
+        {/* Inject runtime NEXT_PUBLIC_* variables for client consumption */}
+        <PublicEnvScript />
       </body>
     </html>
   )
