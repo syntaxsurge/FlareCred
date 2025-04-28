@@ -3,21 +3,20 @@
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
-import { MoreHorizontal, Trash2, FileText, Clipboard, Loader2 } from 'lucide-react'
+import { Trash2, FileText, Clipboard } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { deleteCredentialAction } from '@/app/(dashboard)/admin/credentials/actions'
-import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuItem,
-} from '@/components/ui/dropdown-menu'
 import { StatusBadge } from '@/components/ui/status-badge'
-import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
+import {
+  DataTable,
+  type Column,
+  type BulkAction,
+} from '@/components/ui/tables/data-table'
+import {
+  TableRowActions,
+  type TableRowAction,
+} from '@/components/ui/tables/row-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { CandidateCredentialRow } from '@/lib/types/table-rows'
 import { getProofTx } from '@/lib/utils'
@@ -33,88 +32,6 @@ interface CredentialsTableProps {
   basePath: string
   initialParams: Record<string, string>
   searchQuery: string
-}
-
-/* -------------------------------------------------------------------------- */
-/*                               Row actions                                  */
-/* -------------------------------------------------------------------------- */
-
-function RowActions({ row }: { row: CandidateCredentialRow }) {
-  const router = useRouter()
-  const [isPending, startTransition] = React.useTransition()
-
-  async function destroy() {
-    startTransition(async () => {
-      const fd = new FormData()
-      fd.append('credentialId', row.id.toString())
-      const res = await deleteCredentialAction({}, fd)
-      if (res?.error) {
-        toast.error(res.error)
-      } else {
-        toast.success(res?.success ?? 'Credential deleted.')
-        router.refresh()
-      }
-    })
-  }
-
-  function copyVc() {
-    if (!row.vcJson) return
-    navigator.clipboard.writeText(row.vcJson).then(
-      () => toast.success('VC JSON copied to clipboard'),
-      () => toast.error('Copy failed'),
-    )
-  }
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant='ghost' className='h-8 w-8 p-0' disabled={isPending}>
-          {isPending ? (
-            <Loader2 className='h-4 w-4 animate-spin' />
-          ) : (
-            <MoreHorizontal className='h-4 w-4' />
-          )}
-          <span className='sr-only'>Open menu</span>
-        </Button>
-      </DropdownMenuTrigger>
-
-      <DropdownMenuContent align='end' className='rounded-md p-1 shadow-lg'>
-        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-
-        {row.fileUrl && (
-          <DropdownMenuItem asChild>
-            <a
-              href={row.fileUrl}
-              target='_blank'
-              rel='noopener noreferrer'
-              className='flex cursor-pointer items-center'
-            >
-              <FileText className='mr-2 h-4 w-4 text-sky-600 dark:text-sky-400' />
-              View file
-            </a>
-          </DropdownMenuItem>
-        )}
-
-        {row.vcJson && (
-          <DropdownMenuItem onClick={copyVc} className='cursor-pointer'>
-            <Clipboard className='mr-2 h-4 w-4' />
-            Copy VC JSON
-          </DropdownMenuItem>
-        )}
-
-        <DropdownMenuSeparator />
-
-        <DropdownMenuItem
-          onClick={destroy}
-          disabled={isPending}
-          className='cursor-pointer font-semibold text-rose-600 hover:bg-rose-500/10 focus:bg-rose-500/10 dark:text-rose-400'
-        >
-          <Trash2 className='mr-2 h-4 w-4' />
-          Delete
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
 }
 
 /* -------------------------------------------------------------------------- */
@@ -150,6 +67,58 @@ function buildBulkActions(
 }
 
 /* -------------------------------------------------------------------------- */
+/*                               Row actions                                  */
+/* -------------------------------------------------------------------------- */
+
+function useRowActions(
+  router: ReturnType<typeof useRouter>,
+): (row: CandidateCredentialRow) => TableRowAction<CandidateCredentialRow>[] {
+  return React.useCallback(
+    (row: CandidateCredentialRow) => {
+      const actions: TableRowAction<CandidateCredentialRow>[] = []
+
+      if (row.fileUrl) {
+        actions.push({
+          label: 'View file',
+          icon: FileText,
+          href: row.fileUrl,
+        })
+      }
+
+      if (row.vcJson) {
+        actions.push({
+          label: 'Copy VC JSON',
+          icon: Clipboard,
+          onClick: () =>
+            navigator.clipboard
+              .writeText(row.vcJson!)
+              .then(() => toast.success('VC JSON copied to clipboard'))
+              .catch(() => toast.error('Copy failed')),
+        })
+      }
+
+      actions.push({
+        label: 'Delete',
+        icon: Trash2,
+        variant: 'destructive',
+        onClick: async () => {
+          const fd = new FormData()
+          fd.append('credentialId', row.id.toString())
+          const res = await deleteCredentialAction({}, fd)
+          res?.error
+            ? toast.error(res.error)
+            : toast.success(res?.success ?? 'Credential deleted.')
+          router.refresh()
+        },
+      })
+
+      return actions
+    },
+    [router],
+  )
+}
+
+/* -------------------------------------------------------------------------- */
 /*                                   Table                                    */
 /* -------------------------------------------------------------------------- */
 
@@ -163,6 +132,7 @@ export default function CandidateCredentialsTable({
 }: CredentialsTableProps) {
   const router = useRouter()
   const bulkActions = buildBulkActions(router)
+  const makeActions = useRowActions(router)
 
   /* -------------------- Centralised navigation helpers -------------------- */
   const { search, handleSearchChange, sortableHeader } = useTableNavigation({
@@ -234,10 +204,10 @@ export default function CandidateCredentialsTable({
         header: '',
         enableHiding: false,
         sortable: false,
-        render: (_v, row) => <RowActions row={row} />,
+        render: (_v, row) => <TableRowActions row={row} actions={makeActions(row)} />,
       },
     ]
-  }, [sortableHeader])
+  }, [sortableHeader, makeActions])
 
   /* ------------------------------- View ---------------------------------- */
   return (

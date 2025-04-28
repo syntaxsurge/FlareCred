@@ -1,13 +1,10 @@
 'use client'
 
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
 import { formatDistanceToNow } from 'date-fns'
 import {
-  MoreHorizontal,
-  Loader2,
   CheckCircle2,
   XCircle,
   Trash2,
@@ -20,17 +17,16 @@ import {
   declineInvitationAction,
   deleteInvitationAction,
 } from '@/app/(dashboard)/invitations/actions'
-import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuItem,
-} from '@/components/ui/dropdown-menu'
 import { StatusBadge } from '@/components/ui/status-badge'
-import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
+import {
+  DataTable,
+  type Column,
+  type BulkAction,
+} from '@/components/ui/tables/data-table'
+import {
+  TableRowActions,
+  type TableRowAction,
+} from '@/components/ui/tables/row-actions'
 import type { InvitationRow } from '@/lib/types/table-rows'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 
@@ -58,81 +54,7 @@ const DeclineIcon = (props: LucideProps) => (
 )
 
 /* -------------------------------------------------------------------------- */
-/*                              ROW ACTIONS                                   */
-/* -------------------------------------------------------------------------- */
-
-function RowActions({ row }: { row: InvitationRow }) {
-  const router = useRouter()
-  const [isPending, startTransition] = React.useTransition()
-  const isAwaiting = row.status === 'pending'
-
-  function runAction(
-    fn:
-      | typeof acceptInvitationAction
-      | typeof declineInvitationAction
-      | typeof deleteInvitationAction,
-    successMsg: string,
-  ) {
-    startTransition(async () => {
-      const fd = new FormData()
-      fd.append('invitationId', String(row.id))
-      const res = await fn({}, fd)
-      res?.error ? toast.error(res.error) : toast.success(res?.success ?? successMsg)
-      router.refresh()
-    })
-  }
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant='ghost' className='h-8 w-8 p-0' disabled={isPending}>
-          {isPending ? (
-            <Loader2 className='h-4 w-4 animate-spin' />
-          ) : (
-            <MoreHorizontal className='h-4 w-4' />
-          )}
-          <span className='sr-only'>Open menu</span>
-        </Button>
-      </DropdownMenuTrigger>
-
-      <DropdownMenuContent align='end' className='rounded-md p-1 shadow-lg'>
-        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-
-        {isAwaiting && (
-          <>
-            <DropdownMenuItem
-              onClick={() => runAction(acceptInvitationAction, 'Invitation accepted.')}
-              disabled={isPending}
-            >
-              <AcceptIcon />
-              Accept
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => runAction(declineInvitationAction, 'Invitation declined.')}
-              disabled={isPending}
-            >
-              <DeclineIcon />
-              Decline
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-          </>
-        )}
-
-        <DropdownMenuItem
-          onClick={() => runAction(deleteInvitationAction, 'Invitation deleted.')}
-          disabled={isPending}
-          className='font-semibold text-rose-600 hover:bg-rose-500/10 focus:bg-rose-500/10 dark:text-rose-400'
-        >
-          <Trash2 className='mr-2 h-4 w-4' />
-          Delete
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
-}
-
-/* -------------------------------------------------------------------------- */
-/*                             BULK ACTIONS                                   */
+/*                             Bulk actions                                   */
 /* -------------------------------------------------------------------------- */
 
 function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<InvitationRow>[] {
@@ -199,6 +121,58 @@ function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<Invi
 }
 
 /* -------------------------------------------------------------------------- */
+/*                         Row actions builder                                */
+/* -------------------------------------------------------------------------- */
+
+function useRowActions(
+  router: ReturnType<typeof useRouter>,
+): (row: InvitationRow) => TableRowAction<InvitationRow>[] {
+  return React.useCallback(
+    (row: InvitationRow) => {
+      const actions: TableRowAction<InvitationRow>[] = []
+      const isAwaiting = row.status === 'pending'
+
+      async function runAction(
+        fn:
+          | typeof acceptInvitationAction
+          | typeof declineInvitationAction
+          | typeof deleteInvitationAction,
+        successMsg: string,
+      ) {
+        const fd = new FormData()
+        fd.append('invitationId', String(row.id))
+        const res = await fn({}, fd)
+        res?.error ? toast.error(res.error) : toast.success(res?.success ?? successMsg)
+        router.refresh()
+      }
+
+      if (isAwaiting) {
+        actions.push({
+          label: 'Accept',
+          icon: AcceptIcon as any,
+          onClick: () => runAction(acceptInvitationAction, 'Invitation accepted.'),
+        })
+        actions.push({
+          label: 'Decline',
+          icon: DeclineIcon as any,
+          onClick: () => runAction(declineInvitationAction, 'Invitation declined.'),
+        })
+      }
+
+      actions.push({
+        label: 'Delete',
+        icon: Trash2,
+        variant: 'destructive',
+        onClick: () => runAction(deleteInvitationAction, 'Invitation deleted.'),
+      })
+
+      return actions
+    },
+    [router],
+  )
+}
+
+/* -------------------------------------------------------------------------- */
 /*                              TABLE COMPONENT                               */
 /* -------------------------------------------------------------------------- */
 
@@ -212,6 +186,7 @@ export default function InvitationsTable({
 }: InvitationsTableProps) {
   const router = useRouter()
   const bulkActions = buildBulkActions(router)
+  const makeActions = useRowActions(router)
 
   /* -------------------- Centralised navigation helpers -------------------- */
   const { search, handleSearchChange, sortableHeader } = useTableNavigation({
@@ -264,10 +239,10 @@ export default function InvitationsTable({
         header: '',
         enableHiding: false,
         sortable: false,
-        render: (_v, row) => <RowActions row={row} />,
+        render: (_v, row) => <TableRowActions row={row} actions={makeActions(row)} />,
       },
     ]
-  }, [sortableHeader])
+  }, [sortableHeader, makeActions])
 
   /* ------------------------------ View ------------------------------------ */
   return (
