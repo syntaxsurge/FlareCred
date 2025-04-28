@@ -7,7 +7,8 @@
  *   pnpm hardhat run blockchain/scripts/deployDIDRegistry.ts --network <network>
  */
 
-import { network, run, ethers } from 'hardhat'
+import { network, run } from 'hardhat'
+import { ZeroHash } from 'ethers'
 import { adminAddress, platformAddress } from './config'
 import type { DIDRegistryInstance } from '../typechain-types'
 import { updateEnvLog } from './utils/logEnv'
@@ -31,8 +32,7 @@ async function main(): Promise<void> {
     console.warn('⚠️  PLATFORM_ADDRESS env var not set – skipping DID mint')
   } else {
     try {
-      const ZERO_HASH = ethers.constants.HashZero
-      await registry.createDID(ZERO_HASH, { from: platformAddress })
+      await registry.createDID(ZeroHash, { from: platformAddress })
       const did = await registry.didOf(platformAddress)
       console.log(`🎉  Platform DID created → ${did}`)
 
