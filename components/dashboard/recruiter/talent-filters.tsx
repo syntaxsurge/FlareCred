@@ -1,10 +1,13 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 
 import { Slider } from '@/components/ui/slider'
-import { buildLink } from '@/lib/utils'
+import { useFilterNavigation } from '@/lib/hooks/use-filter-navigation'
+
+/* -------------------------------------------------------------------------- */
+/*                                   Types                                    */
+/* -------------------------------------------------------------------------- */
 
 interface TalentFiltersProps {
   basePath: string
@@ -15,9 +18,8 @@ interface TalentFiltersProps {
   verifiedOnly: boolean
 }
 
-
 /* -------------------------------------------------------------------------- */
-/*                                   View                                     */
+/*                                   View                                     */
 /* -------------------------------------------------------------------------- */
 
 export default function TalentFilters({
@@ -27,25 +29,37 @@ export default function TalentFilters({
   skillMax: initialMax,
   verifiedOnly: initialVerifiedOnly,
 }: TalentFiltersProps) {
-  const router = useRouter()
+  /* Local state mirrors the current URL so the UI reflects external changes */
   const [range, setRange] = useState<[number, number]>([initialMin, initialMax])
   const [verifiedOnly, setVerifiedOnly] = useState<boolean>(initialVerifiedOnly)
 
-  /* Push updated query string whenever filters change */
-  useEffect(() => {
-    const [min, max] = range
-    const href = buildLink(basePath, initialParams, {
-      skillMin: min === 0 ? '' : min,
-      skillMax: max === 100 ? '' : max,
-      verifiedOnly: verifiedOnly ? '1' : '',
-      page: 1, // reset pagination
-    })
-    router.push(href, { scroll: false })
-  }, [range, verifiedOnly])
+  /* ---------------------------------------------------------------------- */
+  /*                Centralised filter-param navigation helper              */
+  /* ---------------------------------------------------------------------- */
+  const pushFilter = useFilterNavigation(basePath, initialParams)
 
+  /* ---------------------------------------------------------------------- */
+  /*                               Handlers                                 */
+  /* ---------------------------------------------------------------------- */
+
+  function handleRangeChange(v: [number, number]) {
+    setRange(v)
+    const [min, max] = v
+    pushFilter('skillMin', min === 0 ? '' : String(min))
+    pushFilter('skillMax', max === 100 ? '' : String(max))
+  }
+
+  function toggleVerified(checked: boolean) {
+    setVerifiedOnly(checked)
+    pushFilter('verifiedOnly', checked ? '1' : '')
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /*                                 UI                                     */
+  /* ---------------------------------------------------------------------- */
   return (
     <div className='mb-6 flex flex-wrap items-end gap-4'>
-      {/* Skill‑score range */}
+      {/* Skill-score range */}
       <div className='flex flex-col'>
         <label htmlFor='skillRange' className='mb-2 text-sm font-medium'>
           Skill Score ({range[0]}-{range[1]})
@@ -56,24 +70,19 @@ export default function TalentFilters({
           max={100}
           step={1}
           value={range}
-          onValueChange={(v) =>
-            setRange([
-              Math.min(Math.max(0, v[0] ?? 0), 100),
-              Math.max(Math.min(100, v[1] ?? 100), 0),
-            ])
-          }
+          onValueChange={handleRangeChange}
           className='w-56'
         />
       </div>
 
-      {/* Verified‑only toggle */}
+      {/* Verified-only toggle */}
       <div className='flex items-center gap-2 self-center pt-4'>
         <input
           id='verifiedOnly'
           type='checkbox'
           className='accent-primary size-4 cursor-pointer'
           checked={verifiedOnly}
-          onChange={(e) => setVerifiedOnly(e.target.checked)}
+          onChange={(e) => toggleVerified(e.target.checked)}
         />
         <label htmlFor='verifiedOnly' className='cursor-pointer text-sm'>
           Verified only
