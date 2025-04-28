@@ -10,12 +10,12 @@ import { type BulkAction } from '@/components/ui/tables/data-table'
 /* -------------------------------------------------------------------------- */
 
 /**
- * Lightweight config used to describe a bulk-selection action.
+ * Lightweight config describing a bulk-selection action.
  * The hook automatically wraps the `handler` inside a React Transition so tables
  * no longer need to re-implement `useTransition` boilerplate or manage
  * disabled-state logic for long-running tasks.
  */
-export interface BulkActionConfig<Row> {
+export interface BulkActionConfig<Row extends Record<string, any>> {
   label: string
   icon: LucideIcon
   variant?: 'default' | 'destructive' | 'outline'
@@ -46,11 +46,11 @@ export interface BulkActionConfig<Row> {
  *       router.refresh()
  *     },
  *   },
- *   // add more actions here…
+ *   // more actions…
  * ])
  * ```
  */
-export function useBulkActions<Row>(
+export function useBulkActions<Row extends Record<string, any>>(
   configs: BulkActionConfig<Row>[],
 ): BulkAction<Row>[] {
   const [isPending, startTransition] = React.useTransition()
@@ -68,6 +68,6 @@ export function useBulkActions<Row>(
       isDisabled: (rows) =>
         isPending || (cfg.isDisabled ? cfg.isDisabled(rows) : false),
     }))
-    /* eslint-disable-next-line react-hooks/exhaustive-deps */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(configs), isPending])
 }
