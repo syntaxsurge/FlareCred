@@ -35,7 +35,9 @@ import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/
 import type { InvitationRow } from '@/lib/types/table-rows'
 import { buildLink } from '@/lib/utils'
 
-
+/* -------------------------------------------------------------------------- */
+/*                                 PROPS                                      */
+/* -------------------------------------------------------------------------- */
 interface InvitationsTableProps {
   rows: InvitationRow[]
   sort: string
@@ -46,7 +48,7 @@ interface InvitationsTableProps {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                              C O L O U R  I C O N S                        */
+/*                         COLOURED ICON COMPONENTS                           */
 /* -------------------------------------------------------------------------- */
 
 const AcceptIcon = (props: LucideProps) => (
@@ -57,13 +59,13 @@ const DeclineIcon = (props: LucideProps) => (
 )
 
 /* -------------------------------------------------------------------------- */
-/*                           Row-level actions                                */
+/*                              ROW ACTIONS                                   */
 /* -------------------------------------------------------------------------- */
 
 function RowActions({ row }: { row: InvitationRow }) {
   const router = useRouter()
   const [isPending, startTransition] = React.useTransition()
-  const isPendingStatus = row.status === 'pending'
+  const isAwaiting = row.status === 'pending'
 
   function runAction(
     fn:
@@ -74,13 +76,9 @@ function RowActions({ row }: { row: InvitationRow }) {
   ) {
     startTransition(async () => {
       const fd = new FormData()
-      fd.append('invitationId', row.id.toString())
+      fd.append('invitationId', String(row.id))
       const res = await fn({}, fd)
-      if (res?.error) {
-        toast.error(res.error)
-      } else {
-        toast.success(res?.success ?? successMsg)
-      }
+      res?.error ? toast.error(res.error) : toast.success(res?.success ?? successMsg)
       router.refresh()
     })
   }
@@ -101,7 +99,7 @@ function RowActions({ row }: { row: InvitationRow }) {
       <DropdownMenuContent align='end' className='rounded-md p-1 shadow-lg'>
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
 
-        {isPendingStatus && (
+        {isAwaiting && (
           <>
             <DropdownMenuItem
               onClick={() => runAction(acceptInvitationAction, 'Invitation accepted.')}
@@ -135,7 +133,7 @@ function RowActions({ row }: { row: InvitationRow }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                             Bulk actions                                   */
+/*                             BULK ACTIONS                                   */
 /* -------------------------------------------------------------------------- */
 
 function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<InvitationRow>[] {
@@ -154,16 +152,14 @@ function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<Invi
     const results = await Promise.all(
       rows.map(async (inv) => {
         const fd = new FormData()
-        fd.append('invitationId', inv.id.toString())
+        fd.append('invitationId', String(inv.id))
         return fn({}, fd)
       }),
     )
     const errors = results.filter((r) => r?.error).map((r) => r!.error)
-    if (errors.length) {
-      toast.error(errors.join('\n'), { id: toastId })
-    } else {
-      toast.success(successMsg, { id: toastId })
-    }
+    errors.length
+      ? toast.error(errors.join('\n'), { id: toastId })
+      : toast.success(successMsg, { id: toastId })
     router.refresh()
   }
 
@@ -172,17 +168,14 @@ function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<Invi
     rows.every((r) => r.status === 'pending') &&
     new Set(rows.map((r) => r.role)).size === 1
 
-  const canDecline = (rows: InvitationRow[]) =>
-    rows.length > 0 && rows.every((r) => r.status === 'pending')
+  const canDecline = (rows: InvitationRow[]) => rows.length > 0 && rows.every((r) => r.status === 'pending')
 
   return [
     {
       label: 'Accept',
       icon: AcceptIcon as any,
       onClick: (selected) =>
-        startTransition(() =>
-          runBulk(selected, acceptInvitationAction, 'Accepting…', 'Invitations accepted.'),
-        ),
+        startTransition(() => runBulk(selected, acceptInvitationAction, 'Accepting…', 'Invitations accepted.')),
       isAvailable: canAccept,
       isDisabled: (rows) => !canAccept(rows) || isPending,
     },
@@ -190,9 +183,7 @@ function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<Invi
       label: 'Decline',
       icon: DeclineIcon as any,
       onClick: (selected) =>
-        startTransition(() =>
-          runBulk(selected, declineInvitationAction, 'Declining…', 'Invitations declined.'),
-        ),
+        startTransition(() => runBulk(selected, declineInvitationAction, 'Declining…', 'Invitations declined.')),
       isAvailable: canDecline,
       isDisabled: (rows) => !canDecline(rows) || isPending,
     },
@@ -201,16 +192,14 @@ function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<Invi
       icon: Trash2,
       variant: 'destructive',
       onClick: (selected) =>
-        startTransition(() =>
-          runBulk(selected, deleteInvitationAction, 'Deleting…', 'Invitations deleted.'),
-        ),
+        startTransition(() => runBulk(selected, deleteInvitationAction, 'Deleting…', 'Invitations deleted.')),
       isDisabled: () => isPending,
     },
   ]
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                   Table                                    */
+/*                              TABLE COMPONENT                               */
 /* -------------------------------------------------------------------------- */
 
 export default function InvitationsTable({
@@ -224,7 +213,7 @@ export default function InvitationsTable({
   const router = useRouter()
   const bulkActions = buildBulkActions(router)
 
-  /* ------------------------ Search handling ------------------------------ */
+  /* ------------------------------ Search ---------------------------------- */
   const [search, setSearch] = React.useState<string>(searchQuery)
   const debounceRef = React.useRef<NodeJS.Timeout | null>(null)
 
@@ -232,12 +221,11 @@ export default function InvitationsTable({
     setSearch(value)
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
-      const href = buildLink(basePath, initialParams, { q: value, page: 1 })
-      router.push(href, { scroll: false })
+      router.push(buildLink(basePath, initialParams, { q: value, page: 1 }), { scroll: false })
     }, 400)
   }
 
-  /* ------------------------ Sortable headers ----------------------------- */
+  /* -------------------------- Sortable headers ---------------------------- */
   function sortableHeader(label: string, key: string) {
     const nextOrder = sort === key && order === 'asc' ? 'desc' : 'asc'
     const href = buildLink(basePath, initialParams, {
@@ -248,33 +236,34 @@ export default function InvitationsTable({
     })
     return (
       <Link href={href} scroll={false} className='flex items-center gap-1'>
-        {label} <ArrowUpDown className='h-4 w-4' />
+        {label}
+        <ArrowUpDown className='h-4 w-4' />
       </Link>
     )
   }
 
-  /* ------------------------ Column definitions --------------------------- */
+  /* ----------------------------- Columns ---------------------------------- */
   const columns = React.useMemo<Column<InvitationRow>[]>(() => {
     return [
       {
         key: 'team',
         header: sortableHeader('Team', 'team'),
         sortable: false,
-        render: (v) => <span className='font-medium'>{v as string}</span>,
+        render: (v) => <span className='font-medium'>{String(v)}</span>,
       },
       {
         key: 'role',
         header: sortableHeader('Role', 'role'),
         sortable: false,
         className: 'capitalize',
-        render: (v) => v as string,
+        render: (v) => <span>{String(v)}</span>,
       },
       {
         key: 'inviter',
         header: sortableHeader('Invited By', 'inviter'),
         sortable: false,
         className: 'break-all',
-        render: (v) => v || '—',
+        render: (v) => <span>{v ? String(v) : '—'}</span>,
       },
       {
         key: 'status',
@@ -286,7 +275,8 @@ export default function InvitationsTable({
         key: 'invitedAt',
         header: sortableHeader('Invited', 'invitedAt'),
         sortable: false,
-        render: (v) => formatDistanceToNow(v as Date, { addSuffix: true }),
+        render: (v) =>
+          <span>{formatDistanceToNow(new Date(v as Date), { addSuffix: true })}</span>,
       },
       {
         key: 'id',
@@ -298,7 +288,7 @@ export default function InvitationsTable({
     ]
   }, [sort, order, basePath, initialParams, search])
 
-  /* ----------------------------- Render ---------------------------------- */
+  /* ------------------------------ View ------------------------------------ */
   return (
     <DataTable
       columns={columns}

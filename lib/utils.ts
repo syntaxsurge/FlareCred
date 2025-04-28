@@ -21,7 +21,11 @@ export function shortenSeed(seed: string) {
   return seed.length <= 10 ? seed : `${seed.slice(0, 6)}…${seed.slice(-4)}`
 }
 
-export function buildLink(basePath: string, init: Record<string, string>, overrides: Record<string, any>) {
+export function buildLink(
+  basePath: string,
+  init: Record<string, string>,
+  overrides: Record<string, any>,
+) {
   const sp = new URLSearchParams(init)
   Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
   Array.from(sp.entries()).forEach(([k, v]) => {

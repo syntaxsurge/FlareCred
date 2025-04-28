@@ -20,8 +20,12 @@ import {
 import { StatusBadge } from '@/components/ui/status-badge'
 import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
 import type { CandidateCredentialRow } from '@/lib/types/table-rows'
+import { buildLink } from '@/lib/utils'
 
 
+/* -------------------------------------------------------------------------- */
+/*                                 PROPS                                      */
+/* -------------------------------------------------------------------------- */
 interface CredentialsTableProps {
   rows: CandidateCredentialRow[]
   sort: string
@@ -29,20 +33,6 @@ interface CredentialsTableProps {
   basePath: string
   initialParams: Record<string, string>
   searchQuery: string
-}
-
-/* -------------------------------------------------------------------------- */
-/*                                Helpers                                     */
-/* -------------------------------------------------------------------------- */
-
-function buildLink(basePath: string, init: Record<string, string>, overrides: Record<string, any>) {
-  const sp = new URLSearchParams(init)
-  Object.entries(overrides).forEach(([k, v]) => sp.set(k, String(v)))
-  Array.from(sp.entries()).forEach(([k, v]) => {
-    if (v === '') sp.delete(k)
-  })
-  const qs = sp.toString()
-  return `${basePath}${qs ? `?${qs}` : ''}`
 }
 
 /**
@@ -145,7 +135,9 @@ function RowActions({ row }: { row: CandidateCredentialRow }) {
 /*                               Bulk actions                                 */
 /* -------------------------------------------------------------------------- */
 
-function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<CandidateCredentialRow>[] {
+function buildBulkActions(
+  router: ReturnType<typeof useRouter>,
+): BulkAction<CandidateCredentialRow>[] {
   const [isPending, startTransition] = React.useTransition()
 
   return [
@@ -250,7 +242,8 @@ export default function CandidateCredentialsTable({
         render: (v) => <StatusBadge status={String(v)} />,
       },
       {
-        key: 'proof',
+        /* Use existing vcJson key to satisfy Column typing while presenting Proof UI */
+        key: 'vcJson',
         header: 'Proof',
         sortable: false,
         render: (_v, row) => {
