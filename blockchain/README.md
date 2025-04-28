@@ -74,12 +74,12 @@ Every deploy script attempts `hardhat verify`. Provide the appropriate API keys 
 
 | Purpose | Env var to copy | Where to paste |
 | --- | --- | --- |
-| DID Registry address | `NEXT_PUBLIC_DID_REGISTRY_ADDRESS` | `/web/.env` |
-| Credential NFT address | `NEXT_PUBLIC_CREDENTIAL_NFT_ADDRESS` | `/web/.env` |
-| SubscriptionManager address | `NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS` | `/web/.env` |
-| FtsoHelper address | `NEXT_PUBLIC_FTSO_HELPER_ADDRESS` | `/web/.env` |
-| RngHelper address | `NEXT_PUBLIC_RNG_HELPER_ADDRESS` | `/web/.env` |
-| FlareCredVerifier address | `NEXT_PUBLIC_FDC_VERIFIER_ADDRESS` & `VERIFIER_ADDRESS` | `/web/.env` and `/blockchain/.env` |
+| DID Registry address | `NEXT_PUBLIC_DID_REGISTRY_ADDRESS` | `../.env` |
+| Credential NFT address | `NEXT_PUBLIC_CREDENTIAL_NFT_ADDRESS` | `../.env` |
+| SubscriptionManager address | `NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS` | `../.env` |
+| FtsoHelper address | `NEXT_PUBLIC_FTSO_HELPER_ADDRESS` | `../.env` |
+| RngHelper address | `NEXT_PUBLIC_RNG_HELPER_ADDRESS` | `../.env` |
+| FlareCredVerifier address | `NEXT_PUBLIC_FDC_VERIFIER_ADDRESS` & `VERIFIER_ADDRESS` | `../.env` and `/blockchain/.env` |
 
 Commit those addresses so the Next .js front-end and server utilities talk to the live contracts.
 
