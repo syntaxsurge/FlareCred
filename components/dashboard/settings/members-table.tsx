@@ -17,8 +17,12 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
-import { DataTable, type Column, type BulkAction } from '@/components/ui/tables/data-table'
-import { RowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
+import {
+  DataTable,
+  type BulkAction,
+  type Column,
+} from '@/components/ui/tables/data-table'
+import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import { truncateAddress } from '@/lib/utils/address'
 
@@ -46,7 +50,7 @@ interface MembersTableProps {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                             Edit member dialog                             */
+/*                              Edit member form                              */
 /* -------------------------------------------------------------------------- */
 
 const ROLES = ['member', 'owner'] as const
@@ -102,65 +106,7 @@ function EditMemberForm({ row, onDone }: { row: RowType; onDone: () => void }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                               Row actions                                  */
-/* -------------------------------------------------------------------------- */
-
-function MemberRowActions({ row, isOwner }: { row: RowType; isOwner: boolean }) {
-  const router = useRouter()
-  const [isPending, startTransition] = React.useTransition()
-  const [editOpen, setEditOpen] = React.useState(false)
-
-  if (!isOwner) return null
-
-  const actions = React.useMemo<TableRowAction<RowType>[]>(
-    () => [
-      {
-        label: 'Edit',
-        icon: Pencil,
-        onClick: () => setEditOpen(true),
-        disabled: () => isPending,
-      },
-      {
-        label: 'Remove',
-        icon: Trash2,
-        variant: 'destructive',
-        onClick: () =>
-          startTransition(async () => {
-            const fd = new FormData()
-            fd.append('memberId', row.id.toString())
-            const res = await removeTeamMember({}, fd)
-            res?.error
-              ? toast.error(res.error)
-              : toast.success(res?.success ?? 'Member removed.')
-            router.refresh()
-          }),
-        disabled: () => isPending,
-      },
-    ],
-    [isPending, row.id, router, startTransition],
-  )
-
-  return (
-    <>
-      <RowActions row={row} actions={actions} />
-
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Member</DialogTitle>
-            <DialogDescription>
-              Modify the member’s role, then save your changes.
-            </DialogDescription>
-          </DialogHeader>
-          <EditMemberForm row={row} onDone={() => setEditOpen(false)} />
-        </DialogContent>
-      </Dialog>
-    </>
-  )
-}
-
-/* -------------------------------------------------------------------------- */
-/*                               Bulk actions                                 */
+/*                             Bulk-selection                                 */
 /* -------------------------------------------------------------------------- */
 
 function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowType>[] {
@@ -205,6 +151,7 @@ export default function MembersTable({
   const router = useRouter()
   const bulkActions = isOwner ? buildBulkActions(router) : []
 
+  /* -------------------- Centralised navigation helpers -------------------- */
   const { search, handleSearchChange, sortableHeader } = useTableNavigation({
     basePath,
     initialParams,
@@ -213,6 +160,40 @@ export default function MembersTable({
     searchQuery,
   })
 
+  /* --------------------------- Edit-dialog state -------------------------- */
+  const [editRow, setEditRow] = React.useState<RowType | null>(null)
+  const [isPending, startTransition] = React.useTransition()
+
+  /* ------------------------ Row-level action builder ---------------------- */
+  const makeActions = React.useCallback(
+    (row: RowType): TableRowAction<RowType>[] => [
+      {
+        label: 'Edit',
+        icon: Pencil,
+        onClick: () => setEditRow(row),
+        disabled: () => isPending,
+      },
+      {
+        label: 'Remove',
+        icon: Trash2,
+        variant: 'destructive',
+        onClick: () =>
+          startTransition(async () => {
+            const fd = new FormData()
+            fd.append('memberId', row.id.toString())
+            const res = await removeTeamMember({}, fd)
+            res?.error
+              ? toast.error(res.error)
+              : toast.success(res?.success ?? 'Member removed.')
+            router.refresh()
+          }),
+        disabled: () => isPending,
+      },
+    ],
+    [router, isPending, startTransition],
+  )
+
+  /* --------------------------- Column definitions ------------------------- */
   const columns = React.useMemo<Column<RowType>[]>(() => {
     const base: Column<RowType>[] = [
       {
@@ -256,24 +237,47 @@ export default function MembersTable({
         header: '',
         enableHiding: false,
         sortable: false,
-        render: (_v, row) => <MemberRowActions row={row} isOwner={isOwner} />,
+        render: (_v, row) => <TableRowActions row={row} actions={makeActions(row)} />,
       })
     }
 
     return base
-  }, [sortableHeader, isOwner])
+  }, [sortableHeader, isOwner, makeActions])
 
+  /* -------------------------------- Render -------------------------------- */
   return (
-    <DataTable
-      columns={columns}
-      rows={rows}
-      filterKey='name'
-      filterValue={search}
-      onFilterChange={handleSearchChange}
-      bulkActions={bulkActions}
-      pageSize={rows.length}
-      pageSizeOptions={[rows.length]}
-      hidePagination
-    />
+    <>
+      <DataTable
+        columns={columns}
+        rows={rows}
+        filterKey='name'
+        filterValue={search}
+        onFilterChange={handleSearchChange}
+        bulkActions={bulkActions}
+        pageSize={rows.length}
+        pageSizeOptions={[rows.length]}
+        hidePagination
+      />
+
+      {/* --------------------------- Edit dialog --------------------------- */}
+      {editRow && (
+        <Dialog
+          open
+          onOpenChange={(open) => {
+            if (!open) setEditRow(null)
+          }}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Member</DialogTitle>
+              <DialogDescription>
+                Modify the member’s role, then save your changes.
+              </DialogDescription>
+            </DialogHeader>
+            <EditMemberForm row={editRow} onDone={() => setEditRow(null)} />
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   )
 }

@@ -8,7 +8,6 @@ import { toast } from 'sonner'
 
 import { deleteUserAction } from '@/app/(dashboard)/admin/users/actions'
 import EditUserForm from '@/app/(dashboard)/admin/users/edit-user-form'
-import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -18,10 +17,10 @@ import {
 } from '@/components/ui/dialog'
 import {
   DataTable,
-  type Column,
   type BulkAction,
+  type Column,
 } from '@/components/ui/tables/data-table'
-import { RowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
+import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import { formatDateTime } from '@/lib/utils/time'
 
@@ -47,20 +46,69 @@ interface UsersTableProps {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                             Row actions UI                                 */
+/*                             Bulk-selection                                 */
 /* -------------------------------------------------------------------------- */
 
-function UsersRowActions({ row }: { row: RowType }) {
-  const router = useRouter()
-  const [editOpen, setEditOpen] = React.useState(false)
+function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowType>[] {
   const [isPending, startTransition] = React.useTransition()
 
-  const actions = React.useMemo<TableRowAction<RowType>[]>(
-    () => [
+  return [
+    {
+      label: 'Delete',
+      icon: Trash2,
+      variant: 'destructive',
+      onClick: (selected) =>
+        startTransition(async () => {
+          await Promise.all(
+            selected.map(async (row) => {
+              const fd = new FormData()
+              fd.append('userId', row.id.toString())
+              return deleteUserAction({}, fd)
+            }),
+          )
+          toast.success('Selected users deleted.')
+          router.refresh()
+        }),
+      isDisabled: () => isPending,
+    },
+  ]
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                    Table                                   */
+/* -------------------------------------------------------------------------- */
+
+export default function AdminUsersTable({
+  rows,
+  sort,
+  order,
+  basePath,
+  initialParams,
+  searchQuery,
+}: UsersTableProps) {
+  const router = useRouter()
+  const bulkActions = buildBulkActions(router)
+
+  /* -------------------- Centralised navigation helpers -------------------- */
+  const { search, handleSearchChange, sortableHeader } = useTableNavigation({
+    basePath,
+    initialParams,
+    sort,
+    order,
+    searchQuery,
+  })
+
+  /* --------------------------- Edit-dialog state -------------------------- */
+  const [editRow, setEditRow] = React.useState<RowType | null>(null)
+  const [isPending, startTransition] = React.useTransition()
+
+  /* ------------------------ Row-level action builder ---------------------- */
+  const makeActions = React.useCallback(
+    (row: RowType): TableRowAction<RowType>[] => [
       {
         label: 'Edit',
         icon: Pencil,
-        onClick: () => setEditOpen(true),
+        onClick: () => setEditRow(row),
         disabled: () => isPending,
       },
       {
@@ -80,85 +128,10 @@ function UsersRowActions({ row }: { row: RowType }) {
         disabled: () => isPending,
       },
     ],
-    [isPending, row.id, router],
+    [router, isPending, startTransition],
   )
 
-  return (
-    <>
-      <RowActions row={row} actions={actions} />
-
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
-            <DialogDescription>Modify the user’s details, then save.</DialogDescription>
-          </DialogHeader>
-
-          <EditUserForm
-            id={row.id}
-            defaultName={row.name}
-            defaultEmail={row.email}
-            defaultRole={row.role}
-            onDone={() => setEditOpen(false)}
-          />
-        </DialogContent>
-      </Dialog>
-    </>
-  )
-}
-
-/* -------------------------------------------------------------------------- */
-/*                             Bulk-selection                                 */
-/* -------------------------------------------------------------------------- */
-
-function buildBulkActions(router: ReturnType<typeof useRouter>): BulkAction<RowType>[] {
-  const [isPending, startTransition] = React.useTransition()
-
-  return [
-    {
-      label: 'Delete',
-      icon: Trash2,
-      variant: 'destructive',
-      onClick: (selected) =>
-        startTransition(async () => {
-          await Promise.all(
-            selected.map(async (u) => {
-              const fd = new FormData()
-              fd.append('userId', u.id.toString())
-              return deleteUserAction({}, fd)
-            }),
-          )
-          toast.success('Selected users deleted.')
-          router.refresh()
-        }),
-      isDisabled: () => isPending,
-    },
-  ]
-}
-
-/* -------------------------------------------------------------------------- */
-/*                                   Table                                    */
-/* -------------------------------------------------------------------------- */
-
-export default function AdminUsersTable({
-  rows,
-  sort,
-  order,
-  basePath,
-  initialParams,
-  searchQuery,
-}: UsersTableProps) {
-  const router = useRouter()
-  const bulkActions = buildBulkActions(router)
-
-  const { search, handleSearchChange, sortableHeader } = useTableNavigation({
-    basePath,
-    initialParams,
-    sort,
-    order,
-    searchQuery,
-  })
-
+  /* --------------------------- Column definitions ------------------------- */
   const columns = React.useMemo<Column<RowType>[]>(() => {
     return [
       {
@@ -191,22 +164,50 @@ export default function AdminUsersTable({
         header: '',
         enableHiding: false,
         sortable: false,
-        render: (_v, row) => <UsersRowActions row={row} />,
+        render: (_v, row) => <TableRowActions row={row} actions={makeActions(row)} />,
       },
     ]
-  }, [sortableHeader])
+  }, [sortableHeader, makeActions])
 
+  /* -------------------------------- Render -------------------------------- */
   return (
-    <DataTable
-      columns={columns}
-      rows={rows}
-      filterKey='name'
-      filterValue={search}
-      onFilterChange={handleSearchChange}
-      bulkActions={bulkActions}
-      pageSize={rows.length}
-      pageSizeOptions={[rows.length]}
-      hidePagination
-    />
+    <>
+      <DataTable
+        columns={columns}
+        rows={rows}
+        filterKey='name'
+        filterValue={search}
+        onFilterChange={handleSearchChange}
+        bulkActions={bulkActions}
+        pageSize={rows.length}
+        pageSizeOptions={[rows.length]}
+        hidePagination
+      />
+
+      {/* --------------------------- Edit dialog --------------------------- */}
+      {editRow && (
+        <Dialog
+          open
+          onOpenChange={(open) => {
+            if (!open) setEditRow(null)
+          }}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit User</DialogTitle>
+              <DialogDescription>Modify the user’s details, then save.</DialogDescription>
+            </DialogHeader>
+
+            <EditUserForm
+              id={editRow.id}
+              defaultName={editRow.name}
+              defaultEmail={editRow.email}
+              defaultRole={editRow.role}
+              onDone={() => setEditRow(null)}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   )
 }
