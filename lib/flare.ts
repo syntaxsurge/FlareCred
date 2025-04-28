@@ -1,6 +1,15 @@
 import { ethers } from 'ethers'
 import type { Log, LogDescription } from 'ethers'
 
+import {
+  DID_REGISTRY_ABI,
+  CREDENTIAL_NFT_ABI,
+  SUBSCRIPTION_MANAGER_ABI,
+  FDC_VERIFIER_ABI,
+  FTSO_HELPER_ABI,
+  RNG_HELPER_ABI,
+} from '@/lib/abis'
+
 /* -------------------------------------------------------------------------- */
 /*                          E N V I R O N M E N T   I O                       */
 /* -------------------------------------------------------------------------- */
@@ -11,7 +20,7 @@ type EnvKind = 'string' | 'number' | 'address'
  * Read and validate an environment variable.
  *
  * @param name         Variable to fetch (e.g. `NEXT_PUBLIC_FLARE_RPC_URL`).
- * @param kind         Desired type: `'string'` | `'number'` | `'address'`.
+ * @param kind         Desired type: `'string' | 'number' | 'address'`.
  * @param optional     Mark `true` only for non-required vars.
  */
 function env(
@@ -81,41 +90,6 @@ export const provider = new ethers.JsonRpcProvider(FLARE_RPC_URL, {
 })
 
 const contract = (addr: string, abi: readonly string[]) => new ethers.Contract(addr, abi, provider)
-
-/* -------------------------------------------------------------------------- */
-/*                                    ABIs                                    */
-/* -------------------------------------------------------------------------- */
-
-const DID_REGISTRY_ABI = [
-  'function createDID(bytes32 docHash) external',
-  'function didOf(address owner) view returns (string)',
-] as const
-
-const CREDENTIAL_NFT_ABI = [
-  'event CredentialMinted(address indexed to,uint256 indexed tokenId,bytes32 vcHash,string uri)',
-  'function mintCredential(address to,bytes32 vcHash,string uri) external returns (uint256)',
-  'function getVcHash(uint256 tokenId) external view returns (bytes32)',
-] as const
-
-const SUBSCRIPTION_MANAGER_ABI = [
-  'function paySubscription(address team,uint8 planKey) payable',
-  'function paidUntil(address team) view returns (uint256)',
-  'function planPriceWei(uint8) view returns (uint256)',
-  'event SubscriptionPaid(address indexed team,uint8 planKey,uint256 paidUntil)',
-] as const
-
-const FDC_VERIFIER_ABI = [
-  'function verifyEVM(bytes) view returns (bool)',
-  'function verifyJson(bytes) view returns (bool)',
-  'function verifyPayment(bytes) view returns (bool)',
-  'function verifyAddress(bytes) view returns (bool)',
-] as const
-
-const FTSO_HELPER_ABI = [
-  'function flrUsdPriceWei() view returns (uint256 priceWei, uint256 timestamp)',
-] as const
-
-const RNG_HELPER_ABI = ['function randomMod(uint256) view returns (uint256)'] as const
 
 /* -------------------------------------------------------------------------- */
 /*                             R E A D  C O N T R A C T S                     */
