@@ -82,7 +82,7 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 24 100% 45%; /* Flare Orange (darker for light mode) */
+    --primary: 24 100% 35%; /* darker orange for light mode */
     --primary-foreground: 0 0% 98%;
     --secondary: 328 66% 61%; /* Flare Pink */
     --secondary-foreground: 0 0% 98%;
@@ -118,8 +118,8 @@
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 24 100% 65%; /* Flare Orange (lighter for dark mode) */
-    --primary-foreground: 0 0% 0%; /* Pure black text for highest contrast */
+    --primary: 24 100% 75%; /* lighter orange for dark mode */
+    --primary-foreground: 0 0% 0%; /* black text on light orange */
     --secondary: 328 66% 61%; /* Flare Pink */
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
@@ -138,7 +138,7 @@
     --chart-5: 340 75% 55%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 24 100% 65%; /* match lighter orange */
+    --sidebar-primary: 24 100% 75%; /* align sidebar highlight */
     --sidebar-primary-foreground: 0 0% 0%;
     --sidebar-accent: 240 3.7% 15.9%;
     --sidebar-accent-foreground: 240 4.8% 95.9%;
@@ -158,7 +158,7 @@
   --card-foreground: hsl(240 10% 3.9%);
   --popover: hsl(0 0% 100%);
   --popover-foreground: hsl(240 10% 3.9%);
-  --primary: hsl(24 100% 45%); /* Flare Orange (darker for light mode) */
+  --primary: hsl(24 100% 35%); /* darker orange for light mode */
   --primary-foreground: hsl(0 0% 98%);
   --secondary: hsl(328 66% 61%); /* Flare Pink */
   --secondary-foreground: hsl(0 0% 98%);
@@ -209,8 +209,8 @@
   --card-foreground: hsl(0 0% 98%);
   --popover: hsl(240 10% 3.9%);
   --popover-foreground: hsl(0 0% 98%);
-  --primary: hsl(24 100% 65%); /* Flare Orange (lighter for dark mode) */
-  --primary-foreground: hsl(0 0% 0%); /* Pure black text for highest contrast */
+  --primary: hsl(24 100% 75%); /* lighter orange for dark mode */
+  --primary-foreground: hsl(0 0% 0%);
   --secondary: hsl(328 66% 61%); /* Flare Pink */
   --secondary-foreground: hsl(0 0% 98%);
   --muted: hsl(240 3.7% 15.9%);
