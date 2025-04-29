@@ -145,7 +145,8 @@ export default function CandidateCredentialsTable({
         sortable: false,
         render: (_v, row) => {
           const proofTx = getProofTx(row.vcJson)
-          return proofTx ? (
+          /* Hide placeholder zero-address until an actual transaction hash exists */
+          return proofTx && proofTx !== '0x0' ? (
             <a
               href={`https://flarescan.com/tx/${proofTx}`}
               target='_blank'
