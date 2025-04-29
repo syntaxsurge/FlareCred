@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { eq, and } from 'drizzle-orm'
 import { BadgeCheck, Clock, XCircle, FileText, Github } from 'lucide-react'
 
+import RequireDidGate from '@/components/dashboard/require-did-gate'
 import { CredentialActions } from '@/components/dashboard/issuer/credential-actions'
 import {
   Dialog,
@@ -27,9 +28,7 @@ import { isGithubRepoCredential } from '@/lib/constants/credential'
 
 export const revalidate = 0
 
-/* -------------------------------------------------------------------------- */
-/*                                   B A D G E S                              */
-/* -------------------------------------------------------------------------- */
+/* ---------------------------- UI Helpers ---------------------------- */
 
 function StatusBadge({ status }: { status: CredentialStatus }) {
   const cls =
@@ -57,10 +56,6 @@ function StatusIcon({ status }: { status: CredentialStatus }) {
       return <Clock className={cn(base, 'text-amber-500')} />
   }
 }
-
-/* -------------------------------------------------------------------------- */
-/*                               P R O O F  UI                               */
-/* -------------------------------------------------------------------------- */
 
 function GithubProofDialog({ proofJson }: { proofJson: string }) {
   'use client'
@@ -90,9 +85,9 @@ function GithubProofDialog({ proofJson }: { proofJson: string }) {
   )
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                   P A G E                                  */
-/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------- */
+/*                                 Page                                 */
+/* -------------------------------------------------------------------- */
 
 export default async function CredentialDetailPage({
   params,
@@ -105,7 +100,7 @@ export default async function CredentialDetailPage({
   const user = await getUser()
   if (!user) redirect('/connect-wallet')
 
-  /* Validate issuer ownership */
+  /* Issuer ownership */
   const [issuer] = await db
     .select()
     .from(issuers)
@@ -113,7 +108,7 @@ export default async function CredentialDetailPage({
     .limit(1)
   if (!issuer) redirect('/issuer/onboard')
 
-  /* Load credential & candidate */
+  /* Credential lookup */
   const [data] = await db
     .select({ cred: candidateCredentials, cand: candidates, candUser: users })
     .from(candidateCredentials)
@@ -123,118 +118,117 @@ export default async function CredentialDetailPage({
       and(eq(candidateCredentials.id, credentialId), eq(candidateCredentials.issuerId, issuer.id)),
     )
     .limit(1)
-
   if (!data) redirect('/issuer/requests')
 
   const { cred, candUser } = data
   const status = cred.status as CredentialStatus
   const isGithub = isGithubRepoCredential(cred.type)
 
-  /* Prettify proof JSON if possible */
+  /* Prettify GitHub proof JSON */
   let proofPretty = cred.proofData
   if (isGithub) {
     try {
       proofPretty = JSON.stringify(JSON.parse(cred.proofData), null, 2)
     } catch {
-      /* leave raw */
+      /* ignore */
     }
   }
 
   /* ----------------------------- UI ----------------------------- */
   return (
-    <section className='mx-auto max-w-2xl py-10'>
-      <PageCard
-        icon={FileText}
-        title='Credential Details'
-        description={`Status: ${status.toLowerCase()}`}
-      >
-        <div className='space-y-6'>
-          {/* Hero header */}
-          <div className='flex items-center gap-4'>
-            <StatusIcon status={status} />
-            <div className='flex-1'>
-              <h2 className='text-3xl font-extrabold leading-tight tracking-tight'>
-                {cred.title}
-              </h2>
-              <p className='text-muted-foreground text-sm'>
-                Submitted by{' '}
-                <span className='font-medium'>
-                  {candUser?.name || candUser?.email || 'Unknown'}
-                </span>
-              </p>
+    <RequireDidGate createPath='/issuer/create-did'>
+      <section className='mx-auto max-w-2xl py-10'>
+        <PageCard
+          icon={FileText}
+          title='Credential Details'
+          description={`Status: ${status.toLowerCase()}`}
+        >
+          <div className='space-y-6'>
+            {/* Hero */}
+            <div className='flex items-center gap-4'>
+              <StatusIcon status={status} />
+              <div className='flex-1'>
+                <h2 className='text-3xl font-extrabold leading-tight tracking-tight'>
+                  {cred.title}
+                </h2>
+                <p className='text-muted-foreground text-sm'>
+                  Submitted by{' '}
+                  <span className='font-medium'>
+                    {candUser?.name || candUser?.email || 'Unknown'}
+                  </span>
+                </p>
+              </div>
+              <StatusBadge status={status} />
             </div>
-            <StatusBadge status={status} />
+
+            {/* Details */}
+            <Card className='shadow-sm'>
+              <CardHeader>
+                <CardTitle className='text-lg font-semibold'>Credential Details</CardTitle>
+              </CardHeader>
+
+              <CardContent className='grid gap-4 text-sm sm:grid-cols-2'>
+                <div>
+                  <p className='text-muted-foreground mb-1 text-xs font-medium uppercase'>Type</p>
+                  <p className='font-medium capitalize'>{cred.type}</p>
+                </div>
+
+                <div>
+                  <p className='text-muted-foreground mb-1 text-xs font-medium uppercase'>
+                    Candidate
+                  </p>
+                  <p className='font-medium break-all'>
+                    {candUser?.name || candUser?.email || 'Unknown'}
+                  </p>
+                </div>
+
+                {cred.fileUrl && !isGithub && (
+                  <div className='sm:col-span-2'>
+                    <p className='text-muted-foreground mb-1 text-xs font-medium uppercase'>
+                      Attached File
+                    </p>
+                    <a
+                      href={cred.fileUrl}
+                      target='_blank'
+                      rel='noopener noreferrer'
+                      className='text-primary inline-flex items-center gap-2 font-medium underline-offset-2 hover:underline'
+                    >
+                      <FileText className='h-4 w-4' />
+                      View Document
+                    </a>
+                  </div>
+                )}
+
+                {isGithub && (
+                  <div className='sm:col-span-2'>
+                    <p className='text-muted-foreground mb-1 text-xs font-medium uppercase'>
+                      GitHub Proof
+                    </p>
+                    <GithubProofDialog proofJson={proofPretty} />
+                  </div>
+                )}
+              </CardContent>
+
+              {[
+                CredentialStatus.PENDING,
+                CredentialStatus.REJECTED,
+                CredentialStatus.VERIFIED,
+                CredentialStatus.UNVERIFIED,
+              ].includes(status) && (
+                <CardFooter className='bg-muted/50 border-t py-4'>
+                  <div className='ml-auto'>
+                    <CredentialActions
+                      credentialId={cred.id}
+                      status={status}
+                      isGithub={isGithub}
+                    />
+                  </div>
+                </CardFooter>
+              )}
+            </Card>
           </div>
-
-          {/* Details card */}
-          <Card className='shadow-sm'>
-            <CardHeader>
-              <CardTitle className='text-lg font-semibold'>Credential Details</CardTitle>
-            </CardHeader>
-
-            <CardContent className='grid gap-4 text-sm sm:grid-cols-2'>
-              <div>
-                <p className='text-muted-foreground mb-1 text-xs font-medium uppercase'>Type</p>
-                <p className='font-medium capitalize'>{cred.type}</p>
-              </div>
-
-              <div>
-                <p className='text-muted-foreground mb-1 text-xs font-medium uppercase'>
-                  Candidate
-                </p>
-                <p className='font-medium break-all'>
-                  {candUser?.name || candUser?.email || 'Unknown'}
-                </p>
-              </div>
-
-              {cred.fileUrl && !isGithub && (
-                <div className='sm:col-span-2'>
-                  <p className='text-muted-foreground mb-1 text-xs font-medium uppercase'>
-                    Attached File
-                  </p>
-                  <a
-                    href={cred.fileUrl}
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    className='text-primary inline-flex items-center gap-2 font-medium underline-offset-2 hover:underline'
-                  >
-                    <FileText className='h-4 w-4' />
-                    View Document
-                  </a>
-                </div>
-              )}
-
-              {/* GitHub proof viewer */}
-              {isGithub && (
-                <div className='sm:col-span-2'>
-                  <p className='text-muted-foreground mb-1 text-xs font-medium uppercase'>
-                    GitHub Proof
-                  </p>
-                  <GithubProofDialog proofJson={proofPretty} />
-                </div>
-              )}
-            </CardContent>
-
-            {/* Action buttons */}
-            {[
-              CredentialStatus.PENDING,
-              CredentialStatus.REJECTED,
-              CredentialStatus.VERIFIED,
-              CredentialStatus.UNVERIFIED,
-            ].includes(status) && (
-              <CardFooter className='bg-muted/50 border-t py-4'>
-                <div className='ml-auto'>
-                  <CredentialActions
-                    credentialId={cred.id}
-                    status={status}
-                    isGithub={isGithub}
-                  />
-                </div>
-              </CardFooter>
-            )}
-          </Card>
-        </div>
-      </PageCard>
-    </section>
+        </PageCard>
+      </section>
+    </RequireDidGate>
   )
 }
