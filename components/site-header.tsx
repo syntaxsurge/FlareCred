@@ -2,7 +2,6 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 import { ConnectButton } from '@rainbow-me/rainbowkit'
@@ -35,11 +34,9 @@ const TOOLS_MENU = [
 /* -------------------------------------------------------------------------- */
 
 export default function SiteHeader() {
-  const router = useRouter()
-
   /* User promise required by downstream components */
   const { userPromise } = useUser()
-  const [user, setUser] = useState<Awaited<typeof userPromise> | null>(null)
+  const [_, setUser] = useState<Awaited<typeof userPromise> | null>(null)
 
   useEffect(() => {
     let mounted = true

@@ -20,15 +20,8 @@
     // Added by me
     "esModuleInterop": true,
     "strict": true,
-    "resolveJsonModule": true,
+    "resolveJsonModule": true
   },
-  "include": [
-    "./scripts",
-    "./test",
-    "./typechain-types",
-    "eslint.config.mjs"
-  ],
-  "files": [
-    "./hardhat.config.ts"
-  ]
+  "include": ["./scripts", "./test", "./typechain-types", "eslint.config.mjs"],
+  "files": ["./hardhat.config.ts"]
 }

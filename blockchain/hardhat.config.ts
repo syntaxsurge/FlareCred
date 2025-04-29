@@ -3,8 +3,6 @@ import "@nomicfoundation/hardhat-toolbox";
 import "@nomiclabs/hardhat-web3";
 require("@nomiclabs/hardhat-truffle5");
 
-// import { vars } from "hardhat/config";
-const { vars } = require("hardhat/config");
 require("dotenv").config();
 
 // Load environment variables
@@ -13,13 +11,7 @@ const FLARE_RPC_API_KEY = process.env.FLARE_RPC_API_KEY ?? "";
 const FLARESCAN_API_KEY = process.env.FLARESCAN_API_KEY ?? "";
 const FLARE_EXPLORER_API_KEY = process.env.FLARE_EXPLORER_API_KEY ?? "";
 
-const COSTON_RPC_URL = process.env.COSTON_RPC_URL ?? "";
-const COSTON2_RPC_URL = process.env.COSTON2_RPC_URL ?? "";
-const SONGBIRD_RPC_URL = process.env.SONGBIRD_RPC_URL ?? "";
-const FLARE_RPC_URL = process.env.FLARE_RPC_URL ?? "";
 const ETHERSCAN_API_URL = process.env.ETHERSCAN_API_URL ?? "";
-
-const VERIFIER_API_KEY_TESTNET = process.env.VERIFIER_API_KEY_TESTNET ?? "";
 
 const USE_FLARESCAN = process.env.USE_FLARESCAN ?? false;
 

@@ -52,12 +52,8 @@
           "name": "activity_logs_team_id_teams_id_fk",
           "tableFrom": "activity_logs",
           "tableTo": "teams",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -65,12 +61,8 @@
           "name": "activity_logs_user_id_users_id_fk",
           "tableFrom": "activity_logs",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -136,12 +128,8 @@
           "name": "invitations_team_id_teams_id_fk",
           "tableFrom": "invitations",
           "tableTo": "teams",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -149,12 +137,8 @@
           "name": "invitations_invited_by_users_id_fk",
           "tableFrom": "invitations",
           "tableTo": "users",
-          "columnsFrom": [
-            "invited_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["invited_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -207,12 +191,8 @@
           "name": "team_members_user_id_users_id_fk",
           "tableFrom": "team_members",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -220,12 +200,8 @@
           "name": "team_members_team_id_teams_id_fk",
           "tableFrom": "team_members",
           "tableTo": "teams",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -315,12 +291,8 @@
           "name": "teams_creator_user_id_users_id_fk",
           "tableFrom": "teams",
           "tableTo": "users",
-          "columnsFrom": [
-            "creator_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["creator_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -330,16 +302,12 @@
         "teams_stripe_customer_id_unique": {
           "name": "teams_stripe_customer_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "stripe_customer_id"
-          ]
+          "columns": ["stripe_customer_id"]
         },
         "teams_stripe_subscription_id_unique": {
           "name": "teams_stripe_subscription_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "stripe_subscription_id"
-          ]
+          "columns": ["stripe_subscription_id"]
         }
       },
       "policies": {},
@@ -415,16 +383,12 @@
         "users_email_unique": {
           "name": "users_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         },
         "users_wallet_address_unique": {
           "name": "users_wallet_address_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "wallet_address"
-          ]
+          "columns": ["wallet_address"]
         }
       },
       "policies": {},
@@ -532,12 +496,8 @@
           "name": "candidate_credentials_candidate_id_candidates_id_fk",
           "tableFrom": "candidate_credentials",
           "tableTo": "candidates",
-          "columnsFrom": [
-            "candidate_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["candidate_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -545,12 +505,8 @@
           "name": "candidate_credentials_issuer_id_issuers_id_fk",
           "tableFrom": "candidate_credentials",
           "tableTo": "issuers",
-          "columnsFrom": [
-            "issuer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["issuer_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -647,12 +603,8 @@
           "name": "candidate_highlights_candidate_id_candidates_id_fk",
           "tableFrom": "candidate_highlights",
           "tableTo": "candidates",
-          "columnsFrom": [
-            "candidate_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["candidate_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -660,12 +612,8 @@
           "name": "candidate_highlights_credential_id_candidate_credentials_id_fk",
           "tableFrom": "candidate_highlights",
           "tableTo": "candidate_credentials",
-          "columnsFrom": [
-            "credential_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["credential_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1012,12 +960,8 @@
           "name": "pipeline_candidates_pipeline_id_recruiter_pipelines_id_fk",
           "tableFrom": "pipeline_candidates",
           "tableTo": "recruiter_pipelines",
-          "columnsFrom": [
-            "pipeline_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["pipeline_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1025,12 +969,8 @@
           "name": "pipeline_candidates_candidate_id_candidates_id_fk",
           "tableFrom": "pipeline_candidates",
           "tableTo": "candidates",
-          "columnsFrom": [
-            "candidate_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["candidate_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1090,12 +1030,8 @@
           "name": "recruiter_pipelines_recruiter_id_users_id_fk",
           "tableFrom": "recruiter_pipelines",
           "tableTo": "users",
-          "columnsFrom": [
-            "recruiter_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["recruiter_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1111,25 +1047,12 @@
     "public.credential_category": {
       "name": "credential_category",
       "schema": "public",
-      "values": [
-        "EDUCATION",
-        "EXPERIENCE",
-        "PROJECT",
-        "AWARD",
-        "CERTIFICATION",
-        "OTHER"
-      ]
+      "values": ["EDUCATION", "EXPERIENCE", "PROJECT", "AWARD", "CERTIFICATION", "OTHER"]
     },
     "public.issuer_category": {
       "name": "issuer_category",
       "schema": "public",
-      "values": [
-        "UNIVERSITY",
-        "EMPLOYER",
-        "TRAINING_PROVIDER",
-        "GOVERNMENT",
-        "OTHER"
-      ]
+      "values": ["UNIVERSITY", "EMPLOYER", "TRAINING_PROVIDER", "GOVERNMENT", "OTHER"]
     },
     "public.issuer_industry": {
       "name": "issuer_industry",
@@ -1151,11 +1074,7 @@
     "public.issuer_status": {
       "name": "issuer_status",
       "schema": "public",
-      "values": [
-        "PENDING",
-        "ACTIVE",
-        "REJECTED"
-      ]
+      "values": ["PENDING", "ACTIVE", "REJECTED"]
     }
   },
   "schemas": {},

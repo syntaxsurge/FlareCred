@@ -32,8 +32,6 @@ const CATEGORIES = [
   'OTHER',
 ] as const
 
-const SUB_TYPES = ['github_repo'] as const
-
 const GITHUB_REPO_REGEX = /^https?:\/\/github\.com\/([\w.-]+)\/([\w.-]+)(?:\/?|\.git)$/i
 
 /* -------------------------------------------------------------------------- */

@@ -62,7 +62,7 @@ const walletOnboardSchema = z.object({
     .transform((addr) => getAddress(addr)), // checksum
 })
 
-export const walletOnboardAction = validatedAction(walletOnboardSchema, async (data, formData) => {
+export const walletOnboardAction = validatedAction(walletOnboardSchema, async (data, _) => {
   const { name, role } = data
   const email = normalizeEmail(data.email)
   const walletAddress = data.walletAddress

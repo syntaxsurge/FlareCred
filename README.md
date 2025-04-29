@@ -10,59 +10,63 @@ Recruiters explore full-text talent search, skill sliders and Kanban pipelines f
 
 A quick-scan map of **where code lives** and **how a request moves** through the stack.
 
-| Layer | Responsibility | Key Paths |
-|-------|---------------|-----------|
-| **Presentation** | React Server-/Client-Components driven by the Next .js 14 **App Router** | `app/` |
-| **UI Atoms** | shadcn/ui primitives & feature-specific boards/tables/dialogs | `components/` |
-| **Domain Logic** | Auth, Drizzle queries, typed on-chain helpers, React hooks | `lib/` |
-| **Smart Contracts** | Solidity libraries & Hardhat scripts | `blockchain/` |
+| Layer               | Responsibility                                                           | Key Paths     |
+| ------------------- | ------------------------------------------------------------------------ | ------------- |
+| **Presentation**    | React Server-/Client-Components driven by the Next .js 14 **App Router** | `app/`        |
+| **UI Atoms**        | shadcn/ui primitives & feature-specific boards/tables/dialogs            | `components/` |
+| **Domain Logic**    | Auth, Drizzle queries, typed on-chain helpers, React hooks               | `lib/`        |
+| **Smart Contracts** | Solidity libraries & Hardhat scripts                                     | `blockchain/` |
 
 <details>
 <summary>📡 Request lifecycle (click)</summary>
 
-1. **File-system routing** → App Router  
-2. **Server Action** (Zod-validated)  
-3. **Drizzle query** and/or **ethers.js** on-chain call  
+1. **File-system routing** → App Router
+2. **Server Action** (Zod-validated)
+3. **Drizzle query** and/or **ethers.js** on-chain call
 4. Render via **shadcn/ui** component (role-guarded, tailwind-styled)
 
 </details>
 
 ### Authentication & Role Guards
-* Static marketing shell (`components/landing/*`) served to all visitors.
-* **Wallet Onboard Modal** posts the wallet address to `/api/auth/wallet-onboard` → issues JWT.
-* Edge **middleware.ts** inspects the JWT on every navigation to enforce route-level guards.
+
+- Static marketing shell (`components/landing/*`) served to all visitors.
+- **Wallet Onboard Modal** posts the wallet address to `/api/auth/wallet-onboard` → issues JWT.
+- Edge **middleware.ts** inspects the JWT on every navigation to enforce route-level guards.
 
 ### Dashboard Segments
-* Users land on a role-scoped root: `/candidate`, `/issuer`, `/recruiter`, `/admin`.
-* Each namespace imports **only** its own hooks/components – coupling is obvious.
-* Sidebar navigation is driven by a React `RoleContext` and double‑checked server‑side with early `redirect()`.
+
+- Users land on a role-scoped root: `/candidate`, `/issuer`, `/recruiter`, `/admin`.
+- Each namespace imports **only** its own hooks/components – coupling is obvious.
+- Sidebar navigation is driven by a React `RoleContext` and double‑checked server‑side with early `redirect()`.
 
 ### Key Flows
-* **Deterministic DID** — `CreateDidButton` → `DIDRegistry.createDID()` (Coston 2) → store `did:flare:…` in Postgres and reference it as `credentialSubject.id`.
-* **Billing** — `useFlareUsdPrice` polls `FtsoHelper.flrUsdPriceWei()` every 60 s; buttons disable if data is > 1 h old. Calling `paySubscription(team, planKey)` on `SubscriptionManager` adds **30 days** to `paidUntil`.
-* **Helper Libraries** — `FtsoHelper` (oracle), `RngHelper` (randomness), `FlareCredVerifier` (FDC). All exposed once via `lib/flare.ts`.
+
+- **Deterministic DID** — `CreateDidButton` → `DIDRegistry.createDID()` (Coston 2) → store `did:flare:…` in Postgres and reference it as `credentialSubject.id`.
+- **Billing** — `useFlareUsdPrice` polls `FtsoHelper.flrUsdPriceWei()` every 60 s; buttons disable if data is > 1 h old. Calling `paySubscription(team, planKey)` on `SubscriptionManager` adds **30 days** to `paidUntil`.
+- **Helper Libraries** — `FtsoHelper` (oracle), `RngHelper` (randomness), `FlareCredVerifier` (FDC). All exposed once via `lib/flare.ts`.
 
 ### Type‑Safety Pipeline
+
 Drizzle‑generated types mean a DB migration (e.g. adding `proofType`) **fails compilation** wherever the old shape is referenced—preventing silent runtime drift.
 
 ### Design System
-Visual coherence comes from central shadcn/ui variants (`components/ui/**`). Dark‑mode is toggled by `components/theme-provider.tsx`, keeping Tailwind’s `dark:` utilities in sync with `localStorage.theme` *and* the OS preference.
 
+Visual coherence comes from central shadcn/ui variants (`components/ui/**`). Dark‑mode is toggled by `components/theme-provider.tsx`, keeping Tailwind’s `dark:` utilities in sync with `localStorage.theme` _and_ the OS preference.
 
 ## 2. Smart Contracts & On-Chain Integrations
 
 ### ✨ One-screen overview
 
-| Layer | Solidity artefact | Purpose | Key security notes |
-| --- | --- | --- | --- |
-| **Identity** | `DIDRegistry.sol` | Mint deterministic `did:flare:0x…` per wallet & update doc pointer | No funds, non-payable ⇒ re-entrancy-proof |
-| **Credentials** | `CredentialNFT.sol` | Hash + anchor every Verifiable Credential in an ERC-721 | Role-gated `mintCredential`, immutable admin |
-| **Billing** | `SubscriptionManager.sol` | 30-day SaaS plans paid in FLR | Single payable fn, no outward calls |
-| **Proofs** | `FlareCredVerifier.sol` | Stateless proxy to FDC verifier | View-only, hot-swappable via env var |
-| **Oracle helper** | `lib/FtsoHelper.sol` | Read FLR/USD feed (wei precision) | Pure _view_ lib |
-| **RNG helper** | `lib/RngHelper.sol` | Provable random `uint256` for quizzes | Pure _view_ lib |
+| Layer             | Solidity artefact         | Purpose                                                            | Key security notes                           |
+| ----------------- | ------------------------- | ------------------------------------------------------------------ | -------------------------------------------- |
+| **Identity**      | `DIDRegistry.sol`         | Mint deterministic `did:flare:0x…` per wallet & update doc pointer | No funds, non-payable ⇒ re-entrancy-proof    |
+| **Credentials**   | `CredentialNFT.sol`       | Hash + anchor every Verifiable Credential in an ERC-721            | Role-gated `mintCredential`, immutable admin |
+| **Billing**       | `SubscriptionManager.sol` | 30-day SaaS plans paid in FLR                                      | Single payable fn, no outward calls          |
+| **Proofs**        | `FlareCredVerifier.sol`   | Stateless proxy to FDC verifier                                    | View-only, hot-swappable via env var         |
+| **Oracle helper** | `lib/FtsoHelper.sol`      | Read FLR/USD feed (wei precision)                                  | Pure _view_ lib                              |
+| **RNG helper**    | `lib/RngHelper.sol`       | Provable random `uint256` for quizzes                              | Pure _view_ lib                              |
 
-- - -
+---
 
 ### 🔗 Core flow (identity → attestation → payment)
 
@@ -70,33 +74,33 @@ Visual coherence comes from central shadcn/ui variants (`components/ui/**`). Dar
     `wagmi.writeContract → DIDRegistry.createDID(docHash)`  
     ⇒ emits `DIDCreated`
 2.  **Issue credential**
-    
+
     issuer/credentials/actions.ts
-    ├ verifyFdcProof(proofType, proofData)   // on-chain
+    ├ verifyFdcProof(proofType, proofData) // on-chain
     ├ vcHash = keccak256(vcJson)
     └ credentialNftSigner.mintCredential(to, vcHash, '')
-    
+
 3.  **Pay subscription**  
     `SubscriptionManager.paySubscription(team, planKey, { value: priceWei })`  
     _priceWei_ comes from `FtsoHelper.flrUsdPriceWei()`; UI blocks if oracle data > 1 h old.
 
 🎛 ABI access in `lib/flare.ts`
 
-*   Centralised address assertions (`assertAddress`)
-*   Shared read-only `ethers.Contract` instances for server & client
-*   Helper wrappers: `createFlareDID()` ・ `issueFlareCredential()` ・ `readFlrUsdPriceWei()` ・ `randomMod()`
+- Centralised address assertions (`assertAddress`)
+- Shared read-only `ethers.Contract` instances for server & client
+- Helper wrappers: `createFlareDID()` ・ `issueFlareCredential()` ・ `readFlrUsdPriceWei()` ・ `randomMod()`
 
-- - -
+---
 
 ### 🛡 Security at a glance
 
-*   **Checks-Effects-Interactions** everywhere
-*   No `delegatecall`; upgrades = redeploy + env-var swap
-*   Global overflow checks (Solidity 0.8.25)
-*   `.solhint.json` bans inline assembly & wildcard re-entrancy
-*   Only one `payable` function—and it never sends FLR out
+- **Checks-Effects-Interactions** everywhere
+- No `delegatecall`; upgrades = redeploy + env-var swap
+- Global overflow checks (Solidity 0.8.25)
+- `.solhint.json` bans inline assembly & wildcard re-entrancy
+- Only one `payable` function—and it never sends FLR out
 
-- - -
+---
 
 ### 🚀 One-command deployment
 
@@ -109,17 +113,16 @@ pnpm hardhat run blockchain/scripts/deployFlareCredVerifier.ts
 
 Scripts auto-verify on Routescan and seed roles from `.env`.
 
-
 ## 3. Application Flows by Role & UI Pages
 
 FlareCred revolves around four personas—Candidate, Recruiter, Hiring Manager and Administrator. The table below shows _where_ each persona begins and the primary UI surfaces they touch. Expand a row for a step-by-step walk-through with file references.
 
-| Persona | Entry Point (Route) | Core UI Files | Key Actions |
-| --- | --- | --- | --- |
-| **Candidate** | `/` | `cta-section.tsx`  <br>`candidate/onboarding.tsx` | Connect Wallet, Verify Credentials |
-| **Recruiter** | `/recruiter` | `recruiter/dashboard.tsx`  <br>`recruiter/job-post.tsx` | Post Job, Review Applicants |
-| **Hiring Manager** | `/manager` | `manager/pipeline.tsx`  <br>`manager/interview.tsx` | Interview, Issue Offers |
-| **Administrator** | `/admin` | `admin/overview.tsx`  <br>`admin/settings.tsx` | Manage Tenants, System Health |
+| Persona            | Entry Point (Route) | Core UI Files                                          | Key Actions                        |
+| ------------------ | ------------------- | ------------------------------------------------------ | ---------------------------------- |
+| **Candidate**      | `/`                 | `cta-section.tsx` <br>`candidate/onboarding.tsx`       | Connect Wallet, Verify Credentials |
+| **Recruiter**      | `/recruiter`        | `recruiter/dashboard.tsx` <br>`recruiter/job-post.tsx` | Post Job, Review Applicants        |
+| **Hiring Manager** | `/manager`          | `manager/pipeline.tsx` <br>`manager/interview.tsx`     | Interview, Issue Offers            |
+| **Administrator**  | `/admin`            | `admin/overview.tsx` <br>`admin/settings.tsx`          | Manage Tenants, System Health      |
 
 **3.1 Candidate Flow**
 
@@ -148,32 +151,30 @@ FlareCred revolves around four personas—Candidate, Recruiter, Hiring Manager 
 2.  **Tenant Management** — `tenants.tsx` lets admins add or suspend organization DIDs.
 3.  **Configuration** — `settings.tsx` toggles feature flags persisted in FeatureFlag Service.
 
-
 ## 4. Data Layer, Proof Pipelines & Backend Services
 
 FlareCred’s backend is _verifiability-first_: every critical byte is either fetched directly from a Flare contract or deterministically reproduced from an on-chain event. PostgreSQL is purely a cache for queries and derived metrics. The diagram below shows how a dashboard click turns into a DB row & an ERC-721 hash:
 
-| Step | Artefact | Purpose |
-| --- | --- | --- |
-| 1 Schema | `lib/db/schema/*` | Drizzle DSL → typed rows, auto-migrations |
-| 2 Server Action | `validatedActionWithUser()` | Zod + JWT guard → Drizzle insert/update |
-| 3 On-chain Call | `lib/flare.*()` | Read/write via ethers → Solidity helper libs |
-| 4 Worker / Hook | `workers/* \| useFlareUsdPrice` | External data or oracle polling |
-| 5 UI | `components/dashboard/**` | Tables & toasts render the final state |
+| Step            | Artefact                        | Purpose                                      |
+| --------------- | ------------------------------- | -------------------------------------------- |
+| 1 Schema        | `lib/db/schema/*`               | Drizzle DSL → typed rows, auto-migrations    |
+| 2 Server Action | `validatedActionWithUser()`     | Zod + JWT guard → Drizzle insert/update      |
+| 3 On-chain Call | `lib/flare.*()`                 | Read/write via ethers → Solidity helper libs |
+| 4 Worker / Hook | `workers/* \| useFlareUsdPrice` | External data or oracle polling              |
+| 5 UI            | `components/dashboard/**`       | Tables & toasts render the final state       |
 
 **4.1 Relational Schema & Migrations**
 
-*   Columns (`proofType`, `proofData`, `seed`) are **NOT NULL** to eliminate “pending nulls”.
-*   `lib/db/setup.ts` runs outstanding SQL inside a transaction and snapshots the schema for deterministic CI.
+- Columns (`proofType`, `proofData`, `seed`) are **NOT NULL** to eliminate “pending nulls”.
+- `lib/db/setup.ts` runs outstanding SQL inside a transaction and snapshots the schema for deterministic CI.
 
 **4.2 Server Action → Query Pattern**
 
 client form
-  └─✅ zod.validate()
-      └─✅ getUser() → role/JWT
-          └─✅ Drizzle query
-              └─📬 toast | redirect
-    
+└─✅ zod.validate()
+└─✅ getUser() → role/JWT
+└─✅ Drizzle query
+└─📬 toast | redirect
 
 Explicit `select({…})` lists keep TypeScript in lock-step with the schema so drift won’t compile.
 
@@ -188,14 +189,14 @@ Verification happens _before_ minting: a credential cannot be VERIFIED unless it
 
 **4.4 GitHub Metrics Worker (Bonus Track)**
 
-*   `workers/githubMetrics.ts` → Octokit → JSON-API proof → IPFS CID.
-*   Endpoint: `/api/tools/github-metrics?repo=<owner/repo>`
-*   Issuer approves via `verifyJson()`; credential gets “Open-Source Contribution” badge.
+- `workers/githubMetrics.ts` → Octokit → JSON-API proof → IPFS CID.
+- Endpoint: `/api/tools/github-metrics?repo=<owner/repo>`
+- Issuer approves via `verifyJson()`; credential gets “Open-Source Contribution” badge.
 
 **4.5 Random Number Seed Service (RNG)**
 
-*   `/api/rng-seed?max=n` → `RngHelper.randomMod()`
-*   Seed stored in `quizAttempts.seed`; auditors can replay shuffle.
+- `/api/rng-seed?max=n` → `RngHelper.randomMod()`
+- Seed stored in `quizAttempts.seed`; auditors can replay shuffle.
 
 **4.6 Live Price Feed Hook (FTSO)**
 
@@ -204,14 +205,14 @@ Buttons disable & toast if data > 1 h old.
 
 **4.7 Security Middleware & Route Fences**
 
-*   Edge `middleware.ts` blocks unauthorised roles at URL level.
-*   Server actions double-check ownership via Drizzle joins.
+- Edge `middleware.ts` blocks unauthorised roles at URL level.
+- Server actions double-check ownership via Drizzle joins.
 
 **4.8 Utility Libraries & Extension Points**
 
-*   Pure helpers in `lib/utils/**` (checksum, time, avatars).
-*   Email stubs document how to plug Postmark/SendGrid without touching contracts.
-*   
+- Pure helpers in `lib/utils/**` (checksum, time, avatars).
+- Email stubs document how to plug Postmark/SendGrid without touching contracts.
+-
 
 ## 5. Deployment & Operational Playbook
 
@@ -250,10 +251,10 @@ pnpm hardhat compile --watch
 
 Deployment order is codified in dedicated scripts that print follow-up commands on success:
 
-*   `pnpm hardhat run blockchain/scripts/deployDIDRegistry.ts --network coston2`
-*   `pnpm hardhat run blockchain/scripts/deployCredentialNFT.ts --network coston2`
-*   `pnpm hardhat run blockchain/scripts/deploySubscriptionManager.ts --network coston2`
-*   `pnpm hardhat run blockchain/scripts/deployFlareCredVerifier.ts --network coston2`
+- `pnpm hardhat run blockchain/scripts/deployDIDRegistry.ts --network coston2`
+- `pnpm hardhat run blockchain/scripts/deployCredentialNFT.ts --network coston2`
+- `pnpm hardhat run blockchain/scripts/deploySubscriptionManager.ts --network coston2`
+- `pnpm hardhat run blockchain/scripts/deployFlareCredVerifier.ts --network coston2`
 
 If `FLARESCAN_API_KEY` / `ETHERSCAN_API_KEY` are present, each script also verifies the byte-code on Routescan, saving manual clicks. Post-deploy addresses must be copied into `.env` (`NEXT_PUBLIC_*` prefixes) so `lib/flare.ts` can assert them during application boot.
 
