@@ -1,11 +1,18 @@
 import type { ReactNode, ElementType } from 'react'
-
 import type { LucideIcon } from 'lucide-react'
-
 import type { Stage } from '@/lib/constants/recruiter'
-import type { CredentialStatus } from '@/lib/db/schema/candidate'
-
 import type { MemberRow } from './table-rows'
+import type { CredentialStatus } from '@/lib/db/schema/candidate'
+import type {
+  StatusCounts,
+  CredentialsSection,
+  PipelineSection,
+  QuizAttempt,
+  Experience,
+  Project,
+  Socials,
+  SnapshotMetrics,
+} from './candidate'
 
 /** Button-style quick action used in dashboards. */
 export interface QuickAction {
@@ -330,4 +337,57 @@ export interface AppModalProps {
   children?: ReactNode
   /** If true, modal cannot be closed (no outside-click close & no X). */
   required?: boolean
+}
+
+/**
+ * Generic prop contract for the <DataTable/> component (client-side TanStack table).
+ */
+export interface DataTableProps<T extends Record<string, any> = any> {
+  /** Column definitions */
+  columns: Column<T>[]
+  /** Row dataset */
+  rows: T[]
+  /** Optional column key used for inline text-filter input */
+  filterKey?: keyof T
+  /** Controlled filter value (server-side search) */
+  filterValue?: string
+  /** Callback for controlled filter changes */
+  onFilterChange?: (value: string) => void
+  /** Optional bulk-selection actions */
+  bulkActions?: BulkAction<T>[]
+  /** Initial page size (default 10) */
+  pageSize?: number
+  /** Page-size selector options (default [10, 20, 50]) */
+  pageSizeOptions?: number[]
+  /** Hide pagination/footer row entirely */
+  hidePagination?: boolean
+}
+
+/**
+ * Props for the <TableRowActions/> dropdown component.
+ */
+export interface TableRowActionsProps<Row> {
+  row: Row
+  actions: TableRowAction<Row>[]
+}
+
+/**
+ * Props for the CandidateDetailedProfileView component.
+ */
+export interface CandidateDetailedProfileViewProps {
+  candidateId: number
+  name: string | null
+  email: string
+  avatarSrc?: string | null
+  bio: string | null
+  pipelineSummary?: string
+  statusCounts: StatusCounts
+  passes: QuizAttempt[]
+  snapshot?: SnapshotMetrics
+  credentials: CredentialsSection
+  experiences: Experience[]
+  projects: Project[]
+  socials: Socials
+  pipeline?: PipelineSection
+  showShare?: boolean
 }

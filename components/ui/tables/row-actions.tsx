@@ -1,7 +1,6 @@
 'use client'
 
 import * as React from 'react'
-
 import { Loader2, MoreHorizontal } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -13,8 +12,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import type { TableRowAction } from '@/lib/types/components'
 import { cn } from '@/lib/utils'
+import type {
+  TableRowAction,
+  TableRowActionsProps,
+} from '@/lib/types/components'
 
 /* Re-export for backwards compatibility */
 export type { TableRowAction } from '@/lib/types/components'
@@ -23,12 +25,7 @@ export type { TableRowAction } from '@/lib/types/components'
 /*                                 Component                                  */
 /* -------------------------------------------------------------------------- */
 
-interface Props<Row> {
-  row: Row
-  actions: TableRowAction<Row>[]
-}
-
-export function TableRowActions<Row>({ row, actions }: Props<Row>) {
+export function TableRowActions<Row>({ row, actions }: TableRowActionsProps<Row>) {
   const [isPending, startTransition] = React.useTransition()
 
   /* -------------------------- Render helpers ----------------------------- */

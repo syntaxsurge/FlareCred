@@ -37,8 +37,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/tables/table'
-import type { Column, BulkAction } from '@/lib/types/components'
 import { cn } from '@/lib/utils'
+import type {
+  Column,
+  BulkAction,
+  DataTableProps,
+} from '@/lib/types/components'
 
 /* Re-export for backwards compatibility */
 export type { Column, BulkAction } from '@/lib/types/components'
@@ -94,31 +98,6 @@ function getPageNumbers(current: number, total: number): number[] {
 /* -------------------------------------------------------------------------- */
 /*                                   T A B L E                                */
 /* -------------------------------------------------------------------------- */
-
-interface DataTableProps<T extends Record<string, any>> {
-  columns: Column<T>[]
-  rows: T[]
-  /** Column key to use for the filter search input (optional). */
-  filterKey?: keyof T
-  /**
-   * Controlled filter value (use when performing server-side search).
-   * When omitted, filtering is handled entirely client-side.
-   */
-  filterValue?: string
-  /**
-   * Callback for controlled filter changes (server-side search).
-   * Called on every keystroke; debounce in the caller if needed.
-   */
-  onFilterChange?: (value: string) => void
-  /** Bulk-selection actions (optional). */
-  bulkActions?: BulkAction<T>[]
-  /** Initial page size - defaults to 10. */
-  pageSize?: number
-  /** Page-size options shown in selector - defaults to [10, 20, 50]. */
-  pageSizeOptions?: number[]
-  /** Hide the intrinsic pagination/footer row (useful when the parent supplies its own). */
-  hidePagination?: boolean
-}
 
 export function DataTable<T extends Record<string, any>>({
   columns,

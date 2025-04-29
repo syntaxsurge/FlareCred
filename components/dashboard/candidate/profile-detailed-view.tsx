@@ -15,6 +15,7 @@ import {
   ExternalLink,
   Globe2,
 } from 'lucide-react'
+import { toast } from 'sonner'
 import { FaTwitter } from 'react-icons/fa'
 import { SiGithub, SiLinkedin } from 'react-icons/si'
 
@@ -27,20 +28,12 @@ import StatusBadge from '@/components/ui/status-badge'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import type {
-  StatusCounts,
-  CredentialsSection,
-  PipelineSection,
-  QuizAttempt,
-  Experience,
-  Project,
-  Socials,
-  SnapshotMetrics,
-} from '@/lib/types'
-import { copyToClipboard, shortenSeed } from '@/lib/utils'
-import { prettyDate } from '@/lib/utils/time'
 
 import ProfileHeader from './profile-header'
+import { copyToClipboard, shortenSeed } from '@/lib/utils'
+import { prettyDate } from '@/lib/utils/time'
+import type { CandidateDetailedProfileViewProps as Props } from '@/lib/types/components'
+import type { SnapshotMetrics } from '@/lib/types/candidate'
 
 /* -------------------------------------------------------------------------- */
 /*                         D E F A U L T   V A L U E S                        */
@@ -112,24 +105,6 @@ function HighlightList<T>({
 /*                              M A I N   V I E W                             */
 /* -------------------------------------------------------------------------- */
 
-interface Props {
-  candidateId: number
-  name: string | null
-  email: string
-  avatarSrc?: string | null
-  bio: string | null
-  pipelineSummary?: string
-  statusCounts: StatusCounts
-  passes: QuizAttempt[]
-  snapshot?: SnapshotMetrics
-  credentials: CredentialsSection
-  experiences: Experience[]
-  projects: Project[]
-  socials: Socials
-  pipeline?: PipelineSection
-  showShare?: boolean
-}
-
 export default function CandidateDetailedProfileView({
   candidateId,
   name,
@@ -148,7 +123,10 @@ export default function CandidateDetailedProfileView({
   showShare = true,
 }: Props) {
   const totalCredentials =
-    statusCounts.verified + statusCounts.pending + statusCounts.rejected + statusCounts.unverified
+    statusCounts.verified +
+    statusCounts.pending +
+    statusCounts.rejected +
+    statusCounts.unverified
   const profilePath = `/candidates/${candidateId}`
 
   const socialIcons = [
@@ -431,7 +409,7 @@ export default function CandidateDetailedProfileView({
                           <div className='flex items-center gap-1'>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <span className='cursor-help font-mono text-xs'>
+                                <span className='font-mono text-xs cursor-help'>
                                   {shortenSeed(p.seed)}
                                 </span>
                               </TooltipTrigger>
