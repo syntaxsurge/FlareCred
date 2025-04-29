@@ -1,27 +1,41 @@
 import { Bot } from 'lucide-react'
+import { inArray } from 'drizzle-orm'
 
 import RequireDidGate from '@/components/dashboard/require-did-gate'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import PageCard from '@/components/ui/page-card'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
-import { skillQuizzes } from '@/lib/db/schema/candidate'
+import {
+  skillQuizzes,
+  skillQuizQuestions,
+} from '@/lib/db/schema/candidate'
 
 import StartQuizForm from './start-quiz-form'
 
 export const revalidate = 0
 
-/**
- * Candidate – AI Skill Check
- * Now guarded by RequireDidGate so only teams with a DID can access.
- */
 export default async function SkillCheckPage() {
-  /* Authentication */
+  /* Auth */
   const user = await getUser()
   if (!user) return <div>Please sign in</div>
 
-  /* Queries */
+  /* Quizzes + questions */
   const quizzes = await db.select().from(skillQuizzes)
+  const ids = quizzes.map((q) => q.id)
+  const questionsRows =
+    ids.length === 0
+      ? []
+      : await db
+          .select()
+          .from(skillQuizQuestions)
+          .where(inArray(skillQuizQuestions.quizId, ids))
+
+  const questionsByQuiz = new Map<number, { id: number; prompt: string }[]>()
+  for (const q of questionsRows) {
+    if (!questionsByQuiz.has(q.quizId)) questionsByQuiz.set(q.quizId, [])
+    questionsByQuiz.get(q.quizId)!.push({ id: q.id, prompt: q.prompt })
+  }
 
   /* View */
   return (
@@ -47,7 +61,14 @@ export default async function SkillCheckPage() {
                   <p className='text-muted-foreground line-clamp-3 flex-1 text-sm'>
                     {quiz.description}
                   </p>
-                  <StartQuizForm quiz={quiz} />
+                  <StartQuizForm
+                    quiz={{
+                      id: quiz.id,
+                      title: quiz.title,
+                      description: quiz.description,
+                      questions: questionsByQuiz.get(quiz.id) ?? [],
+                    }}
+                  />
                 </CardContent>
               </Card>
             ))}

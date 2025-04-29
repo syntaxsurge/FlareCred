@@ -1,8 +1,12 @@
 import { db } from '../drizzle'
-import { skillQuizzes } from '../schema/candidate'
+import { skillQuizzes, skillQuizQuestions } from '../schema/candidate'
 
 export async function seedQuizzes() {
-  console.log('Seeding sample skill quizzes...')
+  console.log('Seeding sample skill quizzes…')
+
+  /* ------------------------------------------------------------------ */
+  /*                Insert quiz headers when they are new               */
+  /* ------------------------------------------------------------------ */
 
   const existingQuizzes = await db.select().from(skillQuizzes)
   const existingTitles = new Set(existingQuizzes.map((q) => q.title))
@@ -37,88 +41,40 @@ export async function seedQuizzes() {
       description:
         'Test knowledge of relational databases, SQL queries (SELECT, JOIN), and data modeling.',
     },
-    {
-      title: 'Data Structures & Algorithms',
-      description:
-        'Focus on complexity analysis, arrays, linked lists, trees, graphs, sorting, and searching algorithms.',
-    },
-    {
-      title: 'Python Fundamentals',
-      description:
-        'Covers Python syntax, built-in data structures, and basic object-oriented programming.',
-    },
-    {
-      title: 'Django Framework',
-      description:
-        "Evaluate knowledge of Django's MVT architecture, ORM usage, and template rendering.",
-    },
-    {
-      title: 'RESTful API Design',
-      description:
-        'Covers designing RESTful endpoints, versioning, error handling, and best practices.',
-    },
-    {
-      title: 'Machine Learning Basics',
-      description:
-        'Assess fundamental ML concepts, including supervised vs. unsupervised learning, regression, classification.',
-    },
-    {
-      title: 'DevOps Fundamentals',
-      description:
-        'Evaluate knowledge of CI/CD pipelines, Docker, Kubernetes, and infrastructure as code basics.',
-    },
-    {
-      title: 'AWS Cloud Practitioner',
-      description:
-        'Covers AWS core services, billing, cloud architecture, and security best practices.',
-    },
-    {
-      title: 'Vue.js Essentials',
-      description:
-        'Check understanding of Vue.js single-file components, lifecycle hooks, and reactivity system.',
-    },
-    {
-      title: 'Angular Basics',
-      description:
-        'Covers data binding, directives, dependency injection, and the component-based structure in Angular.',
-    },
-    {
-      title: 'C# & .NET Fundamentals',
-      description:
-        'Evaluate basic C# syntax, .NET runtime concepts, and building console or web apps with .NET.',
-    },
-    {
-      title: 'Ruby on Rails',
-      description:
-        'Test MVC understanding, Active Record queries, routing, and convention over configuration approach.',
-    },
-    {
-      title: 'Golang Basics',
-      description:
-        'Covers Go syntax, concurrency with goroutines, channels, and basic error handling.',
-    },
-    {
-      title: 'React Native',
-      description:
-        'Focus on using React Native for mobile development, including styling, navigation, and native modules.',
-    },
-    {
-      title: 'Scrum & Agile Methodologies',
-      description:
-        'Non-coding quiz for agile principles, scrum ceremonies, roles, and backlog management.',
-    },
   ]
 
   const newQuizzes = quizzesToInsert.filter((quiz) => !existingTitles.has(quiz.title))
-
-  if (newQuizzes.length === 0) {
-    console.log('All 20 sample quizzes already seeded. Skipping quiz seeding.')
-    return
+  if (newQuizzes.length) {
+    await db.insert(skillQuizzes).values(newQuizzes)
+    console.log('Inserted new quizzes:', newQuizzes.map((q) => q.title))
   }
 
-  await db.insert(skillQuizzes).values(newQuizzes)
-  console.log(
-    'Sample quizzes seeded:',
-    newQuizzes.map((q) => q.title),
-  )
+  /* ------------------------------------------------------------------ */
+  /*        Ensure every quiz has at least three demonstration          */
+  /*                      questions for shuffling                       */
+  /* ------------------------------------------------------------------ */
+
+  const quizzes = await db.select().from(skillQuizzes)
+
+  for (const quiz of quizzes) {
+    const existingQs = await db
+      .select()
+      .from(skillQuizQuestions)
+      .where((sq) => sq.quizId.eq(quiz.id))
+
+    if (existingQs.length >= 3) continue
+
+    const missing = 3 - existingQs.length
+    const qValues = Array.from({ length: missing }).map((_, idx) => ({
+      quizId: quiz.id,
+      prompt: `${quiz.title} – question ${existingQs.length + idx + 1}`,
+    }))
+
+    await db.insert(skillQuizQuestions).values(qValues)
+    console.log(
+      `Added ${missing} question(s) to "${quiz.title}"`,
+    )
+  }
+
+  console.log('✔ Quiz seeding complete.')
 }

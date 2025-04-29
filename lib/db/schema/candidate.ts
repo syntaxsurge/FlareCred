@@ -97,10 +97,6 @@ export const candidateCredentials = pgTable('candidate_credentials', {
 /*                   N E W   C A N D I D A T E   H I G H L I G H T S          */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Stores up to five experience highlights and five project highlights chosen by a candidate.
- * The UI restricts insertion to the allowed categories and enforces the five-item cap.
- */
 export const candidateHighlights = pgTable(
   'candidate_highlights',
   {
@@ -129,6 +125,20 @@ export const skillQuizzes = pgTable('skill_quizzes', {
   id: serial('id').primaryKey(),
   title: varchar('title', { length: 200 }).notNull(),
   description: text('description'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
+/**
+ * NEW: individual questions attached to a quiz.
+ * Shuffling happens client-side using the RNG seed.
+ */
+export const skillQuizQuestions = pgTable('skill_quiz_questions', {
+  id: serial('id').primaryKey(),
+  quizId: integer('quiz_id')
+    .notNull()
+    .references(() => skillQuizzes.id, { onDelete: 'cascade' }),
+  prompt: text('prompt').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
@@ -195,6 +205,13 @@ export const quizAttemptsRelations = relations(quizAttempts, ({ one }) => ({
   }),
 }))
 
+export const skillQuizQuestionsRelations = relations(skillQuizQuestions, ({ one }) => ({
+  quiz: one(skillQuizzes, {
+    fields: [skillQuizQuestions.quizId],
+    references: [skillQuizzes.id],
+  }),
+}))
+
 /* -------------------------------------------------------------------------- */
 /*                               T Y P E S                                    */
 /* -------------------------------------------------------------------------- */
@@ -210,6 +227,9 @@ export type NewCandidateHighlight = typeof candidateHighlights.$inferInsert
 
 export type SkillQuiz = typeof skillQuizzes.$inferSelect
 export type NewSkillQuiz = typeof skillQuizzes.$inferInsert
+
+export type SkillQuizQuestion = typeof skillQuizQuestions.$inferSelect
+export type NewSkillQuizQuestion = typeof skillQuizQuestions.$inferInsert
 
 export type QuizAttempt = typeof quizAttempts.$inferSelect
 export type NewQuizAttempt = typeof quizAttempts.$inferInsert

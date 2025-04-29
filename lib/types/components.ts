@@ -62,6 +62,8 @@ export interface QuizMeta {
   id: number
   title: string
   description?: string | null
+  /** Per-quiz question set used for shuffling */
+  questions: { id: number; prompt: string }[]
 }
 
 /** Subscription / DID metadata shown in team settings. */

@@ -23,6 +23,31 @@ import { copyToClipboard } from '@/lib/utils'
 
 import { startQuizAction } from './actions'
 
+/* -------------------------------------------------------------------------- */
+/*                     Deterministic seed-based shuffle                       */
+/* -------------------------------------------------------------------------- */
+
+function mulberry32(a: number) {
+  return function () {
+    a |= 0
+    a = (a + 0x6d2b79f5) | 0
+    let t = Math.imul(a ^ (a >>> 15), 1 | a)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+function shuffle<T>(arr: T[], seedHex: string): T[] {
+  const out = [...arr]
+  const seedInt = Number.parseInt(seedHex.slice(2, 10), 16) || 1
+  const rand = mulberry32(seedInt)
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1))
+    ;[out[i], out[j]] = [out[j], out[i]]
+  }
+  return out
+}
+
 export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
   const { isConnected, address, chain } = useAccount()
   const { switchChainAsync } = useSwitchChain()
@@ -32,19 +57,22 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
 
-  /* Quiz result state -------------------------------------------------- */
+  /* Quiz state --------------------------------------------------------- */
   const [seed, setSeed] = useState<string>('')
+  const [question, setQuestion] = useState<{ id: number; prompt: string } | null>(null)
   const [score, setScore] = useState<number | null>(null)
   const [message, setMessage] = useState('')
   const [vcHash, setVcHash] = useState<string>('')
   const [signature, setSignature] = useState<string>('')
 
   /* -------------------------------------------------------------------- */
-  /*                 Fetch RNG seed every time the dialog opens           */
+  /*         Fetch RNG seed + derive deterministic question order         */
   /* -------------------------------------------------------------------- */
   useEffect(() => {
     if (!open) return
+
     setSeed('')
+    setQuestion(null)
     setScore(null)
     setMessage('')
     setVcHash('')
@@ -58,6 +86,9 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
         if (!res.ok) throw new Error(await res.text())
         const { seed: s } = (await res.json()) as { seed: string }
         setSeed(s)
+
+        const shuffled = shuffle(quiz.questions, s)
+        setQuestion(shuffled[0] || null)
       } catch (err: any) {
         toast.error(err?.message ?? 'Failed to obtain RNG seed')
         setOpen(false)
@@ -65,7 +96,7 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
     })()
 
     return () => abort.abort()
-  }, [open])
+  }, [open, quiz.questions])
 
   /* -------------------------------------------------------------------- */
   /*                         Mint credential helper                       */
@@ -116,7 +147,6 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
         if (res.passed && res.vcHash && res.signature) {
           setVcHash(res.vcHash)
           setSignature(res.signature)
-          /* Fire-and-forget mint – user still confirms in wallet. */
           await mintCredential(res.vcHash, res.signature)
         }
       } catch (err: any) {
@@ -149,6 +179,13 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
           <form onSubmit={handleSubmit} className='space-y-4'>
             <input type='hidden' name='quizId' value={quiz.id} />
             <input type='hidden' name='seed' value={seed} />
+            {question && <input type='hidden' name='questionId' value={question.id} />}
+
+            {question ? (
+              <p className='font-medium'>{question.prompt}</p>
+            ) : (
+              <p className='text-muted-foreground'>Loading question…</p>
+            )}
 
             <div>
               <label
@@ -167,7 +204,7 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
               />
             </div>
 
-            <Button type='submit' disabled={isPending || !seed} className='w-max'>
+            <Button type='submit' disabled={isPending || !seed || !question} className='w-max'>
               {isPending ? (
                 <>
                   <Loader2 className='mr-2 h-4 w-4 animate-spin' /> Submitting…
