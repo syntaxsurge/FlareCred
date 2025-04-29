@@ -1,7 +1,7 @@
 import { asc, desc, eq, ilike, or, and } from 'drizzle-orm'
 
 import { db } from '../drizzle'
-import { invitations as invT, teams as teamsT, users as usersT } from '../schema/core'
+import { invitations, teams, users } from '../schema/core'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -38,26 +38,26 @@ export async function getInvitationsPage(
   const orderBy =
     sortBy === 'team'
       ? order === 'asc'
-        ? asc(teamsT.name)
-        : desc(teamsT.name)
+        ? asc(teams.name)
+        : desc(teams.name)
       : sortBy === 'role'
         ? order === 'asc'
-          ? asc(invT.role)
-          : desc(invT.role)
+          ? asc(invitations.role)
+          : desc(invitations.role)
         : sortBy === 'inviter'
           ? order === 'asc'
-            ? asc(usersT.email)
-            : desc(usersT.email)
+            ? asc(users.email)
+            : desc(users.email)
           : sortBy === 'status'
             ? order === 'asc'
-              ? asc(invT.status)
-              : desc(invT.status)
+              ? asc(invitations.status)
+              : desc(invitations.status)
             : order === 'asc'
-              ? asc(invT.invitedAt)
-              : desc(invT.invitedAt)
+              ? asc(invitations.invitedAt)
+              : desc(invitations.invitedAt)
 
   /* ------------------------------ WHERE ---------------------------------- */
-  const baseWhere = eq(invT.email, email)
+  const baseWhere = eq(invitations.email, email)
 
   const whereClause =
     searchTerm.trim().length === 0
@@ -65,26 +65,26 @@ export async function getInvitationsPage(
       : and(
           baseWhere,
           or(
-            ilike(teamsT.name, `%${searchTerm}%`),
-            ilike(invT.role, `%${searchTerm}%`),
-            ilike(usersT.email, `%${searchTerm}%`),
-            ilike(invT.status, `%${searchTerm}%`),
+            ilike(teams.name, `%${searchTerm}%`),
+            ilike(invitations.role, `%${searchTerm}%`),
+            ilike(users.email, `%${searchTerm}%`),
+            ilike(invitations.status, `%${searchTerm}%`),
           ),
         )
 
   /* ------------------------------ QUERY ---------------------------------- */
   const rows = await db
     .select({
-      id: invT.id,
-      team: teamsT.name,
-      role: invT.role,
-      inviter: usersT.email,
-      status: invT.status,
-      invitedAt: invT.invitedAt,
+      id: invitations.id,
+      team: teams.name,
+      role: invitations.role,
+      inviter: users.email,
+      status: invitations.status,
+      invitedAt: invitations.invitedAt,
     })
-    .from(invT)
-    .leftJoin(teamsT, eq(invT.teamId, teamsT.id))
-    .leftJoin(usersT, eq(invT.invitedBy, usersT.id))
+    .from(invitations)
+    .leftJoin(teams, eq(invitations.teamId, teams.id))
+    .leftJoin(users, eq(invitations.invitedBy, users.id))
     .where(whereClause)
     .orderBy(orderBy)
     .limit(pageSize + 1)
