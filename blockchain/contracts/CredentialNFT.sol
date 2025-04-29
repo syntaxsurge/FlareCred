@@ -6,8 +6,9 @@ import {ERC721URIStorage} from "@openzeppelin/contracts/token/ERC721/extensions/
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 
 /// @title FlareCred Credential NFT
-/// @dev Each token represents a verifiable credential anchored on-chain.
-///      `tokenURI` → IPFS/Arweave JSON; `_credentialData[tokenId].vcHash` → keccak-256 of full VC.
+/// @dev 2025-04 update: recipients may now self-mint, meaning the wallet that
+///      benefits from a credential also pays the gas fee; trusted issuers with
+///      ISSUER_ROLE remain authorised.
 contract CredentialNFT is ERC721URIStorage, AccessControl {
     bytes32 public constant ADMIN_ROLE    = keccak256("ADMIN_ROLE");
     bytes32 public constant ISSUER_ROLE   = keccak256("ISSUER_ROLE");
@@ -24,7 +25,6 @@ contract CredentialNFT is ERC721URIStorage, AccessControl {
     event CredentialUpdated(uint256 indexed tokenId, bytes32 vcHash, string uri);
     event CredentialRevoked(uint256 indexed tokenId);
 
-    /// @param admin Address that receives DEFAULT_ADMIN and ADMIN roles.
     constructor(address admin) ERC721("FlareCred Credential", "FCRD") {
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(ADMIN_ROLE, admin);
@@ -33,13 +33,24 @@ contract CredentialNFT is ERC721URIStorage, AccessControl {
         _setRoleAdmin(PLATFORM_ROLE, ADMIN_ROLE);
     }
 
-    // ---------- Core actions ----------
-    /// @notice Mint a new credential NFT. Callable by authorised issuers.
+    // --------------------------------------------------------------------- //
+    //                               M I N T                                 //
+    // --------------------------------------------------------------------- //
+
+    /// @notice Mint a credential.
+    /// @dev     Authorised when the caller has ISSUER_ROLE **or** is the
+    ///          recipient, letting candidates anchor credentials and cover
+    ///          the gas fee themselves.
     function mintCredential(
         address to,
         bytes32 vcHash,
         string calldata uri
-    ) external onlyRole(ISSUER_ROLE) returns (uint256) {
+    ) external returns (uint256) {
+        require(
+            hasRole(ISSUER_ROLE, msg.sender) || msg.sender == to,
+            "Credential: not authorised"
+        );
+
         uint256 tokenId = _nextTokenId++;
         _safeMint(to, tokenId);
         _setTokenURI(tokenId, uri);
@@ -48,7 +59,9 @@ contract CredentialNFT is ERC721URIStorage, AccessControl {
         return tokenId;
     }
 
-    /// @notice Update VC hash / URI (e.g. revocation or metadata migration).
+    // --------------------------------------------------------------------- //
+    //                               U P D A T E                             //
+    // --------------------------------------------------------------------- //
     function updateCredential(
         uint256 tokenId,
         bytes32 newVcHash,
@@ -65,13 +78,15 @@ contract CredentialNFT is ERC721URIStorage, AccessControl {
         emit CredentialUpdated(tokenId, newVcHash, newUri);
     }
 
-    /// @notice Burn (revoke) a credential. Allowed to admin, issuer, or token owner.
+    // --------------------------------------------------------------------- //
+    //                               R E V O K E                             //
+    // --------------------------------------------------------------------- //
     function revokeCredential(uint256 tokenId) external {
         require(_exists(tokenId), "Credential: nonexistent");
         require(
             hasRole(ADMIN_ROLE, msg.sender) ||
-            hasRole(ISSUER_ROLE, msg.sender) ||
-            msg.sender == ownerOf(tokenId),
+                hasRole(ISSUER_ROLE, msg.sender) ||
+                msg.sender == ownerOf(tokenId),
             "Credential: not authorised"
         );
 
@@ -80,19 +95,24 @@ contract CredentialNFT is ERC721URIStorage, AccessControl {
         emit CredentialRevoked(tokenId);
     }
 
-    // ---------- Views ----------
+    // --------------------------------------------------------------------- //
+    //                                V I E W                                //
+    // --------------------------------------------------------------------- //
     function getVcHash(uint256 tokenId) external view returns (bytes32) {
         require(_exists(tokenId), "Credential: nonexistent");
         return _credentialData[tokenId].vcHash;
     }
 
-    // ---------- Internal ----------
-    /// @dev OZ v5 still provides `_exists`; we expose a local helper for clarity.
+    // --------------------------------------------------------------------- //
+    //                          I N T E R N A L                               //
+    // --------------------------------------------------------------------- //
     function _exists(uint256 tokenId) internal view returns (bool) {
         return _ownerOf(tokenId) != address(0);
     }
 
-    // ---------- ERC-165 ----------
+    // --------------------------------------------------------------------- //
+    //                              ERC-165                                   //
+    // --------------------------------------------------------------------- //
     function supportsInterface(bytes4 interfaceId)
         public
         view

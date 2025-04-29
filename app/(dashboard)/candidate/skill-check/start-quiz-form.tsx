@@ -5,6 +5,12 @@ import { useState, useEffect, useTransition } from 'react'
 
 import { Copy, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import {
+  useAccount,
+  useSwitchChain,
+  useWalletClient,
+  usePublicClient,
+} from 'wagmi'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -15,6 +21,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import { CREDENTIAL_NFT_ADDRESS, CHAIN_ID } from '@/lib/config'
+import { CREDENTIAL_NFT_ABI } from '@/lib/contracts/abis'
 import type { QuizMeta as Quiz } from '@/lib/types/components'
 import { copyToClipboard } from '@/lib/utils'
 
@@ -24,43 +32,41 @@ import { startQuizAction } from './actions'
 /*                                    VIEW                                    */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Renders a "Take Quiz” button that opens a modal, fetches a verifiable RNG
- * seed, and embeds it in the submission so the attempt can be reproduced.
- */
 export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
+  const { isConnected, address, chain } = useAccount()
+  const { switchChainAsync } = useSwitchChain()
+  const { data: walletClient } = useWalletClient()
+  const publicClient = usePublicClient()
+
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
 
   /* Quiz result state ----------------------------------------------------- */
+  const [seed, setSeed] = useState<string>('')
   const [score, setScore] = useState<number | null>(null)
   const [message, setMessage] = useState('')
-  const [seed, setSeed] = useState<string>('')
+  const [vcHash, setVcHash] = useState<string>('')
 
   /* ---------------------------------------------------------------------- */
-  /*      Fetch seed when dialog opens so UI & hidden input can use it      */
+  /*                      Fetch RNG seed when opened                       */
   /* ---------------------------------------------------------------------- */
   useEffect(() => {
     if (!open) return
-
-    /* Reset previous state */
     setSeed('')
     setScore(null)
     setMessage('')
+    setVcHash('')
 
     const abort = new AbortController()
 
     ;(async () => {
       try {
-        /* NOTE: current quizzes are free-text so we pass max=1; adjust if
-           multiple-question arrays are introduced later.                    */
-        const res = await fetch(`/api/rng-seed?max=1`, { signal: abort.signal })
+        const res = await fetch('/api/rng-seed?max=1', { signal: abort.signal })
         if (!res.ok) throw new Error(await res.text())
         const { seed: s } = (await res.json()) as { seed: string }
         setSeed(s)
       } catch (err: any) {
         toast.error(err?.message ?? 'Failed to obtain RNG seed')
-        /* Close dialog if seed unavailable */
         setOpen(false)
       }
     })()
@@ -69,7 +75,37 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
   }, [open])
 
   /* ---------------------------------------------------------------------- */
-  /*                            Submit handler                              */
+  /*                          Helper: mint credential                       */
+  /* ---------------------------------------------------------------------- */
+  async function mintCredential(hash: string) {
+    if (!walletClient || !address) {
+      toast.error('Connect your wallet first.')
+      return
+    }
+
+    /* Ensure correct network */
+    if (chain?.id !== CHAIN_ID) {
+      await switchChainAsync({ chainId: CHAIN_ID })
+    }
+
+    const toastId = toast.loading('Requesting signature…')
+    try {
+      const txHash = await walletClient.writeContract({
+        address: CREDENTIAL_NFT_ADDRESS,
+        abi: CREDENTIAL_NFT_ABI,
+        functionName: 'mintCredential',
+        args: [address, hash, ''],
+      })
+      toast.loading(`Tx sent: ${txHash.slice(0, 10)}…`, { id: toastId })
+      await publicClient?.waitForTransactionReceipt({ hash: txHash })
+      toast.success('Skill Pass credential minted!', { id: toastId })
+    } catch (err: any) {
+      toast.error(err?.message ?? 'Minting failed.', { id: toastId })
+    }
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /*                           Submit quiz answer                           */
   /* ---------------------------------------------------------------------- */
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -79,14 +115,16 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
     startTransition(async () => {
       try {
         const res = await startQuizAction(fd)
-        if (res) {
-          setScore(res.score)
-          setMessage(res.message)
-          res.score >= 70
-            ? toast.success(res.message, { id: toastId })
-            : toast.info(res.message, { id: toastId })
-        } else {
-          toast.error('No response from server.', { id: toastId })
+        if (!res) throw new Error('No response')
+
+        setScore(res.score)
+        setMessage(res.message)
+        toast.success(res.message, { id: toastId })
+
+        if (res.passed && res.vcHash) {
+          setVcHash(res.vcHash)
+          /* Fire-and-forget mint; user still confirms in wallet. */
+          await mintCredential(res.vcHash)
         }
       } catch (err: any) {
         toast.error(err?.message ?? 'Something went wrong.', { id: toastId })
@@ -95,7 +133,7 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
   }
 
   /* ---------------------------------------------------------------------- */
-  /*                            Render dialog                               */
+  /*                                UI                                      */
   /* ---------------------------------------------------------------------- */
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -107,7 +145,9 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
         <DialogHeader>
           <DialogTitle>{quiz.title}</DialogTitle>
           {quiz.description && (
-            <DialogDescription className='line-clamp-3'>{quiz.description}</DialogDescription>
+            <DialogDescription className='line-clamp-3'>
+              {quiz.description}
+            </DialogDescription>
           )}
         </DialogHeader>
 
@@ -118,7 +158,10 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
             <input type='hidden' name='seed' value={seed} />
 
             <div>
-              <label htmlFor={`answer-${quiz.id}`} className='mb-1 block text-sm font-medium'>
+              <label
+                htmlFor={`answer-${quiz.id}`}
+                className='mb-1 block text-sm font-medium'
+              >
                 Your Answer
               </label>
               <textarea
@@ -150,7 +193,11 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
             {/* Seed display / copy */}
             <div className='flex items-center gap-2'>
               <span className='bg-muted rounded-md px-2 py-1 font-mono text-xs'>{seed}</span>
-              <Button variant='ghost' size='icon' onClick={() => copyToClipboard(seed)}>
+              <Button
+                variant='ghost'
+                size='icon'
+                onClick={() => copyToClipboard(seed)}
+              >
                 <Copy className='h-4 w-4' />
                 <span className='sr-only'>Copy seed</span>
               </Button>
