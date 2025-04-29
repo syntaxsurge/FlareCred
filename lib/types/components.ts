@@ -1,8 +1,3 @@
-/**
- * Shared UI-layer data and prop interfaces.
- * Keeping these in one place removes duplication and enforces strict typing across the app.
- */
-
 import type { ReactNode, ElementType } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import type { Stage } from '@/lib/constants/recruiter'

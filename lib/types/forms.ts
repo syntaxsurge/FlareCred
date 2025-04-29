@@ -1,8 +1,3 @@
-/**
- * Centralised form, component and route interfaces extracted from page-level files.
- * Keeping these here eliminates duplication and enforces strict typing across the app.
- */
-
 import type { Pipeline } from './recruiter'
 import type { Stage } from '../constants/recruiter'
 

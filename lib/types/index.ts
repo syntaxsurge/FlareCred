@@ -1,9 +1,3 @@
-/**
- * Centralised domain-level type declarations.
- * Shared primitives live here; feature-specific types are isolated in their own barrels and
- * re-exported for ergonomic access via this root module.
- */
-
 /* -------------------------------------------------------------------------- */
 /*                                 Core types                                 */
 /* -------------------------------------------------------------------------- */

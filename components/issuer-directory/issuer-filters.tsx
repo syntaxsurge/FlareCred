@@ -1,4 +1,3 @@
-// components/issuer-directory/issuer-filters.tsx
 'use client'
 
 import { useFilterNavigation } from '@/lib/hooks/use-filter-navigation'

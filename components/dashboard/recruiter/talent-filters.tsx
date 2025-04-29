@@ -1,4 +1,3 @@
-// components/dashboard/recruiter/talent-filters.tsx
 'use client'
 
 import { useState } from 'react'

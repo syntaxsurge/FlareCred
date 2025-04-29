@@ -1,10 +1,5 @@
 import type { ActivityType } from '@/lib/db/schema'
 
-/**
- * Shared table-row interfaces and pagination helpers for DataTable-based UI components.
- * Keeping everything in one module eliminates duplication and guarantees consistency.
- */
-
 /* --------------------------------------------------------------------- */
 /*                            Pagination                                 */
 /* --------------------------------------------------------------------- */

@@ -1,8 +1,3 @@
-/**
- * Generic props passed to all DataTable-based components.
- * Centralising this interface removes repetition across table views.
- */
-
 export interface TableProps<T extends Record<string, any>> {
   /** Row data slice for the current page */
   rows: T[]
