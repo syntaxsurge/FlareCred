@@ -8,6 +8,7 @@ import { z } from 'zod'
 import { validatedActionWithUser } from '@/lib/auth/middleware'
 import { db } from '@/lib/db/drizzle'
 import { issuers, IssuerStatus, IssuerCategory, IssuerIndustry } from '@/lib/db/schema/issuer'
+import { teams, teamMembers } from '@/lib/db/schema/core'
 
 /* -------------------------------------------------------------------------- */
 /*                              H E L P E R S                                 */
@@ -37,15 +38,24 @@ export const createIssuerAction = validatedActionWithUser(
     industry: industryEnum.default(IssuerIndustry.OTHER),
   }),
   async (data, _, user) => {
-    /* Prevent duplicate issuer per user */
+    /* One issuer per user ------------------------------------------------- */
     const existing = await db
       .select()
       .from(issuers)
       .where(eq(issuers.ownerUserId, user.id))
       .limit(1)
+    if (existing.length) return { error: 'You already have an issuer organisation.' }
 
-    if (existing.length) {
-      return { error: 'You already have an issuer organisation.' }
+    /* Require team DID ---------------------------------------------------- */
+    const [teamRow] = await db
+      .select({ did: teams.did })
+      .from(teamMembers)
+      .leftJoin(teams, eq(teamMembers.teamId, teams.id))
+      .where(eq(teamMembers.userId, user.id))
+      .limit(1)
+
+    if (!teamRow?.did) {
+      return { error: 'Please create your team DID before creating an issuer organisation.' }
     }
 
     const newIssuer: typeof issuers.$inferInsert = {
@@ -56,6 +66,7 @@ export const createIssuerAction = validatedActionWithUser(
       status: IssuerStatus.PENDING,
       category: data.category as (typeof IssuerCategory)[keyof typeof IssuerCategory],
       industry: data.industry as (typeof IssuerIndustry)[keyof typeof IssuerIndustry],
+      did: teamRow.did,
     }
 
     await db.insert(issuers).values(newIssuer)
@@ -67,6 +78,7 @@ export const createIssuerAction = validatedActionWithUser(
 
 /* -------------------------------------------------------------------------- */
 /*                           L I N K   F L A R E   D I D                      */
+/* (kept for legacy organisations created before this change)                 */
 /* -------------------------------------------------------------------------- */
 
 export const updateIssuerDidAction = validatedActionWithUser(
@@ -83,9 +95,7 @@ export const updateIssuerDidAction = validatedActionWithUser(
       .where(eq(issuers.ownerUserId, user.id))
       .limit(1)
 
-    if (!issuer) {
-      return { error: 'Issuer not found.' }
-    }
+    if (!issuer) return { error: 'Issuer not found.' }
 
     await db
       .update(issuers)
@@ -98,7 +108,7 @@ export const updateIssuerDidAction = validatedActionWithUser(
 )
 
 /* -------------------------------------------------------------------------- */
-/*               U P D A T E   A N D   R E S U B M I T   I S S U E R          */
+/*                     R E J E C T E D   I S S U E R   U P D A T E            */
 /* -------------------------------------------------------------------------- */
 
 export const updateIssuerDetailsAction = validatedActionWithUser(
@@ -119,14 +129,8 @@ export const updateIssuerDetailsAction = validatedActionWithUser(
       .from(issuers)
       .where(eq(issuers.ownerUserId, user.id))
       .limit(1)
-
-    if (!issuer) {
-      return { error: 'Issuer not found.' }
-    }
-
-    if (issuer.status !== IssuerStatus.REJECTED) {
-      return { error: 'Only rejected issuers can be updated.' }
-    }
+    if (!issuer) return { error: 'Issuer not found.' }
+    if (issuer.status !== IssuerStatus.REJECTED) return { error: 'Only rejected issuers can be updated.' }
 
     await db
       .update(issuers)

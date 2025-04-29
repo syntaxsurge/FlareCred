@@ -6,7 +6,6 @@ import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 
 import { validatedActionWithUser } from '@/lib/auth/middleware'
-import { createFlareDID } from '@/lib/contracts/flare'
 import { db } from '@/lib/db/drizzle'
 import { candidateCredentials, CredentialStatus } from '@/lib/db/schema/candidate'
 import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
@@ -37,42 +36,30 @@ const _updateIssuerStatus = validatedActionWithUser(
     if (user.role !== 'admin') return { error: 'Unauthorized.' }
 
     /* ------------------------------------------------------------------ */
-    /* Fetch current issuer record                                        */
+    /* Fetch issuer                                                       */
     /* ------------------------------------------------------------------ */
     const [issuer] = await db.select().from(issuers).where(eq(issuers.id, issuerId)).limit(1)
     if (!issuer) return { error: 'Issuer not found.' }
 
-    let didToPersist: string | undefined
-
-    /* ------------------------------------------------------------------ */
-    /* If verifying and issuer lacks DID → create one via Flare           */
-    /* ------------------------------------------------------------------ */
+    /* Require issuer-side DID before activation ------------------------- */
     if (status === IssuerStatus.ACTIVE && !issuer.did) {
-      try {
-        const { did } = await createFlareDID()
-        didToPersist = did
-      } catch (err) {
-        console.error('Failed to create Flare DID for issuer', issuerId, err)
-        return { error: 'Could not generate DID while verifying issuer.' }
+      return {
+        error:
+          'Issuer has not linked a DID. Ask the organisation to create and attach their Flare DID before activation.',
       }
     }
 
-    /* ------------------------------------------------------------------ */
-    /* Persist changes                                                    */
-    /* ------------------------------------------------------------------ */
+    /* Persist change ---------------------------------------------------- */
     await db
       .update(issuers)
       .set({
         status,
         rejectionReason: status === IssuerStatus.REJECTED ? rejectionReason ?? null : null,
-        ...(didToPersist ? { did: didToPersist } : {}),
       })
       .where(eq(issuers.id, issuerId))
 
     revalidatePath('/admin/issuers')
-    return {
-      success: `Issuer status updated to ${status}${didToPersist ? ' and Flare DID generated.' : '.'}`,
-    }
+    return { success: `Issuer status updated to ${status}.` }
   },
 )
 
@@ -95,7 +82,7 @@ const _deleteIssuer = validatedActionWithUser(
     if (user.role !== 'admin') return { error: 'Unauthorized.' }
 
     await db.transaction(async (tx) => {
-      /* Unlink any credentials that referenced this issuer */
+      /* Unlink credentials first */
       await tx
         .update(candidateCredentials)
         .set({
@@ -106,7 +93,7 @@ const _deleteIssuer = validatedActionWithUser(
         })
         .where(eq(candidateCredentials.issuerId, issuerId))
 
-      /* Finally remove the issuer row */
+      /* Delete issuer row */
       await tx.delete(issuers).where(eq(issuers.id, issuerId))
     })
 
