@@ -9,10 +9,6 @@ import type { Stage } from '@/lib/constants/recruiter'
 import type { MemberRow } from './table-rows'
 import type { CredentialStatus } from '@/lib/db/schema/candidate'
 
-/* -------------------------------------------------------------------------- */
-/*                               Quick Actions                                */
-/* -------------------------------------------------------------------------- */
-
 /** Button-style quick action used in dashboards. */
 export interface QuickAction {
   href: string
@@ -20,10 +16,6 @@ export interface QuickAction {
   /** Filled (default) or outline button variant. */
   variant?: 'default' | 'outline'
 }
-
-/* -------------------------------------------------------------------------- */
-/*                           Candidate Highlights                             */
-/* -------------------------------------------------------------------------- */
 
 /** Minimal credential slice used in the candidate highlights board. */
 export interface HighlightCredential {
@@ -34,10 +26,6 @@ export interface HighlightCredential {
   issuer: string | null
   fileUrl: string | null
 }
-
-/* -------------------------------------------------------------------------- */
-/*                              Profile Header                                */
-/* -------------------------------------------------------------------------- */
 
 /** Simple label/value pair rendered as a stat pill. */
 export interface ProfileStat {
@@ -52,10 +40,6 @@ export interface SocialLink {
   label: string
 }
 
-/* -------------------------------------------------------------------------- */
-/*                       Recruiter Pipeline Candidate                         */
-/* -------------------------------------------------------------------------- */
-
 /** Lightweight card representation for a candidate inside a pipeline. */
 export interface PipelineCandidateCard {
   id: number
@@ -65,20 +49,12 @@ export interface PipelineCandidateCard {
   stage: Stage
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                Quiz Meta                                   */
-/* -------------------------------------------------------------------------- */
-
 /** Quiz descriptor passed to the StartQuizForm modal. */
 export interface QuizMeta {
   id: number
   title: string
   description?: string | null
 }
-
-/* -------------------------------------------------------------------------- */
-/*                              Team Metadata                                 */
-/* -------------------------------------------------------------------------- */
 
 /** Subscription / DID metadata shown in team settings. */
 export interface TeamMeta {
@@ -135,10 +111,6 @@ export interface TableRowAction<Row> {
   disabled?: (row: Row) => boolean
 }
 
-/* -------------------------------------------------------------------------- */
-/*                              Navigation Items                              */
-/* -------------------------------------------------------------------------- */
-
 /** Sidebar navigation entry descriptor. */
 export interface SidebarNavItem {
   href: string
@@ -147,10 +119,6 @@ export interface SidebarNavItem {
   /** Optional numeric badge – hidden when zero/undefined. */
   badgeCount?: number
 }
-
-/* -------------------------------------------------------------------------- */
-/*                           Action-button Helpers                            */
-/* -------------------------------------------------------------------------- */
 
 /** Standardised return shape for async UI actions. */
 export type ActionResult = void | { success?: string; error?: string }
@@ -164,10 +132,6 @@ export interface ActionButtonProps
   pendingLabel?: ReactNode
 }
 
-/* -------------------------------------------------------------------------- */
-/*                           Combobox / Select types                          */
-/* -------------------------------------------------------------------------- */
-
 /** Lightweight issuer record used by the IssuerSelect combobox. */
 export interface IssuerOption {
   id: number
@@ -175,10 +139,6 @@ export interface IssuerOption {
   category: string
   industry: string
 }
-
-/* -------------------------------------------------------------------------- */
-/*                      Charts data & component prop types                    */
-/* -------------------------------------------------------------------------- */
 
 /** Generic name/value pair used in pie-chart datasets. */
 export interface Datum {
@@ -229,10 +189,6 @@ export interface RecruiterChartsProps {
   uniqueCandidates: number
 }
 
-/* -------------------------------------------------------------------------- */
-/*                         Page-specific component props                      */
-/* -------------------------------------------------------------------------- */
-
 /** Props for the Team Settings page component. */
 export interface SettingsProps {
   team: TeamMeta
@@ -262,10 +218,6 @@ export interface AddCredentialDialogProps {
   hasDid: boolean
 }
 
-/* -------------------------------------------------------------------------- */
-/*                         Newly centralised component props                  */
-/* -------------------------------------------------------------------------- */
-
 /** Props for the issuer-side CredentialActions component. */
 export interface CredentialActionsProps {
   credentialId: number
@@ -286,10 +238,6 @@ export interface IssuerStatusButtonsProps {
   issuerId: number
   status: string
 }
-
-/* -------------------------------------------------------------------------- */
-/*                         Candidate Highlights Board                         */
-/* -------------------------------------------------------------------------- */
 
 /** Props for the candidate HighlightsBoard component. */
 export interface HighlightsBoardProps {
@@ -317,9 +265,24 @@ export interface PipelineBoardProps {
   initialData: Record<Stage, PipelineCandidateCard[]>
 }
 
-/* -------------------------------------------------------------------------- */
-/*                        Newly centralised component props                   */
-/* -------------------------------------------------------------------------- */
+/** Props for issuer-directory filter bar component. */
+export interface IssuerFiltersProps {
+  basePath: string
+  initialParams: Record<string, string>
+  categories: string[]
+  industries: string[]
+  selectedCategory: string
+  selectedIndustry: string
+}
+
+/** Props for recruiter-side talent search filter bar component. */
+export interface TalentFiltersProps {
+  basePath: string
+  initialParams: Record<string, string>
+  skillMin: number
+  skillMax: number
+  verifiedOnly: boolean
+}
 
 /** Props for the encapsulated page section card component. */
 export interface PageCardProps {

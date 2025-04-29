@@ -1,18 +1,11 @@
+// components/dashboard/recruiter/talent-filters.tsx
 'use client'
 
 import { useState } from 'react'
 
 import { Slider } from '@/components/ui/slider'
 import { useFilterNavigation } from '@/lib/hooks/use-filter-navigation'
-
-interface TalentFiltersProps {
-  basePath: string
-  /** Existing query params excluding skillMin/skillMax (e.g. sort, order, q…). */
-  initialParams: Record<string, string>
-  skillMin: number
-  skillMax: number
-  verifiedOnly: boolean
-}
+import type { TalentFiltersProps } from '@/lib/types/components'
 
 /* -------------------------------------------------------------------------- */
 /*                                   View                                     */

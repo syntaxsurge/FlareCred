@@ -1,15 +1,8 @@
+// components/issuer-directory/issuer-filters.tsx
 'use client'
 
 import { useFilterNavigation } from '@/lib/hooks/use-filter-navigation'
-
-interface Props {
-  basePath: string
-  initialParams: Record<string, string>
-  categories: string[]
-  industries: string[]
-  selectedCategory: string
-  selectedIndustry: string
-}
+import type { IssuerFiltersProps } from '@/lib/types/components'
 
 export default function IssuerFilters({
   basePath,
@@ -18,17 +11,14 @@ export default function IssuerFilters({
   industries,
   selectedCategory,
   selectedIndustry,
-}: Props) {
+}: IssuerFiltersProps) {
   const handleChange = useFilterNavigation(basePath, initialParams)
 
   return (
     <div className='flex flex-wrap items-center gap-4'>
       {/* Category */}
       <div className='flex flex-col gap-1'>
-        <label
-          htmlFor='category'
-          className='text-muted-foreground text-xs font-medium uppercase'
-        >
+        <label htmlFor='category' className='text-muted-foreground text-xs font-medium uppercase'>
           Category
         </label>
         <select
@@ -48,10 +38,7 @@ export default function IssuerFilters({
 
       {/* Industry */}
       <div className='flex flex-col gap-1'>
-        <label
-          htmlFor='industry'
-          className='text-muted-foreground text-xs font-medium uppercase'
-        >
+        <label htmlFor='industry' className='text-muted-foreground text-xs font-medium uppercase'>
           Industry
         </label>
         <select
