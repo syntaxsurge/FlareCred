@@ -4,21 +4,9 @@ import Link from 'next/link'
 import * as React from 'react'
 
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
-import type { TalentRow } from '@/lib/types/table-rows'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
-
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
-
-interface TalentTableProps {
-  rows: TalentRow[]
-  sort: string
-  order: 'asc' | 'desc'
-  basePath: string
-  initialParams: Record<string, string>
-  searchQuery: string
-}
+import type { TableProps } from '@/lib/types/table-props'
+import type { TalentRow } from '@/lib/types/table-rows'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Table                                    */
@@ -31,7 +19,7 @@ export default function TalentTable({
   basePath,
   initialParams,
   searchQuery,
-}: TalentTableProps) {
+}: TableProps<TalentRow>) {
   /* -------------------- Centralised navigation helpers -------------------- */
   const { search, handleSearchChange, sortableHeader } = useTableNavigation({
     basePath,

@@ -11,20 +11,8 @@ import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
 import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
+import type { TableProps } from '@/lib/types/table-props'
 import type { PipelineRow } from '@/lib/types/table-rows'
-
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
-
-interface PipelinesTableProps {
-  rows: PipelineRow[]
-  sort: string
-  order: 'asc' | 'desc'
-  basePath: string
-  initialParams: Record<string, string>
-  searchQuery: string
-}
 
 /* -------------------------------------------------------------------------- */
 /*                         Row-level actions component                        */
@@ -75,10 +63,10 @@ export default function PipelinesTable({
   basePath,
   initialParams,
   searchQuery,
-}: PipelinesTableProps) {
+}: TableProps<PipelineRow>) {
   const router = useRouter()
 
-  /* --------------------------- Bulk-selection hook ------------------------- */
+  /* --------------------------- Bulk-selection hook ------------------------ */
   const bulkActions = useBulkActions<PipelineRow>([
     {
       label: 'Delete',
