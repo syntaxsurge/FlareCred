@@ -19,9 +19,6 @@ import type { CandidateCredentialRow } from '@/lib/types/table-rows'
 import type { TableProps } from '@/lib/types/table-props'
 import { getProofTx } from '@/lib/utils'
 
-/* -------------------------------------------------------------------------- */
-/*                                   Table                                    */
-/* -------------------------------------------------------------------------- */
 
 export default function CandidateCredentialsTable({
   rows,

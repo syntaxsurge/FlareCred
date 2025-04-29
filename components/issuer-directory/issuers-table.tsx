@@ -64,9 +64,6 @@ function ActionsCell({ row }: { row: IssuerDirectoryRow }) {
   )
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                   Table                                    */
-/* -------------------------------------------------------------------------- */
 
 export default function IssuersTable({
   rows,

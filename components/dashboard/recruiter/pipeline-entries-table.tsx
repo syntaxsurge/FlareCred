@@ -15,9 +15,6 @@ import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { PipelineEntryRow } from '@/lib/types/table-rows'
 import type { TableProps } from '@/lib/types/table-props'
 
-/* -------------------------------------------------------------------------- */
-/*                                   Table                                    */
-/* -------------------------------------------------------------------------- */
 
 export default function PipelineEntriesTable({
   rows,

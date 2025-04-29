@@ -89,9 +89,6 @@ function EditMemberForm({ row, onDone }: { row: MemberRow; onDone: () => void })
   )
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                   Table                                    */
-/* -------------------------------------------------------------------------- */
 
 export default function MembersTable({
   rows,

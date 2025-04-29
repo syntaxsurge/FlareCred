@@ -28,9 +28,6 @@ import { IssuerStatus } from '@/lib/db/schema/issuer'
 import type { AdminIssuerRow } from '@/lib/types/table-rows'
 import type { TableProps } from '@/lib/types/table-props'
 
-/* -------------------------------------------------------------------------- */
-/*                                   Table                                    */
-/* -------------------------------------------------------------------------- */
 
 export default function AdminIssuersTable({
   rows,

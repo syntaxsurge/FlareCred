@@ -52,9 +52,6 @@ function PipelineRowActions({ row }: { row: PipelineRow }) {
   return <TableRowActions row={row} actions={actions} />
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                   Table                                    */
-/* -------------------------------------------------------------------------- */
 
 export default function PipelinesTable({
   rows,

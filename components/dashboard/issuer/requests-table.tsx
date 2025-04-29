@@ -71,9 +71,6 @@ function useRowActions(): (row: IssuerRequestRow) => TableRowAction<IssuerReques
   )
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                   Table                                    */
-/* -------------------------------------------------------------------------- */
 
 export default function IssuerRequestsTable({
   rows,
