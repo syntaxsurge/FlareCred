@@ -4,13 +4,14 @@ import { eq } from 'drizzle-orm'
 import { ListChecks } from 'lucide-react'
 
 import RequireDidGate from '@/components/dashboard/require-did-gate'
-import IssuerRequestsTable, { type RowType } from '@/components/dashboard/issuer/requests-table'
+import IssuerRequestsTable from '@/components/dashboard/issuer/requests-table'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { db } from '@/lib/db/drizzle'
 import { getIssuerRequestsPage } from '@/lib/db/queries/issuer-requests'
 import { getUser } from '@/lib/db/queries/queries'
 import { issuers } from '@/lib/db/schema/issuer'
+import type { IssuerRequestRow } from '@/lib/types/table-rows'
 
 export const revalidate = 0
 
@@ -62,7 +63,7 @@ export default async function RequestsPage({
     searchTerm,
   )
 
-  const rows: RowType[] = requests
+  const rows: IssuerRequestRow[] = requests
 
   /* ------------------ Preserve existing query params --------------------- */
   const initialParams: Record<string, string> = {}
