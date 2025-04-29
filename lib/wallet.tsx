@@ -73,9 +73,9 @@ const queryClient = new QueryClient()
 /**
  * Watches wallet state:
  * – On **disconnect**: clears the HTTP-only session cookie and navigates to /connect-wallet.
- * – On **connect**: sets/refreshes the session exactly once per mount; if the user is on
- *   /connect-wallet it redirects to /dashboard.  It never calls router.refresh(), avoiding
- *   the 404 re-render loop seen previously.
+ * – On **connect**: sets/refreshes the session (via wallet-status) then either
+ *   ① redirects from /connect-wallet to /dashboard or ② refreshes the current page
+ *   so role-gated server components pick up the new session immediately.
  */
 function WalletConnectionListener() {
   const { isConnected, address } = useAccount()
@@ -101,7 +101,7 @@ function WalletConnectionListener() {
     prevConnected.current = isConnected
   }, [isConnected, pathname, router])
 
-  /* Handle first connection (one-shot) */
+  /* Handle first connection (one-shot per mount) */
   useEffect(() => {
     if (!isConnected || ensuredSession.current || !address) return
     ensuredSession.current = true
@@ -115,11 +115,16 @@ function WalletConnectionListener() {
         })
         const json = await res.json().catch(() => ({}))
 
-        if (res.ok && json?.exists && pathname === '/connect-wallet') {
-          router.replace('/dashboard')
+        if (res.ok && json?.exists) {
+          if (pathname === '/connect-wallet') {
+            router.replace('/dashboard')
+          } else {
+            /* Refresh so server components rehydrate with the new session */
+            router.refresh()
+          }
         }
       } finally {
-        /* no global refresh */
+        /* no global catch needed */
       }
     })()
   }, [isConnected, address, pathname, router])
