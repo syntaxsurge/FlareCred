@@ -39,6 +39,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       suppressHydrationWarning
     >
       <body className='min-h-[100dvh]'>
+        {/* Inject runtime NEXT_PUBLIC_* variables before any client component mounts */}
+        <PublicEnvScript />
+
         <Web3Provider>
           <ThemeProvider
             attribute='class'
@@ -70,9 +73,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </UserProvider>
           </ThemeProvider>
         </Web3Provider>
-
-        {/* Inject runtime NEXT_PUBLIC_* variables for client consumption */}
-        <PublicEnvScript />
       </body>
     </html>
   )
