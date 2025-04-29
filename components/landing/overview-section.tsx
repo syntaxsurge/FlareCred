@@ -49,10 +49,10 @@ export default function OverviewSection() {
               className='group bg-background/70 relative flex overflow-hidden rounded-3xl backdrop-blur transition-shadow hover:shadow-xl'
             >
               {/* Gradient accent bar */}
-              <span className='absolute top-0 left-0 h-full w-1.5 rounded-tr-lg rounded-br-lg bg-gradient-to-b from-indigo-500 via-purple-500 to-fuchsia-500' />
+              <span className='absolute top-0 left-0 h-full w-1.5 rounded-tr-lg rounded-br-lg bg-gradient-to-b from-orange-500 via-pink-500 to-rose-500' />
 
               <CardHeader className='flex flex-row items-center gap-4 pl-8'>
-                <div className='flex size-12 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shadow-inner dark:bg-indigo-900/40 dark:text-indigo-300'>
+                <div className='flex size-12 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-600 shadow-inner dark:bg-orange-900/40 dark:text-orange-300'>
                   <Icon className='h-6 w-6' />
                 </div>
                 <CardTitle className='text-lg font-semibold'>{title}</CardTitle>
@@ -64,7 +64,7 @@ export default function OverviewSection() {
 
               {/* Subtle hover glow */}
               <div className='pointer-events-none absolute inset-0 -z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-10'>
-                <div className='h-full w-full bg-gradient-to-br from-indigo-500 via-purple-500 to-fuchsia-500 blur-3xl' />
+                <div className='h-full w-full bg-gradient-to-br from-orange-500 via-pink-500 to-rose-500 blur-3xl' />
               </div>
             </Card>
           ))}

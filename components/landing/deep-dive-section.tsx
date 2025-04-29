@@ -42,7 +42,7 @@ export default function DeepDiveSection() {
   return (
     <section id='deep-dive' className='relative isolate overflow-hidden py-24'>
       {/* soft radial background */}
-      <div className='pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_center,var(--tw-gradient-stops))] from-indigo-400/10 via-purple-400/5 to-transparent dark:from-indigo-700/20 dark:via-purple-700/10' />
+      <div className='pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_center,var(--tw-gradient-stops))] from-orange-400/10 via-pink-400/5 to-transparent dark:from-orange-700/20 dark:via-pink-700/10' />
 
       <div className='mx-auto max-w-6xl px-4'>
         <header className='text-center'>
@@ -64,10 +64,10 @@ export default function DeepDiveSection() {
               className='group/card'
             >
               {/* gradient halo wrapper */}
-              <div className='rounded-3xl bg-gradient-to-br from-indigo-500/30 via-purple-500/30 to-fuchsia-500/30 p-[2px]'>
+              <div className='rounded-3xl bg-gradient-to-br from-orange-500/30 via-pink-500/30 to-rose-500/30 p-[2px]'>
                 <Card className='border-border/60 bg-background/70 h-full rounded-[inherit] border backdrop-blur'>
                   <CardHeader className='flex flex-col items-center gap-4 py-10 text-center'>
-                    <div className='inline-flex size-16 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 via-purple-500 to-fuchsia-500 text-white shadow-lg'>
+                    <div className='inline-flex size-16 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 via-pink-500 to-rose-500 text-white shadow-lg'>
                       <Icon className='h-8 w-8' />
                     </div>
                     <CardTitle className='text-foreground text-2xl'>{title}</CardTitle>
@@ -77,7 +77,7 @@ export default function DeepDiveSection() {
                   <CardContent className='grid gap-3 px-8 pb-10'>
                     {bullets.map((b) => (
                       <div key={b} className='flex gap-2'>
-                        <span className='mt-1 size-2 shrink-0 rounded-full bg-purple-500' />
+                        <span className='mt-1 size-2 shrink-0 rounded-full bg-pink-500' />
                         <p className='text-muted-foreground text-sm leading-relaxed'>{b}</p>
                       </div>
                     ))}

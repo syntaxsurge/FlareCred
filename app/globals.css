@@ -57,14 +57,7 @@
   --radius-sm: calc(var(--radius) - 4px);
 }
 
-/*
-  The default border color has changed to `currentColor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
+/* Tailwind v3 → v4 border fallback  */
 @layer base {
   *,
   ::after,
@@ -77,7 +70,7 @@
 
 @layer utilities {
   body {
-    font-family: 'Manrope', Arial, Helvetica, sans-serif;
+    font-family: 'Inter', Arial, Helvetica, sans-serif;
   }
 }
 
@@ -89,16 +82,16 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 243.4 75.4% 58.6%; /* Indigo 600 */
-    --primary-foreground: 210 40% 98%;
-    --secondary: 271.5 81.3% 55.9%; /* Purple 600 */
-    --secondary-foreground: 210 40% 98%;
+    --primary: 24 100% 59%; /* Flare Orange */
+    --primary-foreground: 0 0% 98%;
+    --secondary: 328 66% 61%; /* Flare Pink */
+    --secondary-foreground: 0 0% 98%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 293.4 69.5% 48.8%; /* Fuchsia 500 */
-    --accent-foreground: 210 40% 98%;
+    --accent: 204 100% 60%; /* Flare Blue */
+    --accent-foreground: 0 0% 98%;
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
@@ -107,7 +100,7 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
+    --radius: 0.6rem;
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
@@ -125,13 +118,13 @@
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
+    --primary: 24 100% 59%; /* Flare Orange */
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 328 66% 61%; /* Flare Pink */
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
+    --accent: 204 100% 60%; /* Flare Blue */
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
@@ -145,7 +138,7 @@
     --chart-5: 340 75% 55%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary: 24 100% 59%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 3.7% 15.9%;
     --sidebar-accent-foreground: 240 4.8% 95.9%;
@@ -174,19 +167,19 @@
   --card-foreground: hsl(240 10% 3.9%);
   --popover: hsl(0 0% 100%);
   --popover-foreground: hsl(240 10% 3.9%);
-  --primary: hsl(243.4 75.4% 58.6%); /* Indigo 600 */
+  --primary: hsl(24 100% 59%); /* Flare Orange */
   --primary-foreground: hsl(0 0% 98%);
-  --secondary: hsl(271.5 81.3% 55.9%); /* Purple 600 */
+  --secondary: hsl(328 66% 61%); /* Flare Pink */
   --secondary-foreground: hsl(0 0% 98%);
   --muted: hsl(240 4.8% 95.9%);
   --muted-foreground: hsl(240 3.8% 46.1%);
-  --accent: hsl(293.4 69.5% 48.8%); /* Fuchsia 500 */
+  --accent: hsl(204 100% 60%); /* Flare Blue */
   --accent-foreground: hsl(0 0% 98%);
-  --success: hsl(158 64% 44%); /* Emerald 500 */
+  --success: hsl(158 64% 44%);
   --success-foreground: hsl(0 0% 98%);
-  --warning: hsl(45 95% 50%); /* Amber 500 */
+  --warning: hsl(45 95% 50%);
   --warning-foreground: hsl(0 0% 10%);
-  --destructive: hsl(0 84.2% 60.2%); /* Rose 500 */
+  --destructive: hsl(0 84.2% 60.2%);
   --destructive-foreground: hsl(0 0% 98%);
   --border: hsl(240 5.9% 90%);
   --input: hsl(240 5.9% 90%);
@@ -210,13 +203,13 @@
   --card-foreground: hsl(0 0% 98%);
   --popover: hsl(240 10% 3.9%);
   --popover-foreground: hsl(0 0% 98%);
-  --primary: hsl(0 0% 98%);
+  --primary: hsl(24 100% 59%); /* Flare Orange */
   --primary-foreground: hsl(240 5.9% 10%);
-  --secondary: hsl(240 3.7% 15.9%);
+  --secondary: hsl(328 66% 61%); /* Flare Pink */
   --secondary-foreground: hsl(0 0% 98%);
   --muted: hsl(240 3.7% 15.9%);
   --muted-foreground: hsl(240 5% 64.9%);
-  --accent: hsl(240 3.7% 15.9%);
+  --accent: hsl(204 100% 60%); /* Flare Blue */
   --accent-foreground: hsl(0 0% 98%);
   --success: hsl(158 36% 30%);
   --success-foreground: hsl(0 0% 98%);

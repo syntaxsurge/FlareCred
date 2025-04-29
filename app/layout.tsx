@@ -1,6 +1,6 @@
 import './globals.css'
 import '@rainbow-me/rainbowkit/styles.css'
-import { Manrope } from 'next/font/google'
+import { Inter } from 'next/font/google'
 
 import type { Metadata, Viewport } from 'next'
 import { Toaster } from 'sonner'
@@ -14,7 +14,7 @@ import { Web3Provider } from '@/lib/wallet'
 
 export const metadata: Metadata = {
   title: 'FlareCred',
-  description: 'AI-Assisted, Credential-Backed Hiring.',
+  description: 'AI-Assisted, Credential-Backed Hiring on Flare.',
   icons: { icon: '/images/favicon.ico' },
 }
 
@@ -22,7 +22,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
 }
 
-const manrope = Manrope({ subsets: ['latin'] })
+const inter = Inter({ subsets: ['latin'] })
 
 /**
  * Root layout — resolves the authenticated user server-side and injects
@@ -35,7 +35,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html
       lang='en'
-      className={`bg-background text-foreground ${manrope.className}`}
+      className={`bg-background text-foreground ${inter.className}`}
       suppressHydrationWarning
     >
       <body className='min-h-[100dvh]'>
