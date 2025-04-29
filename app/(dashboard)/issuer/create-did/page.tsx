@@ -1,4 +1,4 @@
-import CreateDidPage from '@/components/create-did-page'
+import CreateDidPage from '@/components/dashboard/create-did-page'
 
 export const revalidate = 0
 
