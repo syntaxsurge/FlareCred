@@ -61,6 +61,8 @@ export interface PipelineEntryRow {
   pipelineId: number
   pipelineName: string
   stage: string
+  /** ISO string when provided – not required by all views */
+  addedAt?: string
 }
 
 /* --------------------------------------------------------------------- */

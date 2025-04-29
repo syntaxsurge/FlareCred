@@ -10,15 +10,6 @@ import type { CandidateCredentialRow, PageResult } from '@/lib/types/table-rows'
 import { buildOrderExpr, paginate } from './query-helpers'
 
 /* -------------------------------------------------------------------------- */
-/*                               Return Type                                  */
-/* -------------------------------------------------------------------------- */
-
-export interface CandidateCredentialsSection
-  extends PageResult<CandidateCredentialRow> {
-  statusCounts: StatusCounts
-}
-
-/* -------------------------------------------------------------------------- */
 /*                                  Query                                     */
 /* -------------------------------------------------------------------------- */
 
@@ -29,7 +20,7 @@ export async function getCandidateCredentialsSection(
   sort: 'title' | 'status' | 'createdAt' | 'issuer' = 'status',
   order: 'asc' | 'desc' = 'desc',
   searchTerm = '',
-): Promise<CandidateCredentialsSection> {
+): Promise<PageResult<CandidateCredentialRow> & { statusCounts: StatusCounts }> {
   const term = searchTerm.trim().toLowerCase()
   const hasSearch = term.length > 0
 

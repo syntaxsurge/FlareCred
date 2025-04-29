@@ -1,4 +1,4 @@
-import { and, eq, ilike } from 'drizzle-orm'
+import { and, eq, ilike, desc } from 'drizzle-orm'
 
 import { db } from '../drizzle'
 import { recruiterPipelines, pipelineCandidates } from '../schema/recruiter'
@@ -8,18 +8,7 @@ import {
   buildSearchCondition,
   paginate,
 } from './query-helpers'
-
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
-
-export type PipelineEntryRow = {
-  id: number
-  pipelineId: number
-  pipelineName: string
-  stage: string
-  addedAt: Date
-}
+import type { PipelineEntryRow } from '@/lib/types/table-rows'
 
 /* -------------------------------------------------------------------------- */
 /*                             Paginated fetch                                */
@@ -77,5 +66,11 @@ export async function getCandidatePipelineEntriesPage(
     pageSize,
   )
 
-  return { entries: rows as PipelineEntryRow[], hasNext }
+  /* Cast Date → ISO string for uniform consumption */
+  const entries = rows.map((r) => ({
+    ...r,
+    addedAt: r.addedAt instanceof Date ? r.addedAt.toISOString() : r.addedAt,
+  })) as PipelineEntryRow[]
+
+  return { entries, hasNext }
 }
