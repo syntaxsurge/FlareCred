@@ -9,6 +9,7 @@ import {
   useWalletClient,
   usePublicClient,
 } from 'wagmi'
+import { ZeroHash } from 'ethers'
 
 import { Button } from '@/components/ui/button'
 import { createDidAction } from './actions'
@@ -66,7 +67,8 @@ export function CreateDidButton() {
         address: DID_REGISTRY_ADDRESS,
         abi: DID_REGISTRY_ABI,
         functionName: 'createDID',
-        args: [],
+        // Pass zero hash for optional docHash parameter
+        args: [ZeroHash],
       })
 
       toast.loading(`Tx sent: ${hash.slice(0, 10)}…`, { id: toastId })
