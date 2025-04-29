@@ -1,8 +1,8 @@
 import { eq, ilike, and, asc, desc } from 'drizzle-orm'
 
 import { db } from '../drizzle'
-import { candidateCredentials as credsT, CredentialStatus } from '../schema/candidate'
-import { issuers as issuersT } from '../schema/issuer'
+import { candidateCredentials, CredentialStatus } from '../schema/candidate'
+import { issuers } from '../schema/issuer'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -45,47 +45,47 @@ export async function getRecruiterCandidateCredentialsPage(
   const secondary =
     sortBy === 'title'
       ? order === 'asc'
-        ? asc(credsT.title)
-        : desc(credsT.title)
+        ? asc(candidateCredentials.title)
+        : desc(candidateCredentials.title)
       : sortBy === 'issuer'
         ? order === 'asc'
-          ? asc(issuersT.name)
-          : desc(issuersT.name)
+          ? asc(issuers.name)
+          : desc(issuers.name)
         : sortBy === 'status'
           ? order === 'asc'
-            ? asc(credsT.status)
-            : desc(credsT.status)
+            ? asc(candidateCredentials.status)
+            : desc(candidateCredentials.status)
           : sortBy === 'createdAt'
             ? order === 'asc'
-              ? asc(credsT.createdAt)
-              : desc(credsT.createdAt)
+              ? asc(candidateCredentials.createdAt)
+              : desc(candidateCredentials.createdAt)
             : order === 'asc'
-              ? asc(credsT.id)
-              : desc(credsT.id)
+              ? asc(candidateCredentials.id)
+              : desc(candidateCredentials.id)
 
-  const orderByParts = verifiedFirst ? [desc(credsT.verified), secondary] : [secondary]
+  const orderByParts = verifiedFirst ? [desc(candidateCredentials.verified), secondary] : [secondary]
 
   /* ----------------------------- WHERE clause ---------------------------- */
   const where =
     searchTerm.trim().length === 0
-      ? eq(credsT.candidateId, candidateId)
-      : and(eq(credsT.candidateId, candidateId), ilike(credsT.title, `%${searchTerm}%`))
+      ? eq(candidateCredentials.candidateId, candidateId)
+      : and(eq(candidateCredentials.candidateId, candidateId), ilike(candidateCredentials.title, `%${searchTerm}%`))
 
   /* ------------------------------ Query ---------------------------------- */
   const rows = await db
     .select({
-      id: credsT.id,
-      title: credsT.title,
-      issuer: issuersT.name,
-      status: credsT.status,
-      verified: credsT.verified,
-      fileUrl: credsT.fileUrl,
-      proofType: credsT.proofType,
-      proofData: credsT.proofData,
-      createdAt: credsT.createdAt,
+      id: candidateCredentials.id,
+      title: candidateCredentials.title,
+      issuer: issuers.name,
+      status: candidateCredentials.status,
+      verified: candidateCredentials.verified,
+      fileUrl: candidateCredentials.fileUrl,
+      proofType: candidateCredentials.proofType,
+      proofData: candidateCredentials.proofData,
+      createdAt: candidateCredentials.createdAt,
     })
-    .from(credsT)
-    .leftJoin(issuersT, eq(credsT.issuerId, issuersT.id))
+    .from(candidateCredentials)
+    .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
     .where(where as any)
     .orderBy(...orderByParts)
     .limit(pageSize + 1)
