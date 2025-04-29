@@ -1,3 +1,5 @@
+import { eq } from 'drizzle-orm'
+
 import { db } from '../drizzle'
 import { skillQuizzes, skillQuizQuestions } from '../schema/candidate'
 
@@ -60,7 +62,7 @@ export async function seedQuizzes() {
     const existingQs = await db
       .select()
       .from(skillQuizQuestions)
-      .where((sq) => sq.quizId.eq(quiz.id))
+      .where(eq(skillQuizQuestions.quizId, quiz.id))
 
     if (existingQs.length >= 3) continue
 
@@ -71,9 +73,7 @@ export async function seedQuizzes() {
     }))
 
     await db.insert(skillQuizQuestions).values(qValues)
-    console.log(
-      `Added ${missing} question(s) to "${quiz.title}"`,
-    )
+    console.log(`Added ${missing} question(s) to "${quiz.title}"`)
   }
 
   console.log('✔ Quiz seeding complete.')
