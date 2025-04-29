@@ -26,12 +26,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import StatusBadge from '@/components/ui/status-badge'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
+import SkillPassesTable from '@/components/dashboard/candidate/skill-passes-table'
+import { copyToClipboard } from '@/lib/utils'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { SnapshotMetrics } from '@/lib/types/candidate'
 import type { CandidateDetailedProfileViewProps as Props } from '@/lib/types/components'
 import { prettyDate } from '@/lib/utils/time'
 import { txUrl } from '@/lib/utils/explorer'
-import { copyToClipboard } from '@/lib/utils'
 
 import ProfileHeader from './profile-header'
 
@@ -387,51 +388,27 @@ export default function CandidateDetailedProfileView({
                 Skill Passes
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              {passes.length === 0 ? (
+            <CardContent className='space-y-4'>
+              {passes.rows.length === 0 ? (
                 <p className='text-muted-foreground text-sm'>No passes yet.</p>
               ) : (
-                <ul className='space-y-3'>
-                  {passes.map((p) => (
-                    <li
-                      key={p.id}
-                      className='bg-muted flex flex-wrap items-center justify-between gap-2 rounded-lg px-3 py-2'
-                    >
-                      <span className='font-medium'>
-                        Quiz #{p.quizId} • Score {p.score ?? '—'}
-                      </span>
-
-                      <div className='flex flex-wrap items-center gap-3'>
-                        {p.txHash && (
-                          <a
-                            href={txUrl(p.txHash)}
-                            target='_blank'
-                            rel='noopener noreferrer'
-                            className='inline-flex items-center gap-1 text-primary underline'
-                          >
-                            View Tx <ExternalLink className='h-4 w-4' />
-                          </a>
-                        )}
-
-                        {p.vcJson && (
-                          <button
-                            onClick={() => {
-                              copyToClipboard(p.vcJson!)
-                              toast.success('VC JSON copied to clipboard')
-                            }}
-                            className='inline-flex items-center gap-1 text-primary underline'
-                          >
-                            Copy VC <Copy className='h-4 w-4' />
-                          </button>
-                        )}
-
-                        <span className='text-muted-foreground text-xs'>
-                          {useMemo(() => prettyDate(p.createdAt ?? null), [p.createdAt])}
-                        </span>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                <>
+                  <SkillPassesTable
+                    rows={passes.rows}
+                    sort={passes.sort}
+                    order={passes.order}
+                    basePath={passes.pagination.basePath}
+                    initialParams={passes.pagination.initialParams}
+                    searchQuery={passes.pagination.initialParams['passQ'] ?? ''}
+                  />
+                  <TablePagination
+                    page={passes.pagination.page}
+                    hasNext={passes.pagination.hasNext}
+                    basePath={passes.pagination.basePath}
+                    initialParams={passes.pagination.initialParams}
+                    pageSize={passes.pagination.pageSize}
+                  />
+                </>
               )}
             </CardContent>
           </Card>

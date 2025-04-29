@@ -223,6 +223,20 @@ export interface ActivityLogRow {
 }
 
 /* --------------------------------------------------------------------- */
+/*                        Candidate – Skill Passes                       */
+/* --------------------------------------------------------------------- */
+
+export interface SkillPassRow {
+  id: number
+  quizTitle: string
+  score: number | null
+  maxScore: number | null
+  txHash: string | null
+  vcJson?: string | null
+  createdAt: string
+}
+
+/* --------------------------------------------------------------------- */
 /*                    Issuer Directory – Issuers                         */
 /* --------------------------------------------------------------------- */
 

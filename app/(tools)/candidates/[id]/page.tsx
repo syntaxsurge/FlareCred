@@ -3,6 +3,7 @@ import { asc, desc, eq, and } from 'drizzle-orm'
 import CandidateDetailedProfileView from '@/components/dashboard/candidate/profile-detailed-view'
 import { db } from '@/lib/db/drizzle'
 import { getCandidateCredentialsSection } from '@/lib/db/queries/candidate-details'
+import { getCandidateSkillPassesSection } from '@/lib/db/queries/candidate-skill-passes'
 import { candidates, users, quizAttempts, issuers } from '@/lib/db/schema'
 import {
   candidateCredentials,
@@ -197,12 +198,38 @@ export default async function PublicCandidateProfile({
   keep('order')
   if (searchTerm) credInitialParams['q'] = searchTerm
 
-  /* ------------------------ Quiz passes ------------------------------- */
-  const passes = await db
-    .select()
-    .from(quizAttempts)
-    .where(eq(quizAttempts.candidateId, candidateId))
-    .orderBy(desc(quizAttempts.createdAt))
+  /* ------------------------ Skill Passes ------------------------------ */
+  const passPage = Math.max(1, Number(first(q, 'passPage') ?? '1'))
+  const passSizeRaw = Number(first(q, 'passSize') ?? '10')
+  const passPageSize = [10, 20, 50].includes(passSizeRaw) ? passSizeRaw : 10
+  const passAllowedSort = ['quizTitle', 'score', 'createdAt'] as const
+  type PassSortKey = (typeof passAllowedSort)[number]
+  const passSortRaw = (first(q, 'passSort') ?? 'createdAt') as string
+  const passSort: PassSortKey = passAllowedSort.includes(passSortRaw as PassSortKey)
+    ? (passSortRaw as PassSortKey)
+    : 'createdAt'
+  const passOrder = first(q, 'passOrder') === 'asc' ? 'asc' : 'desc'
+  const passSearch = (first(q, 'passQ') ?? '').trim()
+
+  const {
+    rows: passRows,
+    hasNext: passHasNext,
+  } = await getCandidateSkillPassesSection(
+    candidateId,
+    passPage,
+    passPageSize,
+    passSort,
+    passOrder,
+    passSearch,
+  )
+
+  const passInitialParams: Record<string, string> = {}
+  const keepPass = (k: string) => {
+    const v = first(q, k)
+    if (v) passInitialParams[k] = v
+  }
+  ;['passSize', 'passSort', 'passOrder'].forEach(keepPass)
+  if (passSearch) passInitialParams['passQ'] = passSearch
 
   /* ---------------------------- View ---------------------------------- */
   return (
@@ -213,7 +240,18 @@ export default async function PublicCandidateProfile({
       avatarSrc={(row.userRow as any)?.image ?? null}
       bio={row.cand.bio ?? null}
       statusCounts={statusCounts as StatusCounts}
-      passes={passes}
+      passes={{
+        rows: passRows,
+        sort: passSort,
+        order: passOrder as 'asc' | 'desc',
+        pagination: {
+          page: passPage,
+          hasNext: passHasNext,
+          pageSize: passPageSize,
+          basePath: `/candidates/${candidateId}`,
+          initialParams: passInitialParams,
+        },
+      }}
       experiences={experiences}
       projects={projects}
       socials={{

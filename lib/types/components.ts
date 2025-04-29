@@ -15,7 +15,8 @@ import type {
   SnapshotMetrics,
 } from './candidate'
 import { Stage } from './recruiter'
-import type { MemberRow } from './tables'
+import type { MemberRow, SkillPassRow } from './tables'
+import { Pagination } from '.'
 
 /** Button-style quick action used in dashboards. */
 export interface QuickAction {
@@ -387,7 +388,12 @@ export interface CandidateDetailedProfileViewProps {
   bio: string | null
   pipelineSummary?: string
   statusCounts: StatusCounts
-  passes: QuizAttempt[]
+  passes: {
+    rows: SkillPassRow[]
+    sort: string
+    order: 'asc' | 'desc'
+    pagination: Pagination
+  }
   snapshot?: SnapshotMetrics
   credentials: CredentialsSection
   experiences: Experience[]
