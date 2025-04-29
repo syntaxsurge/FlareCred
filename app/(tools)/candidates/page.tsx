@@ -5,9 +5,9 @@ import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { db } from '@/lib/db/drizzle'
 import {
-  candidates as candT,
-  candidateCredentials as credT,
-  users as usersT,
+  candidates,
+  candidateCredentials,
+  users,
 } from '@/lib/db/schema'
 import { Users } from 'lucide-react'
 import type { CandidateDirectoryRow } from '@/lib/types/table-rows'
@@ -45,8 +45,8 @@ export default async function CandidateDirectoryPage({
 
   /* ----------------------------- Sort map ------------------------------- */
   const sortMap = {
-    name: usersT.name,
-    email: usersT.email,
+    name: users.name,
+    email: users.email,
     verified: sql<number>`verified_count`,
   } as const
   const orderExpr =
@@ -57,26 +57,26 @@ export default async function CandidateDirectoryPage({
   /* ----------------------------- Base where ----------------------------- */
   let whereExpr: any = sql`TRUE`
   if (searchTerm.length > 0) {
-    whereExpr = ilike(usersT.name, `%${searchTerm}%`)
-    whereExpr = sql`${whereExpr} OR ${ilike(usersT.email, `%${searchTerm}%`)}`
+    whereExpr = ilike(users.name, `%${searchTerm}%`)
+    whereExpr = sql`${whereExpr} OR ${ilike(users.email, `%${searchTerm}%`)}`
   }
 
   /* ----------------------------- Fetch rows ----------------------------- */
   const offset = (page - 1) * pageSize
   const rowsRaw = await db
     .select({
-      id: candT.id,
-      name: usersT.name,
-      email: usersT.email,
-      verified: sql<number>`COUNT(CASE WHEN ${credT.status} = 'verified' THEN 1 END)`.as(
+      id: candidates.id,
+      name: users.name,
+      email: users.email,
+      verified: sql<number>`COUNT(CASE WHEN ${candidateCredentials.status} = 'verified' THEN 1 END)`.as(
         'verified_count',
       ),
     })
-    .from(candT)
-    .innerJoin(usersT, sql`${candT.userId} = ${usersT.id}`)
-    .leftJoin(credT, sql`${credT.candidateId} = ${candT.id}`)
+    .from(candidates)
+    .innerJoin(users, sql`${candidates.userId} = ${users.id}`)
+    .leftJoin(candidateCredentials, sql`${candidateCredentials.candidateId} = ${candidates.id}`)
     .where(whereExpr)
-    .groupBy(candT.id, usersT.name, usersT.email)
+    .groupBy(candidates.id, users.name, users.email)
     .orderBy(orderExpr)
     .limit(pageSize + 1)
     .offset(offset)
