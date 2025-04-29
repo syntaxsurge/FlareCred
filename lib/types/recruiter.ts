@@ -1,5 +1,14 @@
+/* -------------------------------------------------------------------------- */
+/*                 Recruiter domain-specific shared types                     */
+/* -------------------------------------------------------------------------- */
+
 /**
- * Lightweight recruiter pipeline summary used by forms and dropdowns.
+ * Union of recruiter pipeline stages as defined in `lib/constants/recruiter`.
+ */
+export type Stage = 'sourced' | 'screening' | 'interview' | 'offer'
+
+/**
+ * Lightweight recruiter pipeline summary used by forms and dropdown lists.
  */
 export interface Pipeline {
   id: number

@@ -1,5 +1,4 @@
-import type { Pipeline } from './recruiter'
-import type { Stage } from '../constants/recruiter'
+import type { Pipeline, Stage } from './recruiter'
 
 /* -------------------------------------------------------------------------- */
 /*                                 A C T I O N                                */

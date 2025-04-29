@@ -2,7 +2,6 @@ import type { ReactNode, ElementType } from 'react'
 
 import type { LucideIcon } from 'lucide-react'
 
-import type { Stage } from '@/lib/constants/recruiter'
 import type { CredentialStatus } from '@/lib/db/schema/candidate'
 
 import type {
@@ -16,6 +15,7 @@ import type {
   SnapshotMetrics,
 } from './candidate'
 import type { MemberRow } from './table-rows'
+import { Stage } from './recruiter'
 
 /** Button-style quick action used in dashboards. */
 export interface QuickAction {

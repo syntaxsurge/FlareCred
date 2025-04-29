@@ -6,10 +6,11 @@ import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-p
 import { toast } from 'sonner'
 
 import { updateCandidateStageAction } from '@/app/(dashboard)/recruiter/pipelines/actions'
-import { STAGES, type Stage } from '@/lib/constants/recruiter'
+import { STAGES } from '@/lib/constants/recruiter'
 import type { PipelineCandidateCard, PipelineBoardProps } from '@/lib/types/components'
 
 import CandidateCard from './candidate-card'
+import { Stage } from '@/lib/types/recruiter'
 
 /* -------------------------------------------------------------------------- */
 /*                                 Component                                  */
