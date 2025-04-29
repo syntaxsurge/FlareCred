@@ -8,21 +8,8 @@ import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-  type ChartConfig,
 } from '@/components/ui/charts/chart'
-
-interface BarChartProps<D extends Record<string, any> = any> {
-  /** Source data array */
-  data: D[]
-  /** Categorical X-axis key */
-  xKey: keyof D
-  /** Numeric Y-axis key */
-  yKey: keyof D
-  /** Colour / label configuration map */
-  config: ChartConfig
-  /** Optional X-tick formatter (default: full label) */
-  xTickFormatter?: (value: any) => string
-}
+import type { BarChartProps } from '@/lib/types/charts'
 
 export function BarChart<D extends Record<string, any> = any>({
   data,

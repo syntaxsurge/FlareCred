@@ -13,14 +13,7 @@ import {
   type ChartConfig,
 } from '@/components/ui/charts/chart'
 import { cn } from '@/lib/utils'
-
-interface PieChartProps<D extends Record<string, any> = any> {
-  data: D[]
-  dataKey: keyof D
-  nameKey: keyof D
-  config: ChartConfig
-  className?: string
-}
+import type { PieChartProps } from '@/lib/types/charts'
 
 function sliceColour(sliceKey: string, cfg: ChartConfig): string | undefined {
   const entry = cfg[sliceKey]
