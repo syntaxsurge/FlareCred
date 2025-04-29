@@ -1,6 +1,7 @@
+// SPDX-License-Identifier: MIT
 'use client'
 
-import { ReactNode } from 'react'
+import { ReactNode, useEffect, useRef } from 'react'
 import {
   getDefaultConfig,
   RainbowKitProvider,
@@ -8,9 +9,11 @@ import {
   lightTheme,
 } from '@rainbow-me/rainbowkit'
 import '@rainbow-me/rainbowkit/styles.css'
-import { WagmiProvider, http } from 'wagmi'
+import { WagmiProvider, http, useAccount } from 'wagmi'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useTheme } from 'next-themes'
+import { useRouter } from 'next/navigation'
+
 import { WALLETCONNECT_PROJECT_ID } from './config'
 
 /* -------------------------------------------------------------------------- */
@@ -49,10 +52,9 @@ export const coston2 = {
 /*                         R A I N B O W K I T  /  W A G M I                  */
 /* -------------------------------------------------------------------------- */
 
-const projectId = WALLETCONNECT_PROJECT_ID
 const wagmiConfig = getDefaultConfig({
   appName: 'FlareCred',
-  projectId,
+  projectId: WALLETCONNECT_PROJECT_ID,
   chains: [flare, coston2],
   transports: {
     [flare.id]: http(flare.rpcUrls.default.http[0]),
@@ -64,7 +66,33 @@ const wagmiConfig = getDefaultConfig({
 const queryClient = new QueryClient()
 
 /* -------------------------------------------------------------------------- */
-/*                     R A I N B O W K I T T H E M E W R A P P E R            */
+/*               W A L L E T   D I S C O N N E C T   R E D I R E C T          */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Watches the wagmi account state and, when the wallet transitions from
+ * connected to disconnected (e.g. user clicks "Disconnect” in RainbowKit),
+ * clears the session cookie and redirects to the Connect Wallet page.
+ */
+function WalletDisconnectRedirect() {
+  const { isConnected } = useAccount()
+  const router = useRouter()
+  const wasConnected = useRef(isConnected)
+
+  useEffect(() => {
+    if (wasConnected.current && !isConnected) {
+      // Clear server-side session; ignore network errors
+      fetch('/api/auth/signout', { method: 'POST' }).catch(() => {})
+      router.push('/connect-wallet')
+    }
+    wasConnected.current = isConnected
+  }, [isConnected, router])
+
+  return null
+}
+
+/* -------------------------------------------------------------------------- */
+/*                       R A I N B O W K I T   T H E M E                      */
 /* -------------------------------------------------------------------------- */
 
 function RainbowKitWithTheme({ children }: { children: ReactNode }) {
@@ -74,11 +102,16 @@ function RainbowKitWithTheme({ children }: { children: ReactNode }) {
       ? darkTheme({ accentColor: '#ec5b36' })
       : lightTheme({ accentColor: '#ec5b36' })
 
-  return <RainbowKitProvider theme={rkTheme}>{children}</RainbowKitProvider>
+  return (
+    <RainbowKitProvider theme={rkTheme}>
+      <WalletDisconnectRedirect />
+      {children}
+    </RainbowKitProvider>
+  )
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                   PROVIDER                                 */
+/*                                 P R O V I D E R                            */
 /* -------------------------------------------------------------------------- */
 
 export function Web3Provider({ children }: { children: ReactNode }) {
