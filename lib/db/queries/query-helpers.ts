@@ -23,13 +23,12 @@ export function buildOrderExpr<T extends Record<string, any>>(
 /**
  * Build a full-text ILIKE search condition across multiple columns.
  *
- * Returns `null` when the term is blank or when no valid columns are provided.
- * An explicit loop is used so the accumulator is always a defined `SQL`
- * instance, and the `or()` result is cast to `SQL<unknown>` to satisfy TS.
+ * Accepts Drizzle `SQL` fragments *or* column objects; everything is
+ * coerced to `SQL<unknown>` internally for simplicity.
  */
 export function buildSearchCondition(
   term: string,
-  columns: (SQL<unknown> | undefined | null)[],
+  columns: (SQL<unknown> | unknown | undefined | null)[],
 ): SQL<unknown> | null {
   const t = term.trim()
   if (!t) return null

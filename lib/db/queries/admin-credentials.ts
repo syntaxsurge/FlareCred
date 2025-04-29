@@ -51,9 +51,10 @@ export async function getAdminCredentialsPage(
     .leftJoin(candidates, eq(candidateCredentials.candidateId, candidates.id))
     .leftJoin(users, eq(candidates.userId, users.id))
     .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
-    .orderBy(orderBy)
 
-  if (searchCond) query = query.where(searchCond)
+  if (searchCond) query = query.where(searchCond as any)
+
+  query = query.orderBy(orderBy)
 
   /* ------------------ Pagination ---------------------- */
   const { rows, hasNext } = await paginate<AdminCredentialRow>(query as any, page, pageSize)
