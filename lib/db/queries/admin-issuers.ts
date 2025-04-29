@@ -11,6 +11,10 @@ import {
 } from './query-helpers'
 import type { AdminIssuerRow } from '@/lib/types/table-rows'
 
+/* -------------------------------------------------------------------------- */
+/*                         A D M I N   I S S U E R S                          */
+/* -------------------------------------------------------------------------- */
+
 export async function getAdminIssuersPage(
   page: number,
   pageSize = 10,
@@ -18,7 +22,7 @@ export async function getAdminIssuersPage(
   order: 'asc' | 'desc' = 'desc',
   searchTerm = '',
 ): Promise<{ issuers: AdminIssuerRow[]; hasNext: boolean }> {
-  /* ------------------- Column maps -------------------- */
+  /* --------------------------- ORDER BY -------------------------------- */
   const sortMap = {
     name: issuers.name,
     domain: issuers.domain,
@@ -30,14 +34,16 @@ export async function getAdminIssuersPage(
   } as const
 
   const orderBy = buildOrderExpr(sortMap, sortBy, order)
+
+  /* ---------------------------- WHERE ---------------------------------- */
   const searchCond = buildSearchCondition(searchTerm, [
     issuers.name,
     issuers.domain,
     users.email,
   ])
 
-  /* ------------------- Base SELECT -------------------- */
-  let query = db
+  /* ----------------------------- QUERY --------------------------------- */
+  const baseQuery = db
     .select({
       id: issuers.id,
       name: issuers.name,
@@ -49,11 +55,16 @@ export async function getAdminIssuersPage(
     })
     .from(issuers)
     .leftJoin(users, eq(issuers.ownerUserId, users.id))
-    .orderBy(orderBy)
 
-  if (searchCond) query = query.where(searchCond)
+  const filteredQuery = searchCond ? baseQuery.where(searchCond) : baseQuery
+  const orderedQuery = filteredQuery.orderBy(orderBy)
 
-  /* ------------------ Pagination ---------------------- */
-  const { rows, hasNext } = await paginate<AdminIssuerRow>(query as any, page, pageSize)
+  /* --------------------------- PAGINATE ------------------------------- */
+  const { rows, hasNext } = await paginate<AdminIssuerRow>(
+    orderedQuery as any,
+    page,
+    pageSize,
+  )
+
   return { issuers: rows, hasNext }
 }

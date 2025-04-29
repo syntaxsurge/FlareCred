@@ -8,6 +8,10 @@ import {
 } from './query-helpers'
 import type { AdminUserRow } from '@/lib/types/table-rows'
 
+/* -------------------------------------------------------------------------- */
+/*                        A D M I N   U S E R S                               */
+/* -------------------------------------------------------------------------- */
+
 export async function getAdminUsersPage(
   page: number,
   pageSize = 10,
@@ -15,7 +19,7 @@ export async function getAdminUsersPage(
   order: 'asc' | 'desc' = 'desc',
   searchTerm = '',
 ): Promise<{ users: AdminUserRow[]; hasNext: boolean }> {
-  /* ------------------- Column maps -------------------- */
+  /* --------------------------- ORDER BY -------------------------------- */
   const sortMap = {
     name: users.name,
     email: users.email,
@@ -24,10 +28,12 @@ export async function getAdminUsersPage(
   } as const
 
   const orderBy = buildOrderExpr(sortMap, sortBy, order)
+
+  /* ---------------------------- WHERE ---------------------------------- */
   const searchCond = buildSearchCondition(searchTerm, [users.name, users.email])
 
-  /* ------------------- Base SELECT -------------------- */
-  let query = db
+  /* ----------------------------- QUERY --------------------------------- */
+  const baseQuery = db
     .select({
       id: users.id,
       name: users.name,
@@ -36,11 +42,16 @@ export async function getAdminUsersPage(
       createdAt: users.createdAt,
     })
     .from(users)
-    .orderBy(orderBy)
 
-  if (searchCond) query = query.where(searchCond)
+  const filteredQuery = searchCond ? baseQuery.where(searchCond) : baseQuery
+  const orderedQuery = filteredQuery.orderBy(orderBy)
 
-  /* ------------------ Pagination ---------------------- */
-  const { rows, hasNext } = await paginate<AdminUserRow>(query as any, page, pageSize)
+  /* --------------------------- PAGINATE ------------------------------- */
+  const { rows, hasNext } = await paginate<AdminUserRow>(
+    orderedQuery as any,
+    page,
+    pageSize,
+  )
+
   return { users: rows, hasNext }
 }
