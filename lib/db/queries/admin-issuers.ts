@@ -8,14 +8,14 @@ export type AdminIssuerRow = {
   id: number
   name: string
   domain: string
-  owner: string
+  owner: string | null
   category: string
   industry: string
   status: string
 }
 
 /**
- * Return a page of issuers with full‑text search, sorting and pagination.
+ * Return a page of issuers with full-text search, sorting and pagination.
  */
 export async function getAdminIssuersPage(
   page: number,
@@ -26,7 +26,7 @@ export async function getAdminIssuersPage(
 ): Promise<{ issuers: AdminIssuerRow[]; hasNext: boolean }> {
   const offset = (page - 1) * pageSize
 
-  /* --------------------------- ORDER BY helper --------------------------- */
+  /* --------------------------- ORDER BY helper --------------------------- */
   const orderBy =
     sortBy === 'name'
       ? order === 'asc'
@@ -52,12 +52,12 @@ export async function getAdminIssuersPage(
                 ? order === 'asc'
                   ? asc(issuers.status)
                   : desc(issuers.status)
-                : order === 'asc'
+                : /* id fallback */ order === 'asc'
                   ? asc(issuers.id)
                   : desc(issuers.id)
 
   /* ----------------------------- WHERE clause ---------------------------- */
-  const where =
+  const whereClause =
     searchTerm.trim().length === 0
       ? undefined
       : or(
@@ -66,8 +66,8 @@ export async function getAdminIssuersPage(
           ilike(users.email, `%${searchTerm}%`),
         )
 
-  /* ------------------------------ Query ---------------------------------- */
-  let q = db
+  /* --------------------------- BASE SELECT ------------------------------- */
+  const baseQuery = db
     .select({
       id: issuers.id,
       name: issuers.name,
@@ -80,15 +80,14 @@ export async function getAdminIssuersPage(
     .from(issuers)
     .leftJoin(users, eq(issuers.ownerUserId, users.id))
 
-  if (where) q = q.where(where)
+  /* Apply WHERE only when necessary to preserve accurate builder typing */
+  const query = whereClause ? baseQuery.where(whereClause) : baseQuery
 
-  const rows = await q
-    .orderBy(orderBy)
-    .limit(pageSize + 1)
-    .offset(offset)
+  /* ------------------------------ Query ---------------------------------- */
+  const rows = await query.orderBy(orderBy).limit(pageSize + 1).offset(offset)
 
   const hasNext = rows.length > pageSize
   if (hasNext) rows.pop()
 
-  return { issuers: rows, hasNext }
+  return { issuers: rows as AdminIssuerRow[], hasNext }
 }
