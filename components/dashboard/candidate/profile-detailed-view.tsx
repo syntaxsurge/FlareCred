@@ -144,7 +144,7 @@ export default function CandidateDetailedProfileView({
         showShare={showShare}
         stats={[
           { label: 'Credentials', value: totalCredentials },
-          { label: 'Skill Passes', value: passes.length },
+          { label: 'Skill Passes', value: passes.rows.length },
           { label: 'Pipelines', value: pipelineSummary || '—' },
         ]}
         socials={socialIcons}
