@@ -4,9 +4,9 @@ import CandidateDetailedProfileView from '@/components/dashboard/candidate/profi
 import type { RecruiterCredentialRow } from '@/lib/types/table-rows'
 import { db } from '@/lib/db/drizzle'
 import {
-  getCandidateCredentialsSection,
-  type StatusCounts,
+  getCandidateCredentialsSection
 } from '@/lib/db/queries/candidate-details'
+import type { StatusCounts } from '@/lib/types/candidate'
 import { candidates, users, quizAttempts, issuers } from '@/lib/db/schema'
 import {
   candidateCredentials,
