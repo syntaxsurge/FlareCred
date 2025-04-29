@@ -3,11 +3,12 @@ import { redirect } from 'next/navigation'
 import { Users } from 'lucide-react'
 
 import TalentFilters from '@/components/dashboard/recruiter/talent-filters'
-import TalentTable, { RowType } from '@/components/dashboard/recruiter/talent-table'
+import TalentTable from '@/components/dashboard/recruiter/talent-table'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getUser } from '@/lib/db/queries/queries'
 import { getTalentSearchPage } from '@/lib/db/queries/recruiter-talent'
+import type { TalentRow } from '@/lib/types/table-rows'
 
 export const revalidate = 0
 
@@ -63,7 +64,7 @@ export default async function TalentSearchPage({
     skillMax,
   )
 
-  const rows: RowType[] = candidates.map((c) => ({
+  const rows: TalentRow[] = candidates.map((c) => ({
     id: c.id,
     name: c.name,
     email: c.email,

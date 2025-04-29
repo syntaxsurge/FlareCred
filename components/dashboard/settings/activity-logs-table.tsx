@@ -21,9 +21,6 @@ import type { ActivityLogRow } from '@/lib/types/table-rows'
 import type { TableProps } from '@/lib/types/table-props'
 import { relativeTime } from '@/lib/utils/time'
 
-/* -------------------------------------------------------------------------- */
-/*                                Icons Map                                   */
-/* -------------------------------------------------------------------------- */
 
 const iconMap: Record<ActivityType, LucideIcon> = {
   [ActivityType.SIGN_UP]: UserPlus,
@@ -68,9 +65,6 @@ function formatAction(action: ActivityType): string {
   }
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                   Table                                    */
-/* -------------------------------------------------------------------------- */
 
 export default function ActivityLogsTable({
   rows,
@@ -80,7 +74,6 @@ export default function ActivityLogsTable({
   initialParams,
   searchQuery,
 }: TableProps<ActivityLogRow>) {
-  /* -------------------- Navigation helpers -------------------- */
   const { search, handleSearchChange, sortableHeader } = useTableNavigation({
     basePath,
     initialParams,
@@ -89,7 +82,6 @@ export default function ActivityLogsTable({
     searchQuery,
   })
 
-  /* --------------------------- Columns ------------------------- */
   const columns = React.useMemo<Column<ActivityLogRow>[]>(() => {
     return [
       {
@@ -132,7 +124,6 @@ export default function ActivityLogsTable({
     ]
   }, [sortableHeader])
 
-  /* ------------------------------- View ---------------------------------- */
   return (
     <DataTable
       columns={columns}

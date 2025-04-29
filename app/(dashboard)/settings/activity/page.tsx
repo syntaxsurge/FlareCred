@@ -2,12 +2,13 @@ import { redirect } from 'next/navigation'
 
 import { Activity as ActivityIcon } from 'lucide-react'
 
-import ActivityLogsTable, { RowType } from '@/components/dashboard/settings/activity-logs-table'
+import ActivityLogsTable from '@/components/dashboard/settings/activity-logs-table'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getActivityLogsPage } from '@/lib/db/queries/activity'
 import { getUser } from '@/lib/db/queries/queries'
 import { ActivityType } from '@/lib/db/schema'
+import type { ActivityLogRow } from '@/lib/types/table-rows'
 
 export const revalidate = 0
 
@@ -34,7 +35,7 @@ export default async function ActivityPage({
   const sizeRaw = Number(getParam(params, 'size') ?? '10')
   const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
 
-  /* Only timestamp sorting is supported after Stripe removal */
+  /* Only timestamp sorting is supported */
   const sort = 'timestamp'
   const order = getParam(params, 'order') === 'asc' ? 'asc' : 'desc'
   const searchTerm = (getParam(params, 'q') ?? '').trim()
@@ -49,7 +50,7 @@ export default async function ActivityPage({
     searchTerm,
   )
 
-  const rows: RowType[] = logs.map((log) => ({
+  const rows: ActivityLogRow[] = logs.map((log) => ({
     id: log.id,
     type: log.action as ActivityType,
     ipAddress: log.ipAddress,
@@ -66,7 +67,6 @@ export default async function ActivityPage({
   add('order')
   if (searchTerm) initialParams['q'] = searchTerm
 
-  /* ----------------------------- UI ----------------------------- */
   return (
     <PageCard
       icon={ActivityIcon}

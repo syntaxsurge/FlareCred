@@ -8,10 +8,6 @@ import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { TableProps } from '@/lib/types/table-props'
 import type { TalentRow } from '@/lib/types/table-rows'
 
-/* -------------------------------------------------------------------------- */
-/*                                   Table                                    */
-/* -------------------------------------------------------------------------- */
-
 export default function TalentTable({
   rows,
   sort,
@@ -20,7 +16,7 @@ export default function TalentTable({
   initialParams,
   searchQuery,
 }: TableProps<TalentRow>) {
-  /* -------------------- Centralised navigation helpers -------------------- */
+  /* -------------------- Navigation helpers -------------------- */
   const { search, handleSearchChange, sortableHeader } = useTableNavigation({
     basePath,
     initialParams,
@@ -29,7 +25,7 @@ export default function TalentTable({
     searchQuery,
   })
 
-  /* ----------------------------- Columns ---------------------------------- */
+  /* ------------------------ Column defs ----------------------- */
   const columns = React.useMemo<Column<TalentRow>[]>(() => {
     return [
       {
@@ -70,7 +66,7 @@ export default function TalentTable({
     ]
   }, [sortableHeader])
 
-  /* ------------------------------- View ---------------------------------- */
+  /* --------------------------- UI ---------------------------- */
   return (
     <DataTable
       columns={columns}
