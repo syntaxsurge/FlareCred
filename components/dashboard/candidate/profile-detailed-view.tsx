@@ -15,7 +15,6 @@ import {
   ExternalLink,
   Globe2,
 } from 'lucide-react'
-import { toast } from 'sonner'
 import { FaTwitter } from 'react-icons/fa'
 import { SiGithub, SiLinkedin } from 'react-icons/si'
 
@@ -28,12 +27,12 @@ import StatusBadge from '@/components/ui/status-badge'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-
-import ProfileHeader from './profile-header'
+import type { SnapshotMetrics } from '@/lib/types/candidate'
+import type { CandidateDetailedProfileViewProps as Props } from '@/lib/types/components'
 import { copyToClipboard, shortenSeed } from '@/lib/utils'
 import { prettyDate } from '@/lib/utils/time'
-import type { CandidateDetailedProfileViewProps as Props } from '@/lib/types/components'
-import type { SnapshotMetrics } from '@/lib/types/candidate'
+
+import ProfileHeader from './profile-header'
 
 /* -------------------------------------------------------------------------- */
 /*                         D E F A U L T   V A L U E S                        */
@@ -123,10 +122,7 @@ export default function CandidateDetailedProfileView({
   showShare = true,
 }: Props) {
   const totalCredentials =
-    statusCounts.verified +
-    statusCounts.pending +
-    statusCounts.rejected +
-    statusCounts.unverified
+    statusCounts.verified + statusCounts.pending + statusCounts.rejected + statusCounts.unverified
   const profilePath = `/candidates/${candidateId}`
 
   const socialIcons = [
@@ -409,7 +405,7 @@ export default function CandidateDetailedProfileView({
                           <div className='flex items-center gap-1'>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <span className='font-mono text-xs cursor-help'>
+                                <span className='cursor-help font-mono text-xs'>
                                   {shortenSeed(p.seed)}
                                 </span>
                               </TooltipTrigger>

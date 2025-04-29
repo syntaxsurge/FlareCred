@@ -37,12 +37,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/tables/table'
+import type { Column, DataTableProps } from '@/lib/types/components'
 import { cn } from '@/lib/utils'
-import type {
-  Column,
-  BulkAction,
-  DataTableProps,
-} from '@/lib/types/components'
 
 /* Re-export for backwards compatibility */
 export type { Column, BulkAction } from '@/lib/types/components'
