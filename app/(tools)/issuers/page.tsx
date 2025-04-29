@@ -6,7 +6,7 @@ import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { db } from '@/lib/db/drizzle'
 import {
-  issuers as issuersTable,
+  issuers,
   IssuerStatus,
   IssuerCategory,
   IssuerIndustry,
@@ -64,11 +64,11 @@ export default async function IssuerDirectoryPage({
   /*                              Sort mapping                              */
   /* ---------------------------------------------------------------------- */
   const sortMap = {
-    name: issuersTable.name,
-    domain: issuersTable.domain,
-    category: issuersTable.category,
-    industry: issuersTable.industry,
-    createdAt: issuersTable.createdAt,
+    name: issuers.name,
+    domain: issuers.domain,
+    category: issuers.category,
+    industry: issuers.industry,
+    createdAt: issuers.createdAt,
   } as const
 
   const orderExpr =
@@ -79,22 +79,22 @@ export default async function IssuerDirectoryPage({
   /* ---------------------------------------------------------------------- */
   /*                               Where clause                             */
   /* ---------------------------------------------------------------------- */
-  let whereExpr: any = eq(issuersTable.status, IssuerStatus.ACTIVE)
+  let whereExpr: any = eq(issuers.status, IssuerStatus.ACTIVE)
 
   if (validCategory) {
-    whereExpr = and(whereExpr, eq(issuersTable.category, validCategory as any))
+    whereExpr = and(whereExpr, eq(issuers.category, validCategory as any))
   }
 
   if (validIndustry) {
-    whereExpr = and(whereExpr, eq(issuersTable.industry, validIndustry as any))
+    whereExpr = and(whereExpr, eq(issuers.industry, validIndustry as any))
   }
 
   if (searchTerm.length > 0) {
     const searchCond = or(
-      ilike(issuersTable.name, `%${searchTerm}%`),
-      ilike(issuersTable.domain, `%${searchTerm}%`),
-      ilike(issuersTable.category, `%${searchTerm}%`),
-      ilike(issuersTable.industry, `%${searchTerm}%`),
+      ilike(issuers.name, `%${searchTerm}%`),
+      ilike(issuers.domain, `%${searchTerm}%`),
+      ilike(issuers.category, `%${searchTerm}%`),
+      ilike(issuers.industry, `%${searchTerm}%`),
     )
     whereExpr = and(whereExpr, searchCond)
   }
@@ -105,7 +105,7 @@ export default async function IssuerDirectoryPage({
   const offset = (page - 1) * pageSize
   const rowsRaw = await db
     .select()
-    .from(issuersTable)
+    .from(issuers)
     .where(whereExpr)
     .orderBy(orderExpr)
     .limit(pageSize + 1)
