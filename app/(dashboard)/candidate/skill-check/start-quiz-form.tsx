@@ -20,6 +20,7 @@ import { CREDENTIAL_NFT_ADDRESS, CHAIN_ID } from '@/lib/config'
 import { CREDENTIAL_NFT_ABI } from '@/lib/contracts/abis'
 import type { QuizMeta as Quiz } from '@/lib/types/components'
 import { copyToClipboard } from '@/lib/utils'
+import { txUrl } from '@/lib/utils/explorer'
 
 import { startQuizAction } from './actions'
 
@@ -227,12 +228,12 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
             {/* Transaction link once minted */}
             {txHash && (
               <a
-                href={`https://flarescan.com/tx/${txHash}`}
+                href={txUrl(txHash)}
                 target='_blank'
                 rel='noopener noreferrer'
                 className='inline-flex items-center gap-1 text-primary underline'
               >
-                View on Flarescan <ExternalLink className='h-4 w-4' />
+                View on Flare <ExternalLink className='h-4 w-4' />
               </a>
             )}
 
@@ -247,21 +248,6 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
                 <Copy className='h-4 w-4' />
                 Copy VC JSON
               </Button>
-            )}
-
-            {/* Show seed only before minting (e.g. failed attempt) */}
-            {!txHash && (
-              <div className='flex items-center gap-2'>
-                <span className='bg-muted rounded-md px-2 py-1 font-mono text-xs'>{seed}</span>
-                <Button
-                  variant='ghost'
-                  size='icon'
-                  onClick={() => copyToClipboard(seed)}
-                >
-                  <Copy className='h-4 w-4' />
-                  <span className='sr-only'>Copy seed</span>
-                </Button>
-              </div>
             )}
 
             <Button variant='outline' onClick={() => setScore(null)}>

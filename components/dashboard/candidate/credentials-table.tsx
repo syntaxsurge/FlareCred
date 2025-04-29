@@ -14,6 +14,7 @@ import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { TableProps, CandidateCredentialRow } from '@/lib/types/tables'
 import { getProofTx } from '@/lib/utils'
+import { txUrl } from '@/lib/utils/explorer'
 
 export default function CandidateCredentialsTable({
   rows,
@@ -145,10 +146,9 @@ export default function CandidateCredentialsTable({
         sortable: false,
         render: (_v, row) => {
           const proofTx = getProofTx(row.vcJson)
-          /* Hide placeholder zero-address until an actual transaction hash exists */
           return proofTx && proofTx !== '0x0' ? (
             <a
-              href={`https://flarescan.com/tx/${proofTx}`}
+              href={txUrl(proofTx)}
               target='_blank'
               rel='noopener noreferrer'
               className='text-primary underline'
