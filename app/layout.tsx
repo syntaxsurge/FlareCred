@@ -9,6 +9,7 @@ import PublicEnvScript from '@/components/public-env-script'
 import SiteHeader from '@/components/site-header'
 import { ThemeProvider } from '@/components/theme-provider'
 import { UserProvider } from '@/lib/auth'
+import { isDatabaseHealthy } from '@/lib/db/health'
 import { getUser } from '@/lib/db/queries/queries'
 import { Web3Provider } from '@/lib/wallet'
 
@@ -25,32 +26,50 @@ export const viewport: Viewport = {
 const inter = Inter({ subsets: ['latin'] })
 
 /**
- * Root layout — resolves the authenticated user server-side and injects
- * runtime NEXT_PUBLIC_* variables for client usage.
+ * Root layout — if the database is unreachable we short-circuit and render
+ * a friendly downtime screen; otherwise the normal application shell loads.
  */
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  /* Resolve the current user once on the server */
+  const dbOk = await isDatabaseHealthy()
+
+  /* --------------------------- Downtime screen --------------------------- */
+  if (!dbOk) {
+    return (
+      <html lang="en" className={`bg-background text-foreground ${inter.className}`}>
+        <body className="flex min-h-screen flex-col items-center justify-center px-4 text-center">
+          <h1 className="text-4xl font-extrabold tracking-tight">
+            Our database is having a nap 😴
+          </h1>
+          <p className="text-muted-foreground mt-4 max-w-md">
+            We’re unable to reach the FlareCred database right now. Please try again in a few
+            minutes while we reconnect everything behind the scenes.
+          </p>
+        </body>
+      </html>
+    )
+  }
+
+  /* ---------------------------- Normal shell ----------------------------- */
   const userPromise = getUser()
 
   return (
     <html
-      lang='en'
+      lang="en"
       className={`bg-background text-foreground ${inter.className}`}
       suppressHydrationWarning
     >
-      <body className='min-h-[100dvh]'>
-        {/* Inject runtime NEXT_PUBLIC_* variables before any client component mounts */}
+      <body className="min-h-[100dvh]">
         <PublicEnvScript />
 
         <Web3Provider>
           <ThemeProvider
-            attribute='class'
-            defaultTheme='system'
+            attribute="class"
+            defaultTheme="system"
             enableSystem
             disableTransitionOnChange
           >
             <Toaster
-              position='bottom-right'
+              position="bottom-right"
               toastOptions={{
                 classNames: {
                   toast:
@@ -69,7 +88,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
             <UserProvider userPromise={userPromise}>
               <SiteHeader />
-              <main className='mx-auto max-w-7xl px-4 py-4 md:px-6'>{children}</main>
+              <main className="mx-auto max-w-7xl px-4 py-4 md:px-6">{children}</main>
             </UserProvider>
           </ThemeProvider>
         </Web3Provider>
