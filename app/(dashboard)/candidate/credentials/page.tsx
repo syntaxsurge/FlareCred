@@ -4,9 +4,6 @@ import { eq } from 'drizzle-orm'
 import { FileText } from 'lucide-react'
 
 import AddCredentialDialog from '@/components/dashboard/candidate/add-credential-dialog'
-import CandidateCredentialsTable, {
-  RowType,
-} from '@/components/dashboard/candidate/credentials-table'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { db } from '@/lib/db/drizzle'
@@ -15,6 +12,8 @@ import { getUser } from '@/lib/db/queries/queries'
 import { teams, teamMembers } from '@/lib/db/schema/core'
 
 import { addCredential } from './actions'
+import { CandidateCredentialRow } from '@/lib/types/table-rows'
+import CandidateCredentialsTable from '@/components/dashboard/candidate/credentials-table'
 
 export const revalidate = 0
 
@@ -65,7 +64,7 @@ export default async function CredentialsPage({
     searchTerm,
   )
 
-  const rows: RowType[] = credentialRows.map((c) => ({
+  const rows: CandidateCredentialRow[] = credentialRows.map((c) => ({
     id: c.id,
     title: c.title,
     category: c.category,
