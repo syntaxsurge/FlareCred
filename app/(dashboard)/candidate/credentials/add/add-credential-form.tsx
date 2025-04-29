@@ -279,6 +279,8 @@ export default function AddCredentialForm({ addCredentialAction }: Props) {
               ))}
             </SelectContent>
           </Select>
+          {/* Hidden field ensures proofType is submitted even when the select is disabled */}
+          {repoDetected && <input type='hidden' name='proofType' value={proofType} />}
         </div>
 
         {/* Proof data */}
