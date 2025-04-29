@@ -41,7 +41,7 @@ export default function FeaturesSection() {
               key={title}
               className='group border-border/60 bg-background/70 relative flex flex-col items-center overflow-hidden rounded-2xl border p-8 backdrop-blur transition-transform hover:-translate-y-1 hover:shadow-2xl'
             >
-              <div className='mb-4 inline-flex size-12 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 via-pink-500 to-rose-500 text-white shadow-lg'>
+              <div className='mb-4 inline-flex size-12 items-center justify-center rounded-full bg-flare-gradient text-white shadow-lg'>
                 <Icon className='h-6 w-6' />
               </div>
 
@@ -49,7 +49,7 @@ export default function FeaturesSection() {
               <p className='text-muted-foreground mt-2 text-sm leading-relaxed'>{description}</p>
 
               <div className='pointer-events-none absolute inset-0 -z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-15'>
-                <div className='absolute inset-0 bg-gradient-to-br from-orange-500 via-pink-500 to-rose-500 blur-3xl' />
+                <div className='absolute inset-0 bg-flare-gradient blur-3xl' />
               </div>
             </div>
           ))}

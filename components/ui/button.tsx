@@ -1,5 +1,4 @@
 import * as React from 'react'
-
 import { Slot } from '@radix-ui/react-slot'
 import { cva, type VariantProps } from 'class-variance-authority'
 
@@ -10,8 +9,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default:
-          'bg-gradient-to-r from-orange-500 via-pink-500 to-rose-500 text-white shadow-xs hover:opacity-90',
+        default: 'text-white shadow-xs hover:opacity-90',
         destructive:
           'bg-destructive text-white shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60',
         outline:
@@ -39,17 +37,21 @@ function Button({
   variant,
   size,
   asChild = false,
+  style,
   ...props
 }: React.ComponentProps<'button'> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean
   }) {
   const Comp = asChild ? Slot : 'button'
+  const gradientStyle =
+    variant === 'default' ? { background: 'var(--flare-gradient)', ...style } : style
 
   return (
     <Comp
       data-slot='button'
       className={cn(buttonVariants({ variant, size, className }))}
+      style={gradientStyle}
       {...props}
     />
   )

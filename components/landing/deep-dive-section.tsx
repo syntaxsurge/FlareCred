@@ -13,7 +13,7 @@ const ROLES = [
     bullets: [
       'Single profile with signed proofs',
       'AI-graded SkillPass credentials',
-      'Shareable wallet & PDF resume',
+      'Shareable wallet & PDF résumé',
     ],
   },
   {
@@ -42,7 +42,7 @@ export default function DeepDiveSection() {
   return (
     <section id='deep-dive' className='relative isolate overflow-hidden py-24'>
       {/* soft radial background */}
-      <div className='pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_center,var(--tw-gradient-stops))] from-orange-400/10 via-pink-400/5 to-transparent dark:from-orange-700/20 dark:via-pink-700/10' />
+      <div className='pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,var(--flare-gradient))] opacity-10 dark:opacity-20' />
 
       <div className='mx-auto max-w-6xl px-4'>
         <header className='text-center'>
@@ -64,10 +64,10 @@ export default function DeepDiveSection() {
               className='group/card'
             >
               {/* gradient halo wrapper */}
-              <div className='rounded-3xl bg-gradient-to-br from-orange-500/30 via-pink-500/30 to-rose-500/30 p-[2px]'>
+              <div className='rounded-3xl bg-flare-gradient p-[2px]'>
                 <Card className='border-border/60 bg-background/70 h-full rounded-[inherit] border backdrop-blur'>
                   <CardHeader className='flex flex-col items-center gap-4 py-10 text-center'>
-                    <div className='inline-flex size-16 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 via-pink-500 to-rose-500 text-white shadow-lg'>
+                    <div className='inline-flex size-16 items-center justify-center rounded-full bg-flare-gradient text-white shadow-lg'>
                       <Icon className='h-8 w-8' />
                     </div>
                     <CardTitle className='text-foreground text-2xl'>{title}</CardTitle>

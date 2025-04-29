@@ -190,6 +190,21 @@
   --chart-4: hsl(43 74% 66%);
   --chart-5: hsl(27 87% 67%);
   --radius: 0.6rem;
+  --flare-gradient: linear-gradient(90deg,#f9b233 0%,#f15a28 25%,#e6175c 75%,#5d2eff 100%);
+}
+
+/* Utility helpers */
+@layer utilities {
+  .bg-flare-gradient {
+    background-image: var(--flare-gradient);
+  }
+  .text-flare-gradient {
+    background-image: var(--flare-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
 }
 
 /*
