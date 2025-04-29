@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, ilike } from 'drizzle-orm'
 
 import { db } from '../drizzle'
-import { recruiterPipelines as rp, pipelineCandidates as pc } from '../schema/recruiter'
+import { recruiterPipelines, pipelineCandidates } from '../schema/recruiter'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -38,41 +38,41 @@ export async function getCandidatePipelineEntriesPage(
   const orderBy =
     sortBy === 'pipelineName'
       ? order === 'asc'
-        ? asc(rp.name)
-        : desc(rp.name)
+        ? asc(recruiterPipelines.name)
+        : desc(recruiterPipelines.name)
       : sortBy === 'stage'
         ? order === 'asc'
-          ? asc(pc.stage)
-          : desc(pc.stage)
+          ? asc(pipelineCandidates.stage)
+          : desc(pipelineCandidates.stage)
         : sortBy === 'addedAt'
           ? order === 'asc'
-            ? asc(pc.addedAt)
-            : desc(pc.addedAt)
+            ? asc(pipelineCandidates.addedAt)
+            : desc(pipelineCandidates.addedAt)
           : order === 'asc'
-            ? asc(pc.id)
-            : desc(pc.id)
+            ? asc(pipelineCandidates.id)
+            : desc(pipelineCandidates.id)
 
   /* ----------------------------- WHERE clause ---------------------------- */
   const where =
     searchTerm.trim().length === 0
-      ? and(eq(pc.candidateId, candidateId), eq(rp.recruiterId, recruiterId))
+      ? and(eq(pipelineCandidates.candidateId, candidateId), eq(recruiterPipelines.recruiterId, recruiterId))
       : and(
-          eq(pc.candidateId, candidateId),
-          eq(rp.recruiterId, recruiterId),
-          ilike(rp.name, `%${searchTerm}%`),
+          eq(pipelineCandidates.candidateId, candidateId),
+          eq(recruiterPipelines.recruiterId, recruiterId),
+          ilike(recruiterPipelines.name, `%${searchTerm}%`),
         )
 
   /* ------------------------------ Query ---------------------------------- */
   const rows = await db
     .select({
-      id: pc.id,
-      pipelineId: rp.id,
-      pipelineName: rp.name,
-      stage: pc.stage,
-      addedAt: pc.addedAt,
+      id: pipelineCandidates.id,
+      pipelineId: recruiterPipelines.id,
+      pipelineName: recruiterPipelines.name,
+      stage: pipelineCandidates.stage,
+      addedAt: pipelineCandidates.addedAt,
     })
-    .from(pc)
-    .innerJoin(rp, eq(pc.pipelineId, rp.id))
+    .from(pipelineCandidates)
+    .innerJoin(recruiterPipelines, eq(pipelineCandidates.pipelineId, recruiterPipelines.id))
     .where(where as any)
     .orderBy(orderBy)
     .limit(pageSize + 1)
