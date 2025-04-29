@@ -7,7 +7,7 @@ import {
   AtSign,
   Tag,
   BriefcaseBusiness,
-  Link as LinkIcon,
+  Link,
   BadgeCheck,
   Hourglass,
   XCircle,
@@ -224,7 +224,7 @@ export default async function IssuerOnboardPage() {
                 />
                 {issuer.did && (
                   <Detail
-                    icon={LinkIcon}
+                    icon={Link}
                     label='Flare DID'
                     value={issuer.did}
                     className='sm:col-span-2'
