@@ -96,6 +96,12 @@ export async function startQuizAction(formData: FormData) {
   if (passed) {
     /* Generate on-chain authorisation so the client can self-mint. */
     const toAddr = extractAddressFromDid(subjectDid)
+    if (!toAddr) {
+      return {
+        score: aiScore,
+        message: 'Failed to derive wallet address from your team DID.',
+      }
+    }
     signature = await signCredentialMint(toAddr, vcHash, '')
     message +=
       ' Sign the next transaction to anchor your Skill Pass credential on-chain.'
