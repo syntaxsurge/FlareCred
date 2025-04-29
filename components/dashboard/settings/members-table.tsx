@@ -25,17 +25,6 @@ import { truncateAddress } from '@/lib/utils/address'
 import type { MemberRow } from '@/lib/types/table-rows'
 import type { TableProps } from '@/lib/types/table-props'
 
-/* -------------------------------------------------------------------------- */
-/*                                   Props                                    */
-/* -------------------------------------------------------------------------- */
-
-interface MembersTableProps extends TableProps<MemberRow> {
-  isOwner: boolean
-}
-
-/* -------------------------------------------------------------------------- */
-/*                              Edit member form                              */
-/* -------------------------------------------------------------------------- */
 
 const ROLES = ['member', 'owner'] as const
 
@@ -92,16 +81,16 @@ function EditMemberForm({ row, onDone }: { row: MemberRow; onDone: () => void })
 
 export default function MembersTable({
   rows,
-  isOwner,
+  isOwner = false,
   sort,
   order,
   basePath,
   initialParams,
   searchQuery,
-}: MembersTableProps) {
+}: TableProps<MemberRow>) {
   const router = useRouter()
 
-  /* ----------------------- Bulk-selection actions ------------------------ */
+  /* ----------------------- Bulk-selection actions ----------------------- */
   const bulkActions = isOwner
     ? useBulkActions<MemberRow>([
         {
@@ -124,7 +113,7 @@ export default function MembersTable({
       ])
     : []
 
-  /* -------------------- Centralised navigation helpers ------------------- */
+  /* ------------------ Centralised navigation helpers ------------------- */
   const { search, handleSearchChange, sortableHeader } = useTableNavigation({
     basePath,
     initialParams,
@@ -133,11 +122,11 @@ export default function MembersTable({
     searchQuery,
   })
 
-  /* --------------------------- Edit-dialog state ------------------------- */
+  /* --------------------------- Edit-dialog state ------------------------ */
   const [editRow, setEditRow] = React.useState<MemberRow | null>(null)
   const [isPending, startTransition] = React.useTransition()
 
-  /* ------------------------ Row-level action builder --------------------- */
+  /* ------------------- Row-level action builders ------------------------ */
   const makeActions = React.useCallback(
     (row: MemberRow): TableRowAction<MemberRow>[] => [
       {
@@ -166,7 +155,7 @@ export default function MembersTable({
     [router, isPending, startTransition],
   )
 
-  /* --------------------------- Column definitions ------------------------ */
+  /* --------------------------- Column definitions ----------------------- */
   const columns = React.useMemo<Column<MemberRow>[]>(() => {
     const base: Column<MemberRow>[] = [
       {
@@ -217,7 +206,7 @@ export default function MembersTable({
     return base
   }, [sortableHeader, isOwner, makeActions])
 
-  /* -------------------------------- Render ------------------------------- */
+  /* -------------------------------- Render ------------------------------ */
   return (
     <>
       <DataTable
@@ -232,7 +221,7 @@ export default function MembersTable({
         hidePagination
       />
 
-      {/* --------------------------- Edit dialog --------------------------- */}
+      {/* --------------------------- Edit dialog -------------------------- */}
       {editRow && (
         <Dialog
           open
