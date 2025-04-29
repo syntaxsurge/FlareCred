@@ -43,6 +43,12 @@ export default function ProfileHeader({
       .catch(() => toast.error('Copy failed'))
   }
 
+  /* --------------------- Filter invalid social links ------------------ */
+  const validSocials = socials.filter(
+    (s): s is (typeof socials)[number] & { href: string } =>
+      typeof s.href === 'string' && s.href.trim().length > 0,
+  )
+
   /* ------------------------------- view ------------------------------- */
   return (
     <TooltipProvider delayDuration={150}>
@@ -111,9 +117,9 @@ export default function ProfileHeader({
         )}
 
         {/* Socials */}
-        {socials.length > 0 && (
+        {validSocials.length > 0 && (
           <div className='flex flex-wrap items-center justify-center gap-2 border-t p-4'>
-            {socials.map((s) => (
+            {validSocials.map((s) => (
               <Tooltip key={s.label}>
                 <TooltipTrigger asChild>
                   <Button
