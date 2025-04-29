@@ -20,11 +20,3 @@ export interface Pagination {
   /** Query-string params to persist across navigation */
   initialParams: Record<string, string>
 }
-
-/* -------------------------------------------------------------------------- */
-/*                            Domain-specific barrels                         */
-/* -------------------------------------------------------------------------- */
-
-export * from './candidate'
-export * from './recruiter'
-export * from './table-rows'
