@@ -10,12 +10,14 @@ import {
   Briefcase,
   ChevronDown,
   ChevronUp,
+  Copy,
   Download,
   ExternalLink,
   Globe2,
 } from 'lucide-react'
 import { FaTwitter } from 'react-icons/fa'
 import { SiGithub, SiLinkedin } from 'react-icons/si'
+import { toast } from 'sonner'
 
 import CredentialsTable from '@/components/dashboard/recruiter/credentials-table'
 import PipelineEntriesTable from '@/components/dashboard/recruiter/pipeline-entries-table'
@@ -29,6 +31,7 @@ import type { SnapshotMetrics } from '@/lib/types/candidate'
 import type { CandidateDetailedProfileViewProps as Props } from '@/lib/types/components'
 import { prettyDate } from '@/lib/utils/time'
 import { txUrl } from '@/lib/utils/explorer'
+import { copyToClipboard } from '@/lib/utils'
 
 import ProfileHeader from './profile-header'
 
@@ -158,7 +161,7 @@ export default function CandidateDetailedProfileView({
             </CardHeader>
             <CardContent className='space-y-4'>
               <p className='text-muted-foreground text-sm'>
-                Generate a professionally formatted résumé summarizing your profile, credentials,
+                Generate a professionally formatted résumé summarising your profile, credentials,
                 experiences, and projects.
               </p>
               <Button variant='secondary' className='w-full gap-2' asChild>
@@ -398,7 +401,7 @@ export default function CandidateDetailedProfileView({
                         Quiz #{p.quizId} • Score {p.score ?? '—'}
                       </span>
 
-                      <div className='flex items-center gap-3'>
+                      <div className='flex flex-wrap items-center gap-3'>
                         {p.txHash && (
                           <a
                             href={txUrl(p.txHash)}
@@ -408,6 +411,18 @@ export default function CandidateDetailedProfileView({
                           >
                             View Tx <ExternalLink className='h-4 w-4' />
                           </a>
+                        )}
+
+                        {p.vcJson && (
+                          <button
+                            onClick={() => {
+                              copyToClipboard(p.vcJson!)
+                              toast.success('VC JSON copied to clipboard')
+                            }}
+                            className='inline-flex items-center gap-1 text-primary underline'
+                          >
+                            Copy VC <Copy className='h-4 w-4' />
+                          </button>
                         )}
 
                         <span className='text-muted-foreground text-xs'>

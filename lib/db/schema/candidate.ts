@@ -153,6 +153,8 @@ export const quizAttempts = pgTable('quiz_attempts', {
   maxScore: integer('max_score').default(100),
   pass: integer('pass').default(0),
   vcIssuedId: text('vc_issued_id'),
+  /** Optional Verifiable Credential JSON (raw string) */
+  vcJson: text('vc_json'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })

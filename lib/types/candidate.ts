@@ -35,7 +35,10 @@ export interface QuizAttempt {
   maxScore: number | null
   createdAt: Date
   /** On-chain transaction hash anchoring the Skill Pass credential. */
+  /** On-chain transaction hash anchoring the Skill Pass credential. */
   txHash: string | null
+  /** Raw Verifiable Credential JSON (optional). */
+  vcJson?: string | null
 }
 
 /** Experience highlight rendered in the candidate profile. */
