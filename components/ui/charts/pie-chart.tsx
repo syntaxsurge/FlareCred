@@ -2,7 +2,7 @@
 
 import React from 'react'
 
-import { Pie as RePie, PieChart as RePieChart, Cell } from 'recharts'
+import { Pie, PieChart as RePieChart, Cell } from 'recharts'
 
 import {
   ChartContainer,
@@ -46,13 +46,13 @@ export function PieChart<D extends Record<string, any> = any>({
     >
       <RePieChart>
         <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-        <RePie data={data} dataKey={dataKey as string} nameKey={nameKey as string} label>
+        <Pie data={data} dataKey={dataKey as string} nameKey={nameKey as string} label>
           {data.map((entry, index) => {
             const key = String(entry[nameKey]).toLowerCase()
             const fill = sliceColour(key, config) ?? '#808080'
             return <Cell key={`cell-${index}`} fill={fill} />
           })}
-        </RePie>
+        </Pie>
         <ChartLegend
           content={<ChartLegendContent nameKey={nameKey as string} />}
           className='-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center'
