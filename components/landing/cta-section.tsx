@@ -11,10 +11,11 @@ export default function CTASection() {
 
       <div className='mx-auto max-w-4xl px-4 py-24 text-center sm:py-32'>
         <h2 className='text-3xl font-extrabold tracking-tight text-white sm:text-4xl'>
-          Ready to Build a Verifiable Profile?
+          Bring Flare-native trust to your hiring.
         </h2>
         <p className='mx-auto mt-4 max-w-2xl text-lg/relaxed text-white/90'>
-          Showcase provable achievements and let recruiters trust you instantly.
+          Spin up a workspace, mint your did:flare and start issuing verifiable credentials in
+          minutes.
         </p>
 
         <div className='mt-10 flex justify-center'>
@@ -23,7 +24,7 @@ export default function CTASection() {
             size='lg'
             className='rounded-full bg-white/10 text-white hover:bg-white/20'
           >
-            <Link href='/connect-wallet'>Connect Wallet</Link>
+            <Link href='/connect-wallet'>Get Started</Link>
           </Button>
         </div>
       </div>

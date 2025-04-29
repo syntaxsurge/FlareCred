@@ -5,9 +5,6 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
-/**
- * Edge-to-edge hero banner with vibrant gradients and a direct Connect Wallet CTA.
- */
 export default function HeroSection() {
   return (
     <section className='relative isolate -mx-4 overflow-hidden md:-mx-6'>
@@ -25,14 +22,14 @@ export default function HeroSection() {
           </span>
         </h1>
 
-        {/* Free badge */}
-        <p className='mx-auto mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-transparent via-pink-500/20 to-transparent px-4 py-1 text-sm font-medium text-pink-600 dark:text-pink-300'>
-          🎉 Start for <span className='font-semibold'>FREE</span> — forever
+        <p className='mx-auto mt-6 max-w-3xl text-lg/relaxed text-foreground/80 sm:text-xl'>
+          Built on Flare — the only smart-contract platform with native oracle, data connector and
+          randomness protocols.
         </p>
 
-        <p className='text-muted-foreground mx-auto mt-6 max-w-3xl text-lg/relaxed sm:text-xl'>
-          The trust layer for modern hiring — merge verifiable credentials with AI-graded skill
-          passes and get hired faster.
+        {/* Free badge */}
+        <p className='mx-auto mt-6 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-transparent via-pink-500/20 to-transparent px-4 py-1 text-sm font-medium text-pink-600 dark:text-pink-300'>
+          🎉 Start for <span className='font-semibold'>FREE</span> — forever
         </p>
 
         <div className='mt-12 flex flex-wrap justify-center gap-4'>
@@ -42,10 +39,6 @@ export default function HeroSection() {
     </section>
   )
 }
-
-/* -------------------------------------------------------------------------- */
-/* CTA helper                                                                 */
-/* -------------------------------------------------------------------------- */
 
 type GradientButtonProps = Omit<React.ComponentPropsWithoutRef<typeof Button>, 'variant'> & {
   href: string

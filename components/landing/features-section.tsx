@@ -1,27 +1,29 @@
 'use client'
 
-import { Users, Mail, Lock, FolderKanban } from 'lucide-react'
+import { TrendingUp, Shuffle, ShieldCheck, BookOpen } from 'lucide-react'
 
 const features = [
   {
-    icon: Users,
-    title: 'Team Management',
-    description: 'Invite colleagues and manage roles seamlessly within your organisation.',
+    icon: TrendingUp,
+    title: 'Oracle-Priced Billing',
+    description:
+      'Subscriptions are priced in FLR but converted to USD on the fly using the live FTSO feed.',
   },
   {
-    icon: Mail,
-    title: 'Issuer Workflow',
-    description: 'Streamline credential requests and approvals with real issuers.',
+    icon: ShieldCheck,
+    title: 'On-Chain Verifications',
+    description: 'Every credential hash is anchored through FDC and viewable on Flarescan.',
   },
   {
-    icon: Lock,
-    title: 'Secure & Private',
-    description: 'All data & credentials are encrypted and under your control.',
+    icon: Shuffle,
+    title: 'Randomised Quizzes',
+    description:
+      'Flare RNG seeds each quiz attempt ensuring fair, non-predictable assessment for candidates.',
   },
   {
-    icon: FolderKanban,
-    title: 'Organised Dashboard',
-    description: 'Navigate profiles, credentials and pipelines with ease.',
+    icon: BookOpen,
+    title: 'Open Standards',
+    description: 'Verifiable Credentials, ERC-721 tokens and did:flare identifiers by default.',
   },
 ]
 
@@ -30,7 +32,7 @@ export default function FeaturesSection() {
     <section id='features' className='bg-muted/50 py-20'>
       <div className='mx-auto max-w-6xl px-4 text-center'>
         <h2 className='text-foreground text-3xl font-extrabold tracking-tight sm:text-4xl'>
-          Core Features
+          Key Features
         </h2>
 
         <div className='mt-14 grid gap-8 sm:grid-cols-2 lg:grid-cols-4'>
@@ -46,7 +48,6 @@ export default function FeaturesSection() {
               <h3 className='text-foreground text-lg font-semibold'>{title}</h3>
               <p className='text-muted-foreground mt-2 text-sm leading-relaxed'>{description}</p>
 
-              {/* Hover glow */}
               <div className='pointer-events-none absolute inset-0 -z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-15'>
                 <div className='absolute inset-0 bg-gradient-to-br from-orange-500 via-pink-500 to-rose-500 blur-3xl' />
               </div>
