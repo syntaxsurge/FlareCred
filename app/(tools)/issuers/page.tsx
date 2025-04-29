@@ -1,7 +1,7 @@
 import { asc, desc, ilike, or, and, eq } from 'drizzle-orm'
 
 import IssuerFilters from '@/components/issuer-directory/issuer-filters'
-import IssuersTable, { type RowType } from '@/components/issuer-directory/issuers-table'
+import IssuersTable from '@/components/issuer-directory/issuers-table'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { db } from '@/lib/db/drizzle'
@@ -12,6 +12,7 @@ import {
   IssuerIndustry,
 } from '@/lib/db/schema/issuer'
 import { ShieldCheck } from 'lucide-react'
+import type { IssuerDirectoryRow } from '@/lib/types/table-rows'
 
 /* -------------------------------------------------------------------------- */
 /*                               TYPE HELPERS                                 */
@@ -113,7 +114,7 @@ export default async function IssuerDirectoryPage({
   const hasNext = rowsRaw.length > pageSize
   if (hasNext) rowsRaw.pop()
 
-  const rows: RowType[] = rowsRaw.map((i) => ({
+  const rows: IssuerDirectoryRow[] = rowsRaw.map((i) => ({
     id: i.id,
     name: i.name,
     domain: i.domain,

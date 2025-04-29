@@ -1,6 +1,6 @@
 import { asc, desc, ilike, sql } from 'drizzle-orm'
 
-import CandidatesTable, { type RowType } from '@/components/candidate-directory/candidates-table'
+import CandidatesTable from '@/components/candidate-directory/candidates-table'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { db } from '@/lib/db/drizzle'
@@ -10,6 +10,7 @@ import {
   users as usersT,
 } from '@/lib/db/schema'
 import { Users } from 'lucide-react'
+import type { CandidateDirectoryRow } from '@/lib/types/table-rows'
 
 export const revalidate = 0
 
@@ -83,7 +84,7 @@ export default async function CandidateDirectoryPage({
   const hasNext = rowsRaw.length > pageSize
   if (hasNext) rowsRaw.pop()
 
-  const rows: RowType[] = rowsRaw.map((r) => ({
+  const rows: CandidateDirectoryRow[] = rowsRaw.map((r) => ({
     id: r.id,
     name: r.name,
     email: r.email,
