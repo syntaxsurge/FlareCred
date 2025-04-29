@@ -1,4 +1,4 @@
-import { asc, desc, ilike, or } from 'drizzle-orm'
+import { asc, desc, ilike, or, type SQL } from 'drizzle-orm'
 
 /**
  * Build an ORDER BY expression from a keyed map of columns.
@@ -15,23 +15,29 @@ export function buildOrderExpr<T extends Record<string, any>>(
 /**
  * Build a full-text ILIKE search condition across multiple columns.
  * Returns `null` when the search term is blank or when no valid columns are provided.
+ *
+ * By asserting the first condition we guarantee the accumulator is always a
+ * defined SQL object, preventing the `SQL | undefined` union that triggered
+ * TS2322.
  */
 export function buildSearchCondition(
   term: string,
   columns: any[],
-): ReturnType<typeof ilike> | null {
+): SQL<unknown> | null {
   const t = term.trim()
   if (!t) return null
 
-  /* Filter out falsy column refs then map to ILIKE conditions */
-  const conditions = columns
+  const conditions: SQL<unknown>[] = columns
     .filter(Boolean)
     .map((c) => ilike(c, `%${t}%`))
 
   if (conditions.length === 0) return null
 
-  /* Reduce the array into a single OR-chained SQL condition */
-  return conditions.reduce((prev, cur) => or(prev, cur))
+  let combined: SQL<unknown> = conditions[0]!
+  for (let i = 1; i < conditions.length; i++) {
+    combined = or(combined, conditions[i])
+  }
+  return combined
 }
 
 /**
