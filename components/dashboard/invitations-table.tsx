@@ -13,10 +13,7 @@ import {
   deleteInvitationAction,
 } from '@/app/(dashboard)/invitations/actions'
 import { StatusBadge } from '@/components/ui/status-badge'
-import {
-  DataTable,
-  type Column,
-} from '@/components/ui/tables/data-table'
+import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import {
   TableRowActions,
   type TableRowAction,
@@ -25,18 +22,7 @@ import { AcceptIcon, DeclineIcon } from '@/components/ui/colored-icons'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import type { InvitationRow } from '@/lib/types/table-rows'
-
-/* -------------------------------------------------------------------------- */
-/*                                 PROPS                                      */
-/* -------------------------------------------------------------------------- */
-interface InvitationsTableProps {
-  rows: InvitationRow[]
-  sort: string
-  order: 'asc' | 'desc'
-  basePath: string
-  initialParams: Record<string, string>
-  searchQuery: string
-}
+import type { TableProps } from '@/lib/types/table-props'
 
 /* -------------------------------------------------------------------------- */
 /*                       Bulk-actions hook for invitations                    */
@@ -164,7 +150,7 @@ export default function InvitationsTable({
   basePath,
   initialParams,
   searchQuery,
-}: InvitationsTableProps) {
+}: TableProps<InvitationRow>) {
   const router = useRouter()
   const bulkActions = useInvitationBulkActions(router)
   const makeActions = useRowActions(router)

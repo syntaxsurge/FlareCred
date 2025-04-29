@@ -16,20 +16,8 @@ import {
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import type { CandidateCredentialRow } from '@/lib/types/table-rows'
+import type { TableProps } from '@/lib/types/table-props'
 import { getProofTx } from '@/lib/utils'
-
-/* -------------------------------------------------------------------------- */
-/*                                 PROPS                                      */
-/* -------------------------------------------------------------------------- */
-
-interface CredentialsTableProps {
-  rows: CandidateCredentialRow[]
-  sort: string
-  order: 'asc' | 'desc'
-  basePath: string
-  initialParams: Record<string, string>
-  searchQuery: string
-}
 
 /* -------------------------------------------------------------------------- */
 /*                                   Table                                    */
@@ -42,7 +30,7 @@ export default function CandidateCredentialsTable({
   basePath,
   initialParams,
   searchQuery,
-}: CredentialsTableProps) {
+}: TableProps<CandidateCredentialRow>) {
   const router = useRouter()
 
   /* ------------------------ Bulk-selection actions ----------------------- */
