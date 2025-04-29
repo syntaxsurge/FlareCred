@@ -5,12 +5,7 @@ import { useState, useEffect, useTransition } from 'react'
 
 import { Copy, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
-import {
-  useAccount,
-  useSwitchChain,
-  useWalletClient,
-  usePublicClient,
-} from 'wagmi'
+import { useAccount, useSwitchChain, useWalletClient, usePublicClient } from 'wagmi'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -28,10 +23,6 @@ import { copyToClipboard } from '@/lib/utils'
 
 import { startQuizAction } from './actions'
 
-/* -------------------------------------------------------------------------- */
-/*                                    VIEW                                    */
-/* -------------------------------------------------------------------------- */
-
 export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
   const { isConnected, address, chain } = useAccount()
   const { switchChainAsync } = useSwitchChain()
@@ -41,21 +32,23 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
 
-  /* Quiz result state ----------------------------------------------------- */
+  /* Quiz result state -------------------------------------------------- */
   const [seed, setSeed] = useState<string>('')
   const [score, setScore] = useState<number | null>(null)
   const [message, setMessage] = useState('')
   const [vcHash, setVcHash] = useState<string>('')
+  const [signature, setSignature] = useState<string>('')
 
-  /* ---------------------------------------------------------------------- */
-  /*                      Fetch RNG seed when opened                       */
-  /* ---------------------------------------------------------------------- */
+  /* -------------------------------------------------------------------- */
+  /*                 Fetch RNG seed every time the dialog opens           */
+  /* -------------------------------------------------------------------- */
   useEffect(() => {
     if (!open) return
     setSeed('')
     setScore(null)
     setMessage('')
     setVcHash('')
+    setSignature('')
 
     const abort = new AbortController()
 
@@ -74,16 +67,15 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
     return () => abort.abort()
   }, [open])
 
-  /* ---------------------------------------------------------------------- */
-  /*                          Helper: mint credential                       */
-  /* ---------------------------------------------------------------------- */
-  async function mintCredential(hash: string) {
+  /* -------------------------------------------------------------------- */
+  /*                         Mint credential helper                       */
+  /* -------------------------------------------------------------------- */
+  async function mintCredential(hash: string, sig: string) {
     if (!walletClient || !address) {
       toast.error('Connect your wallet first.')
       return
     }
 
-    /* Ensure correct network */
     if (chain?.id !== CHAIN_ID) {
       await switchChainAsync({ chainId: CHAIN_ID })
     }
@@ -94,7 +86,7 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
         address: CREDENTIAL_NFT_ADDRESS,
         abi: CREDENTIAL_NFT_ABI,
         functionName: 'mintCredential',
-        args: [address, hash, ''],
+        args: [address, hash, '', sig],
       })
       toast.loading(`Tx sent: ${txHash.slice(0, 10)}…`, { id: toastId })
       await publicClient?.waitForTransactionReceipt({ hash: txHash })
@@ -104,9 +96,9 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
     }
   }
 
-  /* ---------------------------------------------------------------------- */
-  /*                           Submit quiz answer                           */
-  /* ---------------------------------------------------------------------- */
+  /* -------------------------------------------------------------------- */
+  /*                          Submit quiz answer                          */
+  /* -------------------------------------------------------------------- */
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const fd = new FormData(e.currentTarget)
@@ -114,17 +106,18 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
 
     startTransition(async () => {
       try {
-        const res = await startQuizAction(fd)
+        const res: any = await startQuizAction(fd)
         if (!res) throw new Error('No response')
 
         setScore(res.score)
         setMessage(res.message)
         toast.success(res.message, { id: toastId })
 
-        if (res.passed && res.vcHash) {
+        if (res.passed && res.vcHash && res.signature) {
           setVcHash(res.vcHash)
-          /* Fire-and-forget mint; user still confirms in wallet. */
-          await mintCredential(res.vcHash)
+          setSignature(res.signature)
+          /* Fire-and-forget mint – user still confirms in wallet. */
+          await mintCredential(res.vcHash, res.signature)
         }
       } catch (err: any) {
         toast.error(err?.message ?? 'Something went wrong.', { id: toastId })
@@ -132,9 +125,9 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
     })
   }
 
-  /* ---------------------------------------------------------------------- */
-  /*                                UI                                      */
-  /* ---------------------------------------------------------------------- */
+  /* -------------------------------------------------------------------- */
+  /*                                UI                                    */
+  /* -------------------------------------------------------------------- */
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -190,7 +183,6 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
             <p className='text-primary text-4xl font-extrabold'>{score}</p>
             <p className='text-center'>{message}</p>
 
-            {/* Seed display / copy */}
             <div className='flex items-center gap-2'>
               <span className='bg-muted rounded-md px-2 py-1 font-mono text-xs'>{seed}</span>
               <Button

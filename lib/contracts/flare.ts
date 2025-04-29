@@ -27,9 +27,6 @@ import {
 /*                         F T S O   &   R N G   W R A P P E R S              */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Return the live FLR/USD oracle price in wei and its last-updated timestamp.
- */
 export async function readFlrUsdPriceWei(): Promise<{
   priceWei: bigint
   timestamp: number
@@ -38,12 +35,8 @@ export async function readFlrUsdPriceWei(): Promise<{
   return { priceWei, timestamp: Number(ts) }
 }
 
-/** Convenience helper to convert a wei-denominated FLR price to USD. */
 export const formatUsd = (priceWei: bigint): number => Number(priceWei) / 1e18
 
-/**
- * Return a provably random number ∈ [0, bound) derived from Flare RNG.
- */
 export async function randomMod(bound: number | bigint): Promise<bigint> {
   const b = typeof bound === 'number' ? BigInt(bound) : bound
   if (b <= 0n) throw new Error('bound must be positive')
@@ -51,7 +44,7 @@ export async function randomMod(bound: number | bigint): Promise<bigint> {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                               F D C  P R O O F S                           */
+/*                                F D C  P R O O F S                         */
 /* -------------------------------------------------------------------------- */
 
 export async function verifyFdcProof(proofType: string, proofData: unknown): Promise<boolean> {
@@ -116,7 +109,12 @@ export async function createFlareDID(args?: SignerArgs & { docHash?: string }) {
 /* ---------------------- Credential NFT ----------------------------------- */
 
 export async function issueFlareCredential(
-  args: SignerArgs & { to: string; vcHash: string; uri: string },
+  args: SignerArgs & {
+    to: string
+    vcHash: string
+    uri: string
+    signature?: string
+  },
 ) {
   const signer = resolveSigner(args)
   const nftWrite = new ethers.Contract(
@@ -124,11 +122,16 @@ export async function issueFlareCredential(
     CREDENTIAL_NFT_ABI as InterfaceAbi,
     signer,
   )
+
   const receipt = await (
-    await nftWrite.mintCredential(ethers.getAddress(args.to), toBytes32(args.vcHash), args.uri)
+    await nftWrite.mintCredential(
+      ethers.getAddress(args.to),
+      toBytes32(args.vcHash),
+      args.uri,
+      args.signature ?? '0x',
+    )
   ).wait()
 
-  /* Extract event for tokenId */
   const parsedLog = receipt.logs
     .map((l: Log): LogDescription | null => {
       try {

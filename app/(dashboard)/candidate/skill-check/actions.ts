@@ -8,17 +8,17 @@ import { getUser } from '@/lib/db/queries/queries'
 import { quizAttempts, skillQuizzes, candidates } from '@/lib/db/schema/candidate'
 import { teams, teamMembers } from '@/lib/db/schema/core'
 import { extractAddressFromDid, toBytes32 } from '@/lib/utils/address'
+import { signCredentialMint } from '@/lib/utils/signature'
 
 import { openAIAssess } from './openai'
 
-/**
- * Grades a quiz attempt, records the result, and—if passed—returns the VC
- * payload so the browser can anchor it with the connected wallet.
- */
 export async function startQuizAction(formData: FormData) {
   const user = await getUser()
   if (!user) return { score: 0, message: 'Not logged in.' }
 
+  /* ------------------------------------------------------------------ */
+  /*                           Payload parse                            */
+  /* ------------------------------------------------------------------ */
   const quizId = formData.get('quizId')
   const answer = formData.get('answer')
   const seed = formData.get('seed') as string | null
@@ -91,8 +91,15 @@ export async function startQuizAction(formData: FormData) {
   const vcHash = toBytes32(vcJson)
 
   let message = `You scored ${aiScore}. ${passed ? 'You passed!' : 'You failed.'}`
-  if (passed)
-    message += ' Sign the next transaction to anchor your Skill Pass credential on-chain.'
+
+  let signature = ''
+  if (passed) {
+    /* Generate on-chain authorisation so the client can self-mint. */
+    const toAddr = extractAddressFromDid(subjectDid)
+    signature = await signCredentialMint(toAddr, vcHash, '')
+    message +=
+      ' Sign the next transaction to anchor your Skill Pass credential on-chain.'
+  }
 
   /* Record attempt ---------------------------------------------------- */
   await db.insert(quizAttempts).values({
@@ -104,5 +111,5 @@ export async function startQuizAction(formData: FormData) {
     pass: passed ? 1 : 0,
   })
 
-  return { score: aiScore, message, passed, vcHash }
+  return { score: aiScore, message, passed, vcHash, signature }
 }
