@@ -3,22 +3,12 @@
 import { useEffect, useRef, useState } from 'react'
 
 import { formatUsd, readFlrUsdPriceWei } from '@/lib/contracts/flare'
-
-interface PriceState {
-  usd: number | null
-  stale: boolean
-  loading: boolean
-}
-
-interface UseFlareUsdPriceOptions {
-  /** Milliseconds after which the oracle price is considered stale (defaults to 1 hour). */
-  maxAgeMs?: number
-}
+import type { PriceState, UseFlareUsdPriceOptions } from '@/lib/types/hooks'
 
 /**
- * Returns the latest FLR→USD price, a staleness flag, and loading status.
+ * Returns the latest FLR → USD price, a staleness flag, and loading status.
  *
- * @param options.maxAgeMs  Optional freshness window in milliseconds; defaults to 3 600 000 ms.
+ * @param options.maxAgeMs  Optional freshness window in milliseconds; defaults to 1 hour.
  */
 export function useFlareUsdPrice(options?: UseFlareUsdPriceOptions): PriceState {
   const maxAgeMs = options?.maxAgeMs ?? 3_600_000 // 1 hour
@@ -39,7 +29,7 @@ export function useFlareUsdPrice(options?: UseFlareUsdPriceOptions): PriceState 
         const { priceWei, timestamp } = await readFlrUsdPriceWei()
         if (cancelled) return
 
-        // Avoid redundant state updates.
+        /* Avoid redundant renders. */
         if (lastTimestampRef.current === timestamp) {
           setState((s) => ({ ...s, loading: false }))
           return

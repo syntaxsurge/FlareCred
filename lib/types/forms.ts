@@ -41,6 +41,12 @@ export interface AddToPipelineFormProps {
   pipelines: Pipeline[]
 }
 
+/** Props for the candidate dashboard → "add credential” form. */
+export interface AddCredentialFormProps {
+  /** Server action invoked on submit. */
+  addCredentialAction: (formData: FormData) => Promise<{ error?: string } | void>
+}
+
 /** Props for the account settings → general details form. */
 export interface GeneralFormProps {
   defaultName: string

@@ -14,25 +14,10 @@ import {
 import { users } from '@/lib/db/schema/core'
 import { issuers } from '@/lib/db/schema/issuer'
 
-/* -------------------------------------------------------------------------- */
-/*                                   TYPES                                    */
-/* -------------------------------------------------------------------------- */
-
-export interface ResumeData {
-  name: string
-  email: string
-  bio?: string | null
-  credentials: {
-    title: string
-    issuer: string | null
-    status: CredentialStatus
-  }[]
-  experiences: { title: string; company: string | null }[]
-  projects: { title: string; link?: string | null }[]
-}
+import type { ResumeData } from '@/lib/types/resume'
 
 /* -------------------------------------------------------------------------- */
-/*                         R E S U M E   B U I L D E R                        */
+/*                         R É S U M É   B U I L D E R                        */
 /* -------------------------------------------------------------------------- */
 
 export async function buildResumeData(candidateId: number): Promise<ResumeData | null> {
@@ -50,7 +35,7 @@ export async function buildResumeData(candidateId: number): Promise<ResumeData |
 
   if (!profile) return null
 
-  /* All credentials regardless of status */
+  /* All credentials, regardless of status */
   const creds = await db
     .select({
       title: candidateCredentials.title,
@@ -104,16 +89,16 @@ export async function generateResumePdf(data: ResumeData): Promise<Uint8Array> {
   const BODY_FONT_SIZE = 10
   const SMALL_FONT_SIZE = 8
   const LINE_HEIGHT = BODY_FONT_SIZE + 4
-  const GAP_AFTER_DIVIDER = 12 // spacing below divider
-  const SECTION_TOP_GAP = 20 // NEW - spacing above each section header
+  const GAP_AFTER_DIVIDER = 12
+  const SECTION_TOP_GAP = 20
 
-  /* Use brand primary indigo (#4F46E5) instead of default blue */
-  const ACCENT = rgb(79 / 255, 70 / 255, 229 / 255) // #4F46E5
+  /* Brand primary indigo (#4F46E5) */
+  const ACCENT = rgb(79 / 255, 70 / 255, 229 / 255)
 
   const fontRegular = await pdf.embedFont(StandardFonts.Helvetica)
   const fontBold = await pdf.embedFont(StandardFonts.HelveticaBold)
 
-  /* Optional brand logo */
+  /* Brand logo (optional) */
   let logoImage
   try {
     const logoBytes = await fs.readFile(
@@ -136,11 +121,9 @@ export async function generateResumePdf(data: ResumeData): Promise<Uint8Array> {
     color: ACCENT,
   })
 
-  // Calculate vertical positions with explicit gaps to avoid overlap
-  const nameY = height - bannerH + (bannerH + HEAD_FONT_SIZE) / 2 - HEAD_FONT_SIZE // center name
-  const emailY = nameY - SUBHEAD_FONT_SIZE - 6 // 6-pt gap below name
+  const nameY = height - bannerH + (bannerH + HEAD_FONT_SIZE) / 2 - HEAD_FONT_SIZE
+  const emailY = nameY - SUBHEAD_FONT_SIZE - 6
 
-  // Name
   page.drawText(data.name, {
     x: MARGIN_X,
     y: nameY,
@@ -149,7 +132,6 @@ export async function generateResumePdf(data: ResumeData): Promise<Uint8Array> {
     color: rgb(1, 1, 1),
   })
 
-  // Email
   page.drawText(data.email, {
     x: MARGIN_X,
     y: emailY,
@@ -158,7 +140,6 @@ export async function generateResumePdf(data: ResumeData): Promise<Uint8Array> {
     color: rgb(1, 1, 1),
   })
 
-  // Logo (top-right)
   if (logoImage) {
     const logoH = 24
     const scale = logoH / logoImage.height
@@ -170,7 +151,7 @@ export async function generateResumePdf(data: ResumeData): Promise<Uint8Array> {
     })
   }
 
-  /* Y cursor below banner */
+  /* Cursor below banner */
   let y = height - bannerH - MARGIN_Y
 
   /* ---------------------------------------------------------------------- */
@@ -178,7 +159,6 @@ export async function generateResumePdf(data: ResumeData): Promise<Uint8Array> {
   /* ---------------------------------------------------------------------- */
 
   function drawSectionTitle(title: string) {
-    /* Add breathing room before starting a new section */
     y -= SECTION_TOP_GAP
     ensureSpace()
 
@@ -190,7 +170,6 @@ export async function generateResumePdf(data: ResumeData): Promise<Uint8Array> {
       color: ACCENT,
     })
     y -= SUBHEAD_FONT_SIZE + 2
-    // divider line
     page.drawLine({
       start: { x: MARGIN_X, y },
       end: { x: width - MARGIN_X, y },
@@ -235,7 +214,7 @@ export async function generateResumePdf(data: ResumeData): Promise<Uint8Array> {
       page.drawText(ln, { x: MARGIN_X, y, size, font })
       y -= LINE_HEIGHT
     })
-    y -= 8 // paragraph gap
+    y -= 8
   }
 
   function bulletLine(text: string) {
@@ -270,13 +249,11 @@ export async function generateResumePdf(data: ResumeData): Promise<Uint8Array> {
   /*                                 BODY                                   */
   /* ---------------------------------------------------------------------- */
 
-  // Bio
   if (data.bio) {
     drawSectionTitle('About Me')
     drawWrapped(data.bio, fontRegular, BODY_FONT_SIZE)
   }
 
-  // Experience
   if (data.experiences.length > 0) {
     drawSectionTitle('Experience')
     data.experiences.forEach((exp) =>
@@ -284,13 +261,11 @@ export async function generateResumePdf(data: ResumeData): Promise<Uint8Array> {
     )
   }
 
-  // Projects
   if (data.projects.length > 0) {
     drawSectionTitle('Projects')
     data.projects.forEach((proj) => bulletLine(proj.title))
   }
 
-  // Credentials
   if (data.credentials.length > 0) {
     drawSectionTitle('Credentials')
     data.credentials.forEach((c) => {
@@ -308,7 +283,6 @@ export async function generateResumePdf(data: ResumeData): Promise<Uint8Array> {
 
   pdf.getPages().forEach((p, idx) => {
     const { width: pw } = p.getSize()
-    // footer
     p.drawText(footerText, {
       x: pw / 2 - footerW / 2,
       y: MARGIN_Y / 2,
@@ -316,7 +290,6 @@ export async function generateResumePdf(data: ResumeData): Promise<Uint8Array> {
       font: fontRegular,
       color: rgb(0.55, 0.55, 0.55),
     })
-    // page number
     const num = `${idx + 1}/${pdf.getPageCount()}`
     const numW = fontRegular.widthOfTextAtSize(num, SMALL_FONT_SIZE)
     p.drawText(num, {

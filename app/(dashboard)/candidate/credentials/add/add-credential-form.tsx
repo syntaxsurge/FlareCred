@@ -19,8 +19,8 @@ import {
 import {
   PROOF_TYPES,
   type ProofType,
-  isGithubRepoCredential,
 } from '@/lib/constants/credential'
+import type { AddCredentialFormProps } from '@/lib/types/forms'
 
 /* -------------------------------------------------------------------------- */
 /*                                 CONSTANTS                                  */
@@ -35,29 +35,20 @@ const CATEGORIES = [
   'OTHER',
 ] as const
 
-/* Explicit sub-types surfaced in the UI — extend as needed */
 const SUB_TYPES = ['github_repo'] as const
 
-/* Regex recognising https://github.com/{owner}/{repo}[...] */
 const GITHUB_REPO_REGEX =
   /^https?:\/\/github\.com\/([\w.-]+)\/([\w.-]+)(?:\/?|\.git)$/i
-
-/* -------------------------------------------------------------------------- */
-/*                                   PROPS                                    */
-/* -------------------------------------------------------------------------- */
-
-interface Props {
-  addCredentialAction: (formData: FormData) => Promise<{ error?: string } | void>
-}
 
 /* -------------------------------------------------------------------------- */
 /*                                    VIEW                                    */
 /* -------------------------------------------------------------------------- */
 
-export default function AddCredentialForm({ addCredentialAction }: Props) {
+export default function AddCredentialForm({
+  addCredentialAction,
+}: AddCredentialFormProps) {
   const [isPending, startTransition] = useTransition()
 
-  /* ----------------------------- local state ----------------------------- */
   const [proofType, setProofType] = useState<ProofType>('EVM')
   const [subType, setSubType] = useState<string>('')
   const [fileUrl, setFileUrl] = useState<string>('')
@@ -76,7 +67,6 @@ export default function AddCredentialForm({ addCredentialAction }: Props) {
   useEffect(() => {
     const m = fileUrl.match(GITHUB_REPO_REGEX)
     if (!m) {
-      /* Reset to manual mode when the URL no longer matches */
       if (repoDetected) {
         setRepoDetected(false)
         setProofType('EVM')
@@ -87,11 +77,9 @@ export default function AddCredentialForm({ addCredentialAction }: Props) {
       return
     }
 
-    /* Short-circuit if already processed the same repo */
     const repoPath = `${m[1]}/${m[2]}`
     if (repoDetected && repoUrlRef.current === repoPath) return
 
-    /* Trigger GitHub proof fetch */
     repoUrlRef.current = repoPath
     setRepoDetected(true)
     setSubType('github_repo')
@@ -115,7 +103,6 @@ export default function AddCredentialForm({ addCredentialAction }: Props) {
         toast.error(
           err?.message || 'Failed to attach GitHub proof – try again later.',
         )
-        /* Treat as manual URL credential on failure */
         setRepoDetected(false)
         setProofType('EVM')
         setSubType('')
@@ -143,7 +130,6 @@ export default function AddCredentialForm({ addCredentialAction }: Props) {
           toast.success('Credential added.', { id: toastId })
         }
       } catch (err: any) {
-        /* NEXT redirects throw an error we treat as success */
         if (err?.digest === 'NEXT_REDIRECT' || err?.message === 'NEXT_REDIRECT') {
           toast.success('Credential added.', { id: toastId })
         } else {
@@ -153,7 +139,6 @@ export default function AddCredentialForm({ addCredentialAction }: Props) {
     })
   }
 
-  /* ------------------------------ UI flags ------------------------------ */
   const isJson = proofType === 'JSON'
 
   /* ---------------------------------------------------------------------- */
@@ -279,13 +264,11 @@ export default function AddCredentialForm({ addCredentialAction }: Props) {
               ))}
             </SelectContent>
           </Select>
-          {/* Hidden field ensures proofType is submitted even when the select is disabled */}
           {repoDetected && <input type='hidden' name='proofType' value={proofType} />}
         </div>
 
         {/* Proof data */}
         {repoDetected ? (
-          /* Hidden textarea populated programmatically */
           <textarea
             name='proofData'
             value={proofJson}
@@ -325,10 +308,8 @@ export default function AddCredentialForm({ addCredentialAction }: Props) {
         )}
       </div>
 
-      {/* Optional issuer combobox */}
       <IssuerSelect />
 
-      {/* Submit */}
       <Button
         type='submit'
         disabled={isPending || attachPending || (repoDetected && !proofAttached)}
