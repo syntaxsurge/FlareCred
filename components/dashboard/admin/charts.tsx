@@ -3,17 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { type ChartConfig } from '@/components/ui/charts/chart'
 import { PieChart } from '@/components/ui/charts/pie-chart'
-
-export interface Datum {
-  name: string
-  value: number
-}
-
-interface AdminChartsProps {
-  usersData: Datum[]
-  issuerData: Datum[]
-  credentialData: Datum[]
-}
+import type { AdminChartsProps, Datum } from '@/lib/types/components'
 
 function buildConfig(title: string, data: Datum[]): ChartConfig {
   const palette = [

@@ -4,21 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { type ChartConfig } from '@/components/ui/charts/chart'
 import { LineChart } from '@/components/ui/charts/line-chart'
 import { PieChart } from '@/components/ui/charts/pie-chart'
-
-export interface ScoreDatum {
-  date: string
-  score: number
-}
-
-export interface StatusDatum {
-  name: string
-  value: number
-}
-
-interface CandidateChartsProps {
-  scoreData: ScoreDatum[]
-  statusData: StatusDatum[]
-}
+import type { CandidateChartsProps } from '@/lib/types/components'
 
 export default function CandidateCharts({ scoreData, statusData }: CandidateChartsProps) {
   /* Pie-chart prep */

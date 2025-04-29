@@ -1,11 +1,6 @@
 'use client'
 
-import {
-  ArrowRight,
-  Loader2,
-  RotateCcw,
-  Users,
-} from 'lucide-react'
+import { ArrowRight, Loader2, RotateCcw, Users } from 'lucide-react'
 import {
   useAccount,
   useSwitchChain,
@@ -15,36 +10,18 @@ import {
 import { toast } from 'sonner'
 import { useState } from 'react'
 
-import MembersTable, { RowType } from '@/components/dashboard/settings/members-table'
+import MembersTable from '@/components/dashboard/settings/members-table'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { PLAN_META } from '@/lib/constants/pricing'
 import { useFlareUsdPrice } from '@/lib/hooks/use-flare-usd-price'
-import type { TeamMeta } from '@/lib/types/components'
+import type { SettingsProps } from '@/lib/types/components'
 
 import { InviteTeamMember } from './invite-team'
 import { CHAIN_ID, SUBSCRIPTION_MANAGER_ADDRESS } from '@/lib/config'
 import { SUBSCRIPTION_MANAGER_ABI } from '@/lib/contracts/abis'
-
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
-
-interface SettingsProps {
-  team: TeamMeta
-  rows: RowType[]
-  isOwner: boolean
-  page: number
-  hasNext: boolean
-  pageSize: number
-  sort: string
-  order: 'asc' | 'desc'
-  searchQuery: string
-  basePath: string
-  initialParams: Record<string, string>
-}
 
 /* -------------------------------------------------------------------------- */
 /*                       Renew Subscription Button                            */

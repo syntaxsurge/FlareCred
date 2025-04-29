@@ -7,6 +7,7 @@ import type { ReactNode, ElementType } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import type { Button } from '@/components/ui/button'
 import type { Stage } from '@/lib/constants/recruiter'
+import type { MemberRow } from './table-rows'
 
 /* -------------------------------------------------------------------------- */
 /*                               Quick Actions                                */
@@ -173,4 +174,90 @@ export interface IssuerOption {
   name: string
   category: string
   industry: string
+}
+
+/* -------------------------------------------------------------------------- */
+/*                      Charts data & component prop types                    */
+/* -------------------------------------------------------------------------- */
+
+/** Generic name/value pair used in pie-chart datasets. */
+export interface Datum {
+  name: string
+  value: number
+}
+
+/** Time-series quiz-score datum. */
+export interface ScoreDatum {
+  date: string
+  score: number
+}
+
+/** Credential-status slice used in candidate pie chart. */
+export interface StatusDatum {
+  name: string
+  value: number
+}
+
+/** Stage/count tuple for recruiter pipeline bar chart. */
+export interface StageDatum {
+  stage: string
+  count: number
+}
+
+/** Props for the Admin dashboard charts component. */
+export interface AdminChartsProps {
+  usersData: Datum[]
+  issuerData: Datum[]
+  credentialData: Datum[]
+}
+
+/** Props for the Candidate dashboard charts component. */
+export interface CandidateChartsProps {
+  scoreData: ScoreDatum[]
+  statusData: StatusDatum[]
+}
+
+/** Props for the Issuer dashboard charts component. */
+export interface IssuerChartsProps {
+  pending: number
+  verified: number
+}
+
+/** Props for the Recruiter dashboard charts component. */
+export interface RecruiterChartsProps {
+  stageData: StageDatum[]
+  uniqueCandidates: number
+}
+
+/* -------------------------------------------------------------------------- */
+/*                         Page-specific component props                      */
+/* -------------------------------------------------------------------------- */
+
+/** Props for the Team Settings page component. */
+export interface SettingsProps {
+  team: TeamMeta
+  rows: MemberRow[]
+  isOwner: boolean
+  page: number
+  hasNext: boolean
+  pageSize: number
+  sort: string
+  order: 'asc' | 'desc'
+  searchQuery: string
+  basePath: string
+  initialParams: Record<string, string>
+}
+
+/** Props for the WalletOnboardModal component. */
+export interface WalletOnboardModalProps {
+  isConnected: boolean
+  user: any | null
+}
+
+/** Props for the AddCredentialDialog component. */
+export interface AddCredentialDialogProps {
+  /** Server action wrapper passed from the parent server component */
+  addCredentialAction: (formData: FormData) => Promise<{ error?: string } | void>
+  /** Whether the current user’s team already has a DID */
+  hasDid: boolean
 }

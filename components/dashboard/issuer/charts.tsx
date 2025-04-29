@@ -3,11 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { type ChartConfig } from '@/components/ui/charts/chart'
 import { PieChart } from '@/components/ui/charts/pie-chart'
-
-interface IssuerChartsProps {
-  pending: number
-  verified: number
-}
+import type { IssuerChartsProps } from '@/lib/types/components'
 
 export default function IssuerCharts({ pending, verified }: IssuerChartsProps) {
   const data = [

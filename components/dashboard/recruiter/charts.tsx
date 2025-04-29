@@ -4,16 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { BarChart } from '@/components/ui/charts/bar-chart'
 import { type ChartConfig } from '@/components/ui/charts/chart'
 import { PieChart } from '@/components/ui/charts/pie-chart'
-
-interface StageDatum {
-  stage: string
-  count: number
-}
-
-interface RecruiterChartsProps {
-  stageData: StageDatum[]
-  uniqueCandidates: number
-}
+import type { RecruiterChartsProps } from '@/lib/types/components'
 
 export default function RecruiterCharts({ stageData, uniqueCandidates }: RecruiterChartsProps) {
   /* --------------------- bar-chart config --------------------- */

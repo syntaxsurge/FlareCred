@@ -7,13 +7,7 @@ import { AppModal } from '@/components/ui/app-modal'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { KeyRound } from 'lucide-react'
-
-interface Props {
-  /** Server action wrapper passed from the parent server component */
-  addCredentialAction: (formData: FormData) => Promise<{ error?: string } | void>
-  /** Whether the current user’s team already has a DID */
-  hasDid: boolean
-}
+import type { AddCredentialDialogProps as Props } from '@/lib/types/components'
 
 /**
  * Renders an "Add Credential” button that opens a modal with the full
