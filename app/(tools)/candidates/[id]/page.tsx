@@ -1,7 +1,7 @@
 import { asc, desc, eq, and } from 'drizzle-orm'
 
 import CandidateDetailedProfileView from '@/components/dashboard/candidate/profile-detailed-view'
-import { type RowType as CredRowType } from '@/components/dashboard/recruiter/credentials-table'
+import type { RecruiterCredentialRow } from '@/lib/types/table-rows'
 import { db } from '@/lib/db/drizzle'
 import {
   getCandidateCredentialsSection,
@@ -178,8 +178,8 @@ export default async function PublicCandidateProfile({
     searchTerm,
   )
 
-  const credRows: CredRowType[] = rawCredRows.map(
-    (c): CredRowType => ({
+  const credRows: RecruiterCredentialRow[] = rawCredRows.map(
+    (c): RecruiterCredentialRow => ({
       id: c.id,
       title: c.title,
       category: (c as any).category ?? CredentialCategory.OTHER,
