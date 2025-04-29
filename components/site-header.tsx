@@ -7,9 +7,6 @@ import { useEffect, useState, useRef } from 'react'
 
 import { ChevronDown } from 'lucide-react'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
-import { useAccount } from 'wagmi'
-
-import WalletOnboardModal from '@/components/auth/wallet-onboard-modal'
 import { ModeToggle } from '@/components/theme-toggle'
 import {
   HoverCard,
@@ -43,48 +40,6 @@ const TOOLS_MENU = [
 export default function SiteHeader() {
   const router = useRouter()
 
-  /* Wallet connection state */
-  const { isConnected, address } = useAccount()
-
-  /* When the wallet connects, ask the backend to refresh the session cookie
-     then navigate to the dashboard so role-based layouts are re-evaluated. */
-  useEffect(() => {
-    if (!isConnected) return
-
-    if (!address) {
-      router.replace('/connect-wallet')
-      return
-    }
-
-    let cancelled = false
-
-    ;(async () => {
-      try {
-        await fetch(`/api/auth/wallet-status?address=${address}`, {
-          method: 'GET',
-          cache: 'no-store',
-        })
-      } finally {
-        if (!cancelled) router.replace('/dashboard')
-      }
-    })()
-
-    return () => {
-      cancelled = true
-    }
-  }, [isConnected, address, router])
-
-  /* Detect wallet disconnect (wagmi no longer exposes onDisconnect) */
-  const prevConnectedRef = useRef<boolean>(isConnected)
-  useEffect(() => {
-    if (prevConnectedRef.current && !isConnected) {
-      fetch('/api/auth/signout', { method: 'POST' }).finally(() => {
-        router.replace('/connect-wallet')
-      })
-    }
-    prevConnectedRef.current = isConnected
-  }, [isConnected, router])
-
   /* User promise required by downstream components */
   const { userPromise } = useUser()
   const [user, setUser] = useState<Awaited<typeof userPromise> | null>(null)
@@ -104,30 +59,6 @@ export default function SiteHeader() {
       mounted = false
     }
   }, [userPromise])
-
-  /* ---------------------------------------------------------------------- */
-  /*        Auto-logout when cookie session exists but wallet is gone       */
-  /* ---------------------------------------------------------------------- */
-
-  const signoutAttemptedRef = useRef(false)
-
-  useEffect(() => {
-    /* If a user session exists yet the wallet is not connected, invalidate it */
-    if (!isConnected && user && !signoutAttemptedRef.current) {
-      signoutAttemptedRef.current = true
-      fetch('/api/auth/signout', { method: 'POST' }).finally(() => {
-        router.replace('/connect-wallet')
-        signoutAttemptedRef.current = false
-      })
-    }
-  }, [isConnected, user, router])
-
-  /* Wallet controls: always show RainbowKit ConnectButton (includes built-in Disconnect). */
-  function WalletControls() {
-    return (
-      <ConnectButton accountStatus='avatar' chainStatus='icon' showBalance={false} />
-    )
-  }
 
   return (
     <>
@@ -232,13 +163,10 @@ export default function SiteHeader() {
           {/* Right-aligned controls */}
           <div className='flex items-center justify-end gap-3'>
             <ModeToggle />
-            <WalletControls />
+            <ConnectButton accountStatus='avatar' chainStatus='icon' showBalance={false} />
           </div>
         </div>
       </header>
-
-      {/* Wallet-first onboarding modal */}
-      <WalletOnboardModal isConnected={isConnected} user={user} />
     </>
   )
 }
