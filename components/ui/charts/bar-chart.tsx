@@ -2,7 +2,7 @@
 
 import React from 'react'
 
-import { Bar as ReBar, BarChart as ReBarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
+import { Bar, BarChart as ReBarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 
 import {
   ChartContainer,
@@ -46,7 +46,7 @@ export function BarChart<D extends Record<string, any> = any>({
         />
         <YAxis allowDecimals={false} tickLine={false} axisLine={false} tickMargin={8} />
         <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-        <ReBar dataKey={yKey as string} fill={colourVar} radius={[4, 4, 0, 0]} />
+        <Bar dataKey={yKey as string} fill={colourVar} radius={[4, 4, 0, 0]} />
       </ReBarChart>
     </ChartContainer>
   )
