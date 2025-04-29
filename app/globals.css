@@ -280,3 +280,23 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* -------------------------------------------------------------------------- */
+/*                         Animated Flare Gradient Utility                    */
+/* -------------------------------------------------------------------------- */
+
+@keyframes flare-gradient-pan {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@layer utilities {
+  .animate-flare-gradient {
+    background-size: 200% 200%;
+    animation: flare-gradient-pan 1.2s linear infinite;
+  }
+}
