@@ -10,17 +10,7 @@ import { saveHighlightsAction } from '@/app/(dashboard)/candidate/highlights/act
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import type { HighlightCredential } from '@/lib/types/components'
-
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
-
-interface Props {
-  selectedExperience: HighlightCredential[]
-  selectedProject: HighlightCredential[]
-  available: HighlightCredential[]
-}
+import type { HighlightCredential, HighlightsBoardProps } from '@/lib/types/components'
 
 /* -------------------------------------------------------------------------- */
 /*                         Utility - reorder helper                           */
@@ -37,7 +27,11 @@ function reorder<T>(list: T[], startIdx: number, endIdx: number) {
 /*                                 Component                                  */
 /* -------------------------------------------------------------------------- */
 
-export default function HighlightsBoard({ selectedExperience, selectedProject, available }: Props) {
+export default function HighlightsBoard({
+  selectedExperience,
+  selectedProject,
+  available,
+}: HighlightsBoardProps) {
   const [exp, setExp] = useState<HighlightCredential[]>(selectedExperience)
   const [proj, setProj] = useState<HighlightCredential[]>(selectedProject)
   const [pool, setPool] = useState<HighlightCredential[]>(available)

@@ -261,3 +261,33 @@ export interface AddCredentialDialogProps {
   /** Whether the current user’s team already has a DID */
   hasDid: boolean
 }
+
+/* -------------------------------------------------------------------------- */
+/*                         Newly centralised component props                  */
+/* -------------------------------------------------------------------------- */
+
+/** Props for the candidate HighlightsBoard component. */
+export interface HighlightsBoardProps {
+  selectedExperience: HighlightCredential[]
+  selectedProject: HighlightCredential[]
+  available: HighlightCredential[]
+}
+
+/** Props for the profile header component. */
+export interface ProfileHeaderProps {
+  name: string | null
+  email: string
+  walletAddress?: string
+  avatarSrc?: string | null
+  profilePath?: string
+  showShare?: boolean
+  stats?: ProfileStat[]
+  socials?: SocialLink[]
+  children?: ReactNode
+}
+
+/** Props for the recruiter PipelineBoard component. */
+export interface PipelineBoardProps {
+  pipelineId: number
+  initialData: Record<Stage, PipelineCandidateCard[]>
+}

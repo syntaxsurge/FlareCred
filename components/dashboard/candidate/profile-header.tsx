@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import { ReactNode } from 'react'
 
 import { Share2, Clipboard } from 'lucide-react'
 import { toast } from 'sonner'
@@ -16,23 +15,9 @@ import {
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import { truncateAddress } from '@/lib/utils/address'
-import type { ProfileStat as Stat, SocialLink as Social } from '@/lib/types/components'
-
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
-
-interface ProfileHeaderProps {
-  name: string | null
-  email: string
-  walletAddress?: string
-  avatarSrc?: string | null
-  profilePath?: string
-  showShare?: boolean
-  stats?: Stat[]
-  socials?: Social[]
-  children?: ReactNode
-}
+import type {
+  ProfileHeaderProps,
+} from '@/lib/types/components'
 
 /* -------------------------------------------------------------------------- */
 /*                                   View                                     */

@@ -7,33 +7,25 @@ import { toast } from 'sonner'
 
 import { updateCandidateStageAction } from '@/app/(dashboard)/recruiter/pipelines/actions'
 import { STAGES, type Stage } from '@/lib/constants/recruiter'
+import type {
+  PipelineCandidateCard,
+  PipelineBoardProps,
+} from '@/lib/types/components'
 
 import CandidateCard from './candidate-card'
 
 /* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
+/*                                 Component                                  */
 /* -------------------------------------------------------------------------- */
 
-export type Candidate = {
-  /** Pipeline‑candidate row id */
-  id: number
-  /** Original candidate id (for profile link) */
-  candidateId: number
-  name: string
-  email: string
-  stage: Stage
-}
-
-interface Props {
-  pipelineId: number
-  initialData: Record<Stage, Candidate[]>
-}
-
 /**
- * Responsive drag‑and‑drop Kanban board for recruiter pipelines.
+ * Responsive drag-and-drop Kanban board for recruiter pipelines.
  */
-export default function PipelineBoard({ pipelineId: _pipelineId, initialData }: Props) {
-  const [columns, setColumns] = useState<Record<Stage, Candidate[]>>(initialData)
+export default function PipelineBoard({
+  pipelineId: _pipelineId,
+  initialData,
+}: PipelineBoardProps) {
+  const [columns, setColumns] = useState<Record<Stage, PipelineCandidateCard[]>>(initialData)
   const [_isPending, startTransition] = useTransition()
 
   /* --------------------------- Persist move --------------------------- */
@@ -61,7 +53,7 @@ export default function PipelineBoard({ pipelineId: _pipelineId, initialData }: 
 
     /* Update UI */
     setColumns((prev) => {
-      const next: Record<Stage, Candidate[]> = { ...prev }
+      const next: Record<Stage, PipelineCandidateCard[]> = { ...prev }
       next[from] = [...next[from]]
       next[to] = [...next[to]]
       next[from].splice(source.index, 1)
