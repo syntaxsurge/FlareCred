@@ -2,11 +2,12 @@ import { redirect } from 'next/navigation'
 
 import { Mail } from 'lucide-react'
 
-import InvitationsTable, { RowType } from '@/components/dashboard/invitations-table'
+import InvitationsTable from '@/components/dashboard/invitations-table'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getInvitationsPage } from '@/lib/db/queries/invitations'
 import { getUser } from '@/lib/db/queries/queries'
+import type { InvitationRow } from '@/lib/types/table-rows'
 
 export const revalidate = 0
 
@@ -49,7 +50,7 @@ export default async function InvitationsPage({
     searchTerm,
   )
 
-  const rows: RowType[] = invitations.map((inv) => ({
+  const rows: InvitationRow[] = invitations.map((inv) => ({
     ...inv,
     invitedAt: new Date(inv.invitedAt),
   }))

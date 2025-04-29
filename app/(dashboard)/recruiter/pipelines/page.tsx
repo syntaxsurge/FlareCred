@@ -2,11 +2,12 @@ import { redirect } from 'next/navigation'
 
 import { KanbanSquare } from 'lucide-react'
 
-import PipelinesTable, { RowType } from '@/components/dashboard/recruiter/pipelines-table'
+import PipelinesTable from '@/components/dashboard/recruiter/pipelines-table'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getUser } from '@/lib/db/queries/queries'
 import { getRecruiterPipelinesPage } from '@/lib/db/queries/recruiter-pipelines'
+import type { PipelineRow } from '@/lib/types/table-rows'
 
 import NewPipelineDialog from './new-pipeline-dialog'
 
@@ -59,7 +60,7 @@ export default async function PipelinesPage({
     searchTerm,
   )
 
-  const rows: RowType[] = pipelines.map((p) => ({
+  const rows: PipelineRow[] = pipelines.map((p) => ({
     id: p.id,
     name: p.name,
     description: p.description,
