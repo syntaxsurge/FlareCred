@@ -10,7 +10,6 @@ import {
   Briefcase,
   ChevronDown,
   ChevronUp,
-  Copy,
   Download,
   ExternalLink,
   Globe2,
@@ -26,11 +25,10 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import StatusBadge from '@/components/ui/status-badge'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import type { SnapshotMetrics } from '@/lib/types/candidate'
 import type { CandidateDetailedProfileViewProps as Props } from '@/lib/types/components'
-import { copyToClipboard, shortenSeed } from '@/lib/utils'
 import { prettyDate } from '@/lib/utils/time'
+import { txUrl } from '@/lib/utils/explorer'
 
 import ProfileHeader from './profile-header'
 
@@ -401,29 +399,15 @@ export default function CandidateDetailedProfileView({
                       </span>
 
                       <div className='flex items-center gap-3'>
-                        {p.seed && (
-                          <div className='flex items-center gap-1'>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className='cursor-help font-mono text-xs'>
-                                  {shortenSeed(p.seed)}
-                                </span>
-                              </TooltipTrigger>
-                              <TooltipContent side='top'>
-                                <span className='font-mono text-xs break-all'>{p.seed}</span>
-                              </TooltipContent>
-                            </Tooltip>
-
-                            <Button
-                              variant='ghost'
-                              size='icon'
-                              onClick={() => copyToClipboard(p.seed)}
-                              className='h-6 w-6'
-                            >
-                              <Copy className='h-3.5 w-3.5' />
-                              <span className='sr-only'>Copy seed</span>
-                            </Button>
-                          </div>
+                        {p.txHash && (
+                          <a
+                            href={txUrl(p.txHash)}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className='inline-flex items-center gap-1 text-primary underline'
+                          >
+                            View Tx <ExternalLink className='h-4 w-4' />
+                          </a>
                         )}
 
                         <span className='text-muted-foreground text-xs'>

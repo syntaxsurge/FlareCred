@@ -5,13 +5,21 @@ import { eq } from 'drizzle-orm'
 import { PLATFORM_ISSUER_DID } from '@/lib/config'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
-import { quizAttempts, skillQuizzes, candidates } from '@/lib/db/schema/candidate'
+import {
+  candidates,
+  skillQuizzes,
+} from '@/lib/db/schema/candidate'
 import { teams, teamMembers } from '@/lib/db/schema/core'
 import { extractAddressFromDid, toBytes32 } from '@/lib/utils/address'
 import { signCredentialMint } from '@/lib/utils/signature'
 
 import { openAIAssess } from './openai'
 
+/**
+ * Runs the AI assessment and returns signing payloads _without_
+ * writing anything to the database – the quiz attempt will be
+ * inserted only after the user mints the credential.
+ */
 export async function startQuizAction(formData: FormData) {
   const user = await getUser()
   if (!user) return { score: 0, message: 'Not logged in.' }
@@ -107,15 +115,16 @@ export async function startQuizAction(formData: FormData) {
       ' Sign the next transaction to anchor your Skill Pass credential on-chain.'
   }
 
-  /* Record attempt ---------------------------------------------------- */
-  await db.insert(quizAttempts).values({
-    candidateId: candidateRow.id,
+  /* No DB writes here – the attempt will be saved after mint success */
+
+  return {
+    score: aiScore,
+    message,
+    passed,
+    vcHash,
+    signature,
+    vcJson,
     quizId: quiz.id,
     seed,
-    score: aiScore,
-    maxScore: 100,
-    pass: passed ? 1 : 0,
-  })
-
-  return { score: aiScore, message, passed, vcHash, signature, vcJson }
+  }
 }

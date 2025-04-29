@@ -27,14 +27,15 @@ export interface PipelineSection {
   addToPipelineForm?: ReactNode
 }
 
-/** Historic quiz attempt used for skill-pass tables. */
+/** Historic quiz attempt used for skill-pass tables (only saved once minted). */
 export interface QuizAttempt {
   id: number
   quizId: number
   score: number | null
   maxScore: number | null
   createdAt: Date
-  seed: string
+  /** On-chain transaction hash anchoring the Skill Pass credential. */
+  txHash: string | null
 }
 
 /** Experience highlight rendered in the candidate profile. */

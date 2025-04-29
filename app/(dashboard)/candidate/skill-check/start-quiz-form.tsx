@@ -105,7 +105,7 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
   /* -------------------------------------------------------------------- */
   /*                         Mint credential helper                       */
   /* -------------------------------------------------------------------- */
-  async function mintCredential(hash: string, sig: string) {
+  async function mintCredential(hash: string, sig: string, aiScore: number) {
     if (!walletClient || !address) {
       toast.error('Connect your wallet first.')
       return
@@ -127,6 +127,19 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
       await publicClient?.waitForTransactionReceipt({ hash: tx })
       setTxHash(tx)
       toast.success('Skill Pass credential minted!', { id: toastId })
+
+      /* Persist minted pass ---------------------------------------------- */
+      await fetch('/api/skill-pass', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          quizId: quiz.id,
+          score: aiScore,
+          seed,
+          txHash: tx,
+          vcJson,
+        }),
+      })
     } catch (err: any) {
       toast.error(err?.message ?? 'Minting failed.', { id: toastId })
     }
@@ -152,7 +165,7 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
         if (res.passed && res.vcHash && res.signature) {
           setVcHash(res.vcHash)
           if (res.vcJson) setVcJson(res.vcJson)
-          await mintCredential(res.vcHash, res.signature)
+          await mintCredential(res.vcHash, res.signature, res.score)
         }
       } catch (err: any) {
         toast.error(err?.message ?? 'Something went wrong.', { id: toastId })
