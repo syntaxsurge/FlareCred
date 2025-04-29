@@ -12,6 +12,14 @@ import {
 } from './query-helpers'
 import type { AdminCredentialRow } from '@/lib/types/table-rows'
 
+/* -------------------------------------------------------------------------- */
+/*                      A D M I N   C R E D E N T I A L S                     */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Return a paginated, searchable slice of all candidate credentials for the admin
+ * dashboard with flexible sorting.
+ */
 export async function getAdminCredentialsPage(
   page: number,
   pageSize = 10,
@@ -19,7 +27,7 @@ export async function getAdminCredentialsPage(
   order: 'asc' | 'desc' = 'desc',
   searchTerm = '',
 ): Promise<{ credentials: AdminCredentialRow[]; hasNext: boolean }> {
-  /* ------------------- Column maps -------------------- */
+  /* --------------------------- ORDER BY -------------------------------- */
   const sortMap = {
     title: candidateCredentials.title,
     candidate: users.email,
@@ -29,14 +37,16 @@ export async function getAdminCredentialsPage(
   } as const
 
   const orderBy = buildOrderExpr(sortMap, sortBy, order)
+
+  /* ---------------------------- WHERE ---------------------------------- */
   const searchCond = buildSearchCondition(searchTerm, [
     candidateCredentials.title,
     users.email,
     issuers.name,
   ])
 
-  /* ------------------- Base SELECT -------------------- */
-  let query = db
+  /* ----------------------------- QUERY --------------------------------- */
+  const baseQuery = db
     .select({
       id: candidateCredentials.id,
       title: candidateCredentials.title,
@@ -44,7 +54,6 @@ export async function getAdminCredentialsPage(
       candidate: users.email,
       issuer: issuers.name,
       proofType: candidateCredentials.proofType,
-      proofData: candidateCredentials.proofData,
       vcJson: candidateCredentials.vcJson,
     })
     .from(candidateCredentials)
@@ -52,11 +61,15 @@ export async function getAdminCredentialsPage(
     .leftJoin(users, eq(candidates.userId, users.id))
     .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
 
-  if (searchCond) query = query.where(searchCond as any)
+  const filteredQuery = searchCond ? baseQuery.where(searchCond) : baseQuery
+  const orderedQuery = filteredQuery.orderBy(orderBy)
 
-  query = query.orderBy(orderBy)
+  /* --------------------------- PAGINATE -------------------------------- */
+  const { rows, hasNext } = await paginate<AdminCredentialRow>(
+    orderedQuery as any,
+    page,
+    pageSize,
+  )
 
-  /* ------------------ Pagination ---------------------- */
-  const { rows, hasNext } = await paginate<AdminCredentialRow>(query as any, page, pageSize)
   return { credentials: rows, hasNext }
 }
