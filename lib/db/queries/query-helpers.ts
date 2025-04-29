@@ -23,14 +23,21 @@ export function buildSearchCondition(
   const t = term.trim()
   if (!t) return null
   const conds = columns.map((c) => ilike(c, `%${t}%`))
-  return conds.reduce<ReturnType<typeof ilike> | null>((prev, cur) => (prev ? or(prev, cur) : cur))
+  return conds.reduce<ReturnType<typeof ilike> | null>(
+    (prev, cur) => (prev ? or(prev, cur) : cur),
+    null,
+  )
 }
 
 /**
- * Apply LIMIT/OFFSET pagination and return rows + hasNext flag.
+ * Apply LIMIT/OFFSET pagination and return rows with a hasNext flag.
+ *
+ * The query builder type is intentionally broad (any object exposing
+ * `.limit` and `.offset`) to stay compatible with Drizzle’s various
+ * builder instances.
  */
 export async function paginate<T>(
-  q: ReturnType<typeof sql>,
+  q: any,
   page: number,
   pageSize: number,
 ): Promise<{ rows: T[]; hasNext: boolean }> {
