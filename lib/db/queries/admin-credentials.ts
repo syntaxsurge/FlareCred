@@ -31,7 +31,7 @@ export async function getAdminCredentialsPage(
 ): Promise<{ credentials: AdminCredentialRow[]; hasNext: boolean }> {
   const offset = (page - 1) * pageSize
 
-  /* ---------- order by ---------- */
+  /* ---------------------------- ORDER BY ---------------------------- */
   const orderBy =
     sortBy === 'title'
       ? order === 'asc'
@@ -53,8 +53,8 @@ export async function getAdminCredentialsPage(
               ? asc(candidateCredentials.id)
               : desc(candidateCredentials.id)
 
-  /* ---------- where ---------- */
-  const where =
+  /* ----------------------------- WHERE ----------------------------- */
+  const whereExpr =
     searchTerm.trim().length === 0
       ? undefined
       : or(
@@ -63,8 +63,8 @@ export async function getAdminCredentialsPage(
           ilike(issuers.name, `%${searchTerm}%`),
         )
 
-  /* ---------- query ---------- */
-  let q = db
+  /* --------------------------- BASE QUERY --------------------------- */
+  const baseQuery = db
     .select({
       id: candidateCredentials.id,
       title: candidateCredentials.title,
@@ -79,9 +79,11 @@ export async function getAdminCredentialsPage(
     .leftJoin(users, eq(candidates.userId, users.id))
     .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
 
-  if (where) q = q.where(where)
+  /* Apply WHERE only when needed to preserve correct builder types */
+  const query = whereExpr ? baseQuery.where(whereExpr) : baseQuery
 
-  const rows = await q.orderBy(orderBy).limit(pageSize + 1).offset(offset)
+  /* ------------------------------ RUN ------------------------------ */
+  const rows = await query.orderBy(orderBy).limit(pageSize + 1).offset(offset)
 
   const hasNext = rows.length > pageSize
   if (hasNext) rows.pop()
