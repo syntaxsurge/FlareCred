@@ -3,24 +3,11 @@ import { and, asc, desc, ilike, or, sql } from 'drizzle-orm'
 import { db } from '../drizzle'
 import { candidates } from '../schema/candidate'
 import { users } from '../schema/core'
+import type { TalentRow } from '@/lib/types/table-rows'
 
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
-
-export type TalentRow = {
-  id: number
-  name: string | null
-  email: string
-  bio: string | null
-  verified: number
-  topScore: number | null
-}
-
-/* -------------------------------------------------------------------------- */
-/*                             Paginated fetch                                */
-/* -------------------------------------------------------------------------- */
-
+/**
+ * Paginated talent search with filters.
+ */
 export async function getTalentSearchPage(
   page: number,
   pageSize = 10,
@@ -33,7 +20,7 @@ export async function getTalentSearchPage(
 ): Promise<{ candidates: TalentRow[]; hasNext: boolean }> {
   const offset = (page - 1) * pageSize
 
-  /* --------------------------- ORDER BY helper --------------------------- */
+  /* --------------------------- ORDER BY helper --------------------------- */
   const orderBy =
     sortBy === 'email'
       ? order === 'asc'
@@ -72,7 +59,7 @@ export async function getTalentSearchPage(
     )
   }
 
-  /* Skill‑score range */
+  /* Skill-score range */
   if (skillMin > 0) {
     filters.push(
       sql`${skillMin} <= (

@@ -2,17 +2,10 @@ import { asc, desc, ilike, or } from 'drizzle-orm'
 
 import { db } from '../drizzle'
 import { users } from '../schema/core'
-
-export type AdminUserRow = {
-  id: number
-  name: string | null
-  email: string
-  role: string
-  createdAt: Date
-}
+import type { AdminUserRow } from '@/lib/types/table-rows'
 
 /**
- * Return a page of users with optional full‑text search, sorting and pagination.
+ * Return a page of users with optional full-text search, sorting and pagination.
  */
 export async function getAdminUsersPage(
   page: number,
@@ -23,7 +16,7 @@ export async function getAdminUsersPage(
 ): Promise<{ users: AdminUserRow[]; hasNext: boolean }> {
   const offset = (page - 1) * pageSize
 
-  /* --------------------------- ORDER BY helper --------------------------- */
+  /* --------------------------- ORDER BY helper --------------------------- */
   const orderBy =
     sortBy === 'name'
       ? order === 'asc'
@@ -68,5 +61,5 @@ export async function getAdminUsersPage(
   const hasNext = rows.length > pageSize
   if (hasNext) rows.pop()
 
-  return { users: rows, hasNext }
+  return { users: rows as AdminUserRow[], hasNext }
 }

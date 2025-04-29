@@ -2,27 +2,11 @@ import { asc, desc, eq, ilike, or, and } from 'drizzle-orm'
 
 import { db } from '../drizzle'
 import { invitations, teams, users } from '../schema/core'
-
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
-
-export type InvitationRow = {
-  id: number
-  team: string
-  role: string
-  inviter: string | null
-  status: string
-  invitedAt: Date
-}
-
-/* -------------------------------------------------------------------------- */
-/*                                Main helper                                 */
-/* -------------------------------------------------------------------------- */
+import type { InvitationRow } from '@/lib/types/table-rows'
 
 /**
  * Return a page of invitations addressed to the given email with optional
- * full‑text search, sorting and pagination.
+ * full-text search, sorting and pagination.
  */
 export async function getInvitationsPage(
   email: string,

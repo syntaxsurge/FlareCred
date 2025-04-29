@@ -2,14 +2,7 @@ import { asc, desc, eq, ilike, or, and } from 'drizzle-orm'
 
 import { db } from '../drizzle'
 import { teamMembers, users } from '../schema/core'
-
-export type TeamMemberRow = {
-  id: number
-  name: string | null
-  email: string
-  role: string
-  joinedAt: Date
-}
+import type { MemberRow } from '@/lib/types/table-rows'
 
 /**
  * Return a single page of team members with optional search, sorting and pagination.
@@ -21,10 +14,10 @@ export async function getTeamMembersPage(
   sortBy: 'name' | 'email' | 'role' | 'joinedAt' = 'joinedAt',
   order: 'asc' | 'desc' = 'asc',
   searchTerm = '',
-): Promise<{ members: TeamMemberRow[]; hasNext: boolean }> {
+): Promise<{ members: MemberRow[]; hasNext: boolean }> {
   const offset = (page - 1) * pageSize
 
-  /* ----------------------------- ORDER BY -------------------------------- */
+  /* ----------------------------- ORDER BY -------------------------------- */
   const orderBy =
     sortBy === 'name'
       ? order === 'asc'
@@ -63,6 +56,7 @@ export async function getTeamMembersPage(
       id: teamMembers.id,
       name: users.name,
       email: users.email,
+      walletAddress: users.walletAddress,
       role: teamMembers.role,
       joinedAt: teamMembers.joinedAt,
     })
@@ -76,5 +70,5 @@ export async function getTeamMembersPage(
   const hasNext = rows.length > pageSize
   if (hasNext) rows.pop()
 
-  return { members: rows, hasNext }
+  return { members: rows as MemberRow[], hasNext }
 }

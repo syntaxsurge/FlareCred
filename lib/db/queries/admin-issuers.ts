@@ -3,16 +3,7 @@ import { asc, desc, eq, ilike, or } from 'drizzle-orm'
 import { db } from '../drizzle'
 import { users } from '../schema/core'
 import { issuers } from '../schema/issuer'
-
-export type AdminIssuerRow = {
-  id: number
-  name: string
-  domain: string
-  owner: string | null
-  category: string
-  industry: string
-  status: string
-}
+import type { AdminIssuerRow } from '@/lib/types/table-rows'
 
 /**
  * Return a page of issuers with full-text search, sorting and pagination.
@@ -80,7 +71,7 @@ export async function getAdminIssuersPage(
     .from(issuers)
     .leftJoin(users, eq(issuers.ownerUserId, users.id))
 
-  /* Apply WHERE only when necessary to preserve accurate builder typing */
+  /* Apply WHERE only when necessary */
   const query = whereClause ? baseQuery.where(whereClause) : baseQuery
 
   /* ------------------------------ Query ---------------------------------- */

@@ -4,20 +4,10 @@ import { db } from '../drizzle'
 import {
   candidateCredentials,
   candidates,
-  CredentialStatus,
 } from '../schema/candidate'
 import { users } from '../schema/core'
 import { issuers } from '../schema/issuer'
-
-export type AdminCredentialRow = {
-  id: number
-  title: string
-  status: CredentialStatus
-  candidate: string
-  issuer: string | null
-  proofType: string | null
-  proofData: string | null
-}
+import type { AdminCredentialRow } from '@/lib/types/table-rows'
 
 /**
  * Return a page of credentials with full-text search, sorting and pagination.
@@ -79,7 +69,6 @@ export async function getAdminCredentialsPage(
     .leftJoin(users, eq(candidates.userId, users.id))
     .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
 
-  /* Apply WHERE only when needed to preserve correct builder types */
   const query = whereExpr ? baseQuery.where(whereExpr) : baseQuery
 
   /* ------------------------------ RUN ------------------------------ */

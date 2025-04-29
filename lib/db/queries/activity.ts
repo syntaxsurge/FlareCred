@@ -2,11 +2,10 @@ import { eq, asc, desc, and, or, ilike } from 'drizzle-orm'
 
 import { db } from '../drizzle'
 import { activityLogs } from '../schema/core'
-
-export type ActivityLogRow = typeof activityLogs.$inferSelect
+import type { ActivityLogRow } from '@/lib/types/table-rows'
 
 /**
- * Fetch a page of activity logs with optional full‑text search, pagination and sorting.
+ * Fetch a page of activity logs with optional full-text search, pagination and sorting.
  */
 export async function getActivityLogsPage(
   userId: number,
@@ -18,7 +17,7 @@ export async function getActivityLogsPage(
 ): Promise<{ logs: ActivityLogRow[]; hasNext: boolean }> {
   const offset = (page - 1) * pageSize
 
-  /* --------------------------- ORDER BY helper --------------------------- */
+  /* --------------------------- ORDER BY helper --------------------------- */
   const orderBy =
     sortBy === 'action'
       ? order === 'asc'
@@ -54,5 +53,5 @@ export async function getActivityLogsPage(
   const hasNext = rows.length > pageSize
   if (hasNext) rows.pop()
 
-  return { logs: rows, hasNext }
+  return { logs: rows as ActivityLogRow[], hasNext }
 }

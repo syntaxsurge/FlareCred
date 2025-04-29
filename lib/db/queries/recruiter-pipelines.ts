@@ -2,21 +2,7 @@ import { eq, ilike, asc, desc, and } from 'drizzle-orm'
 
 import { db } from '../drizzle'
 import { recruiterPipelines } from '../schema/recruiter'
-
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
-
-export type PipelineRow = {
-  id: number
-  name: string
-  description: string | null
-  createdAt: Date
-}
-
-/* -------------------------------------------------------------------------- */
-/*                              Paginated fetch                               */
-/* -------------------------------------------------------------------------- */
+import type { PipelineRow } from '@/lib/types/table-rows'
 
 /**
  * Paginate pipelines for the given recruiter with optional search and sorting.
@@ -31,7 +17,7 @@ export async function getRecruiterPipelinesPage(
 ): Promise<{ pipelines: PipelineRow[]; hasNext: boolean }> {
   const offset = (page - 1) * pageSize
 
-  /* --------------------------- ORDER BY helper --------------------------- */
+  /* --------------------------- ORDER BY helper --------------------------- */
   const orderBy =
     sortBy === 'name'
       ? order === 'asc'

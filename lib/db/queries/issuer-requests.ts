@@ -3,15 +3,7 @@ import { asc, desc, eq, ilike, or, and, sql } from 'drizzle-orm'
 import { db } from '../drizzle'
 import { candidateCredentials, candidates, CredentialStatus } from '../schema/candidate'
 import { users } from '../schema/core'
-
-export interface IssuerRequestRow {
-  id: number
-  title: string
-  type: string
-  candidate: string
-  status: CredentialStatus
-  proofType: string | null
-}
+import type { IssuerRequestRow } from '@/lib/types/table-rows'
 
 /**
  * Fetch a paginated, searchable list of credential-verification requests
