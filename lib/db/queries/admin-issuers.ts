@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm'
 
-import type { AdminIssuerRow } from '@/lib/types/table-rows'
+import type { AdminIssuerRow } from '@/lib/types/tables'
 
 import { db } from '../drizzle'
 import { buildOrderExpr, buildSearchCondition, paginate } from './query-helpers'

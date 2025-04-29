@@ -1,6 +1,6 @@
 import { eq, and, desc } from 'drizzle-orm'
 
-import type { RecruiterCredentialRow } from '@/lib/types/table-rows'
+import type { RecruiterCredentialRow } from '@/lib/types/tables'
 
 import { db } from '../drizzle'
 import { buildOrderExpr, buildSearchCondition, paginate } from './query-helpers'

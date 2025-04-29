@@ -17,8 +17,7 @@ import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row
 import { IssuerStatus } from '@/lib/db/schema/issuer'
 import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
-import type { TableProps } from '@/lib/types/table-props'
-import type { AdminIssuerRow } from '@/lib/types/table-rows'
+import type { TableProps, AdminIssuerRow } from '@/lib/types/tables'
 
 export default function AdminIssuersTable({
   rows,

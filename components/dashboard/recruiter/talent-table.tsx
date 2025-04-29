@@ -5,8 +5,7 @@ import * as React from 'react'
 
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
-import type { TableProps } from '@/lib/types/table-props'
-import type { TalentRow } from '@/lib/types/table-rows'
+import type { TableProps, TalentRow } from '@/lib/types/tables'
 
 export default function TalentTable({
   rows,

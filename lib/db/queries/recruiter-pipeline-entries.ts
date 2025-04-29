@@ -1,6 +1,6 @@
 import { and, eq } from 'drizzle-orm'
 
-import type { PipelineEntryRow } from '@/lib/types/table-rows'
+import type { PipelineEntryRow } from '@/lib/types/tables'
 
 import { db } from '../drizzle'
 import { buildOrderExpr, buildSearchCondition, paginate } from './query-helpers'

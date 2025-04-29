@@ -1,6 +1,6 @@
 import { eq, and } from 'drizzle-orm'
 
-import type { MemberRow } from '@/lib/types/table-rows'
+import type { MemberRow } from '@/lib/types/tables'
 
 import { db } from '../drizzle'
 import { buildOrderExpr, buildSearchCondition, paginate } from './query-helpers'

@@ -1,29 +1,15 @@
+import type { PlanKey, PlanMeta } from '@/lib/types/pricing'
+
 /**
  * Pricing metadata shared by frontend UI and server-side logic.
  * All amounts are expressed in wei and **must** match the on-chain
  * SubscriptionManager configuration.
  */
 
-export const PLAN_KEYS = ['free', 'base', 'plus'] as const
-
-/** Union type for plan keys (`'free' | 'base' | 'plus'`). */
-export type PlanKey = (typeof PLAN_KEYS)[number]
+export const PLAN_KEYS: readonly PlanKey[] = ['free', 'base', 'plus'] as const
 
 /** Native FLR token decimals (18). */
 export const FLR_DECIMALS = 18
-
-export interface PlanMeta {
-  /** Unique key used internally and on-chain (`planKey` param). */
-  key: PlanKey
-  /** Human-readable label. */
-  name: string
-  /** Bullet-point feature list for marketing copy. */
-  features: string[]
-  /** Optional flag to visually highlight this tier in UI. */
-  highlight?: boolean
-  /** On-chain price in wei (0 wei = free tier). */
-  priceWei: bigint
-}
 
 /**
  * Immutable price & feature table.
@@ -72,12 +58,13 @@ export const PLAN_META: readonly PlanMeta[] = [
 ] as const
 
 /**
- * Helper: return strongly-typed plan metadata.
- *
- * @param key  Plan identifier (`'free' | 'base' | 'plus'`)
+ * Helper: return strongly-typed plan metadata for a given key.
  */
 export function getPlanMeta(key: PlanKey): PlanMeta {
   const meta = PLAN_META.find((p) => p.key === key)
   if (!meta) throw new Error(`Unknown plan key: ${key}`)
   return meta
 }
+
+/* Re-export typings for convenience */
+export type { PlanMeta, PlanKey }

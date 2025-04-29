@@ -1,6 +1,6 @@
 import { eq, and } from 'drizzle-orm'
 
-import type { InvitationRow } from '@/lib/types/table-rows'
+import type { InvitationRow } from '@/lib/types/tables'
 
 import { db } from '../drizzle'
 import { buildOrderExpr, buildSearchCondition, paginate } from './query-helpers'

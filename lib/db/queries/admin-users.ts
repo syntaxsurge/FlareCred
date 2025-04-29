@@ -1,4 +1,4 @@
-import type { AdminUserRow } from '@/lib/types/table-rows'
+import type { AdminUserRow } from '@/lib/types/tables'
 
 import { db } from '../drizzle'
 import { buildOrderExpr, buildSearchCondition, paginate } from './query-helpers'

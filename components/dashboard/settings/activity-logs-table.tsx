@@ -18,8 +18,7 @@ import {
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { ActivityType } from '@/lib/db/schema'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
-import type { TableProps } from '@/lib/types/table-props'
-import type { ActivityLogRow } from '@/lib/types/table-rows'
+import type { TableProps, ActivityLogRow } from '@/lib/types/tables'
 import { relativeTime } from '@/lib/utils/time'
 
 const iconMap: Record<ActivityType, LucideIcon> = {

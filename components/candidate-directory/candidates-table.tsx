@@ -7,8 +7,7 @@ import { Button } from '@/components/ui/button'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
-import type { TableProps } from '@/lib/types/table-props'
-import type { CandidateDirectoryRow } from '@/lib/types/table-rows'
+import type { TableProps, CandidateDirectoryRow } from '@/lib/types/tables'
 
 export default function CandidatesTable({
   rows,

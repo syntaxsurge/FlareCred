@@ -6,7 +6,7 @@ import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { db } from '@/lib/db/drizzle'
 import { candidates, candidateCredentials, users } from '@/lib/db/schema'
-import type { CandidateDirectoryRow } from '@/lib/types/table-rows'
+import type { CandidateDirectoryRow } from '@/lib/types/tables'
 
 export const revalidate = 0
 

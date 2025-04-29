@@ -6,12 +6,13 @@ import { KanbanSquare } from 'lucide-react'
 
 import PipelineBoard from '@/components/dashboard/recruiter/pipeline-board'
 import PageCard from '@/components/ui/page-card'
-import { STAGES, type Stage } from '@/lib/constants/recruiter'
+import { STAGES } from '@/lib/constants/recruiter'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
 import { candidates } from '@/lib/db/schema/candidate'
 import { users } from '@/lib/db/schema/core'
 import { recruiterPipelines, pipelineCandidates } from '@/lib/db/schema/recruiter'
+import { Stage } from '@/lib/types/recruiter'
 
 export const revalidate = 0
 

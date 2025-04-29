@@ -4,7 +4,7 @@ import { db } from '@/lib/db/drizzle'
 import { candidateCredentials, CredentialStatus, candidates } from '@/lib/db/schema/candidate'
 import { issuers } from '@/lib/db/schema/issuer'
 import type { StatusCounts } from '@/lib/types/candidate'
-import type { PageResult, CandidateCredentialRow } from '@/lib/types/table-rows'
+import type { PageResult, CandidateCredentialRow } from '@/lib/types/tables'
 
 import { buildOrderExpr, paginate } from './query-helpers'
 

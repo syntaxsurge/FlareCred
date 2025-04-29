@@ -7,7 +7,7 @@ import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getActivityLogsPage } from '@/lib/db/queries/activity'
 import { getUser } from '@/lib/db/queries/queries'
-import type { ActivityLogRow } from '@/lib/types/table-rows'
+import type { ActivityLogRow } from '@/lib/types/tables'
 
 export const revalidate = 0
 

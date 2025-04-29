@@ -13,8 +13,7 @@ import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
 import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
-import type { TableProps } from '@/lib/types/table-props'
-import type { IssuerDirectoryRow } from '@/lib/types/table-rows'
+import type { IssuerDirectoryRow, TableProps } from '@/lib/types/tables'
 
 /* -------------------------------------------------------------------------- */
 /*                        Per-row actions + dialog UI                         */

@@ -1,6 +1,6 @@
 import { eq, and } from 'drizzle-orm'
 
-import type { ActivityLogRow } from '@/lib/types/table-rows'
+import type { ActivityLogRow } from '@/lib/types/tables'
 
 import { db } from '../drizzle'
 import { buildOrderExpr, buildSearchCondition, paginate } from './query-helpers'

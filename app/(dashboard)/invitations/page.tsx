@@ -7,7 +7,7 @@ import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getInvitationsPage } from '@/lib/db/queries/invitations'
 import { getUser } from '@/lib/db/queries/queries'
-import type { InvitationRow } from '@/lib/types/table-rows'
+import type { InvitationRow } from '@/lib/types/tables'
 
 export const revalidate = 0
 

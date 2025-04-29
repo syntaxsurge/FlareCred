@@ -7,7 +7,7 @@ import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getAdminUsersPage } from '@/lib/db/queries/admin-users'
 import { getUser } from '@/lib/db/queries/queries'
-import type { AdminUserRow } from '@/lib/types/table-rows'
+import type { AdminUserRow } from '@/lib/types/tables'
 
 export const revalidate = 0
 

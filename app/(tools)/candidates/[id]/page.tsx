@@ -11,7 +11,7 @@ import {
   CredentialStatus,
 } from '@/lib/db/schema/candidate'
 import type { StatusCounts } from '@/lib/types/candidate'
-import type { RecruiterCredentialRow } from '@/lib/types/table-rows'
+import type { RecruiterCredentialRow } from '@/lib/types/tables'
 
 export const revalidate = 0
 

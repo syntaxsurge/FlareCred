@@ -11,7 +11,7 @@ import { db } from '@/lib/db/drizzle'
 import { getIssuerRequestsPage } from '@/lib/db/queries/issuer-requests'
 import { getUser } from '@/lib/db/queries/queries'
 import { issuers } from '@/lib/db/schema/issuer'
-import type { IssuerRequestRow } from '@/lib/types/table-rows'
+import type { IssuerRequestRow } from '@/lib/types/tables'
 
 export const revalidate = 0
 

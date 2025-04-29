@@ -1,6 +1,6 @@
 import { and, sql } from 'drizzle-orm'
 
-import type { TalentRow } from '@/lib/types/table-rows'
+import type { TalentRow } from '@/lib/types/tables'
 
 import { db } from '../drizzle'
 import { buildOrderExpr, buildSearchCondition, paginate } from './query-helpers'

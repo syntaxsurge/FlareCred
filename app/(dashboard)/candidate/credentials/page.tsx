@@ -11,7 +11,7 @@ import { db } from '@/lib/db/drizzle'
 import { getCandidateCredentialsPage } from '@/lib/db/queries/candidate-credentials'
 import { getUser } from '@/lib/db/queries/queries'
 import { teams, teamMembers } from '@/lib/db/schema/core'
-import type { CandidateCredentialRow } from '@/lib/types/table-rows'
+import type { CandidateCredentialRow } from '@/lib/types/tables'
 
 export const revalidate = 0
 

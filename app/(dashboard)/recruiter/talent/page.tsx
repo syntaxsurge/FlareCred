@@ -8,7 +8,7 @@ import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getUser } from '@/lib/db/queries/queries'
 import { getTalentSearchPage } from '@/lib/db/queries/recruiter-talent'
-import type { TalentRow } from '@/lib/types/table-rows'
+import type { TalentRow } from '@/lib/types/tables'
 
 export const revalidate = 0
 

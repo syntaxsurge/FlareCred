@@ -1,6 +1,6 @@
 import { eq, and, sql } from 'drizzle-orm'
 
-import type { IssuerRequestRow } from '@/lib/types/table-rows'
+import type { IssuerRequestRow } from '@/lib/types/tables'
 
 import { db } from '../drizzle'
 import { buildOrderExpr, buildSearchCondition, paginate } from './query-helpers'

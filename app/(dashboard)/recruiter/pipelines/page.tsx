@@ -7,7 +7,7 @@ import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getUser } from '@/lib/db/queries/queries'
 import { getRecruiterPipelinesPage } from '@/lib/db/queries/recruiter-pipelines'
-import type { PipelineRow } from '@/lib/types/table-rows'
+import type { PipelineRow } from '@/lib/types/tables'
 
 import NewPipelineDialog from './new-pipeline-dialog'
 
