@@ -1,16 +1,16 @@
 'use client'
 
-import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAccount, useSwitchChain, useWalletClient, usePublicClient } from 'wagmi'
-import { toast } from 'sonner'
+import { useState } from 'react'
+
 import { ArrowRight, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
+import { useAccount, useSwitchChain, useWalletClient, usePublicClient } from 'wagmi'
 
 import { Button } from '@/components/ui/button'
-import { useFlareUsdPrice } from '@/lib/hooks/use-flare-usd-price'
 import { SUBSCRIPTION_MANAGER_ADDRESS, CHAIN_ID } from '@/lib/config'
 import { SUBSCRIPTION_MANAGER_ABI } from '@/lib/contracts/abis'
-
+import { useFlareUsdPrice } from '@/lib/hooks/use-flare-usd-price'
 import type { SubmitButtonProps } from '@/lib/types/forms'
 
 export function SubmitButton({ planKey, priceWei }: SubmitButtonProps) {

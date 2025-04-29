@@ -3,8 +3,9 @@ import { redirect } from 'next/navigation'
 import { asc, eq } from 'drizzle-orm'
 import { Star } from 'lucide-react'
 
-import { AppModal } from '@/components/ui/app-modal'
+import HighlightsBoard from '@/components/dashboard/candidate/highlights-board'
 import ProfileHeader from '@/components/dashboard/candidate/profile-header'
+import { AppModal } from '@/components/ui/app-modal'
 import PageCard from '@/components/ui/page-card'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
@@ -16,7 +17,6 @@ import {
 } from '@/lib/db/schema/candidate'
 import { issuers } from '@/lib/db/schema/issuer'
 import { HighlightCredential } from '@/lib/types/components'
-import HighlightsBoard from '@/components/dashboard/candidate/highlights-board'
 
 export const revalidate = 0
 

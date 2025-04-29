@@ -1,27 +1,23 @@
 'use client'
 
-import { ArrowRight, Loader2, RotateCcw, Users } from 'lucide-react'
-import {
-  useAccount,
-  useSwitchChain,
-  useWalletClient,
-  usePublicClient,
-} from 'wagmi'
-import { toast } from 'sonner'
 import { useState } from 'react'
+
+import { ArrowRight, Loader2, RotateCcw, Users } from 'lucide-react'
+import { toast } from 'sonner'
+import { useAccount, useSwitchChain, useWalletClient, usePublicClient } from 'wagmi'
 
 import MembersTable from '@/components/dashboard/settings/members-table'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
+import { CHAIN_ID, SUBSCRIPTION_MANAGER_ADDRESS } from '@/lib/config'
 import { PLAN_META } from '@/lib/constants/pricing'
+import { SUBSCRIPTION_MANAGER_ABI } from '@/lib/contracts/abis'
 import { useFlareUsdPrice } from '@/lib/hooks/use-flare-usd-price'
 import type { SettingsProps } from '@/lib/types/components'
 
 import { InviteTeamMember } from './invite-team'
-import { CHAIN_ID, SUBSCRIPTION_MANAGER_ADDRESS } from '@/lib/config'
-import { SUBSCRIPTION_MANAGER_ABI } from '@/lib/contracts/abis'
 
 /* -------------------------------------------------------------------------- */
 /*                       Renew Subscription Button                            */
@@ -133,8 +129,7 @@ export function Settings({
   basePath,
   initialParams,
 }: SettingsProps) {
-  const paidUntilDate =
-    team.subscriptionPaidUntil ? new Date(team.subscriptionPaidUntil) : null
+  const paidUntilDate = team.subscriptionPaidUntil ? new Date(team.subscriptionPaidUntil) : null
   const now = new Date()
   const isActive = paidUntilDate && paidUntilDate > now
 
@@ -188,7 +183,7 @@ export function Settings({
             {team.did ? (
               <>
                 <p className='text-sm'>DID:</p>
-                <p className='break-all font-semibold'>{team.did}</p>
+                <p className='font-semibold break-all'>{team.did}</p>
               </>
             ) : (
               <p className='text-muted-foreground text-sm'>

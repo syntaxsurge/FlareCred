@@ -2,11 +2,12 @@
 
 import * as React from 'react'
 
+import { KeyRound } from 'lucide-react'
+
 import AddCredentialForm from '@/app/(dashboard)/candidate/credentials/add/add-credential-form'
 import { AppModal } from '@/components/ui/app-modal'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { KeyRound } from 'lucide-react'
 import type { AddCredentialDialogProps } from '@/lib/types/components'
 
 /**
@@ -14,7 +15,10 @@ import type { AddCredentialDialogProps } from '@/lib/types/components'
  * AddCredentialForm. If the user lacks a team DID, a blocking modal
  * prompts them to create one instead of showing the form.
  */
-export default function AddCredentialDialog({ addCredentialAction, hasDid }: AddCredentialDialogProps) {
+export default function AddCredentialDialog({
+  addCredentialAction,
+  hasDid,
+}: AddCredentialDialogProps) {
   const [open, setOpen] = React.useState(false)
   const [showDidModal, setShowDidModal] = React.useState(false)
 

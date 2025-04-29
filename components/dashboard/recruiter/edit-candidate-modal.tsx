@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, type ReactNode } from 'react'
+import { useState } from 'react'
+
 import { toast } from 'sonner'
 
 import { updateCandidateStageAction } from '@/app/(dashboard)/recruiter/pipelines/actions'

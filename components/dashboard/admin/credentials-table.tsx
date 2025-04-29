@@ -10,12 +10,11 @@ import { deleteCredentialAction } from '@/app/(dashboard)/admin/credentials/acti
 import { StatusBadge } from '@/components/ui/status-badge'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
-import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
-import { getProofTx } from '@/lib/utils'
-import type { AdminCredentialRow } from '@/lib/types/table-rows'
+import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { TableProps } from '@/lib/types/table-props'
-
+import type { AdminCredentialRow } from '@/lib/types/table-rows'
+import { getProofTx } from '@/lib/utils'
 
 export default function AdminCredentialsTable({
   rows,
@@ -68,9 +67,7 @@ export default function AdminCredentialsTable({
           const fd = new FormData()
           fd.append('credentialId', row.id.toString())
           const res = await deleteCredentialAction({}, fd)
-          res?.error
-            ? toast.error(res.error)
-            : toast.success(res?.success ?? 'Credential deleted.')
+          res?.error ? toast.error(res.error) : toast.success(res?.success ?? 'Credential deleted.')
           router.refresh()
         },
       },

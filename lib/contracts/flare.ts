@@ -2,6 +2,18 @@ import { ethers } from 'ethers'
 import type { Log, LogDescription, InterfaceAbi } from 'ethers'
 
 import {
+  DID_REGISTRY_ADDRESS,
+  CREDENTIAL_NFT_ADDRESS,
+  SUBSCRIPTION_MANAGER_ADDRESS,
+} from '@/lib/config'
+import {
+  DID_REGISTRY_ABI,
+  CREDENTIAL_NFT_ABI,
+  SUBSCRIPTION_MANAGER_ABI,
+} from '@/lib/contracts/abis'
+import { toBytes32 } from '@/lib/utils/address'
+
+import {
   provider,
   didRegistry,
   credentialNft,
@@ -10,20 +22,6 @@ import {
   rngHelper,
   fdcVerifier,
 } from './index'
-
-import {
-  DID_REGISTRY_ABI,
-  CREDENTIAL_NFT_ABI,
-  SUBSCRIPTION_MANAGER_ABI,
-} from '@/lib/contracts/abis'
-
-import {
-  DID_REGISTRY_ADDRESS,
-  CREDENTIAL_NFT_ADDRESS,
-  SUBSCRIPTION_MANAGER_ADDRESS,
-} from '@/lib/config'
-
-import { toBytes32 } from '@/lib/utils/address'
 
 /* -------------------------------------------------------------------------- */
 /*                         F T S O   &   R N G   W R A P P E R S              */
@@ -56,12 +54,8 @@ export async function randomMod(bound: number | bigint): Promise<bigint> {
 /*                               F D C  P R O O F S                           */
 /* -------------------------------------------------------------------------- */
 
-export async function verifyFdcProof(
-  proofType: string,
-  proofData: unknown,
-): Promise<boolean> {
-  if (!fdcVerifier)
-    throw new Error('FDC verifier contract address is not configured')
+export async function verifyFdcProof(proofType: string, proofData: unknown): Promise<boolean> {
+  if (!fdcVerifier) throw new Error('FDC verifier contract address is not configured')
 
   const fnMap: Record<string, string> = {
     EVM: 'verifyEVM',
@@ -86,9 +80,7 @@ export async function verifyFdcProof(
     if (!ok) throw new Error('Proof verification failed')
     return true
   } catch (err: any) {
-    throw new Error(
-      err?.shortMessage || err?.reason || err?.message || 'Proof verification failed',
-    )
+    throw new Error(err?.shortMessage || err?.reason || err?.message || 'Proof verification failed')
   }
 }
 
@@ -106,18 +98,14 @@ function resolveSigner({ signer, signerAddress }: SignerArgs = {}): ethers.Signe
 
 /* ----------------------------- DID  -------------------------------------- */
 
-export async function createFlareDID(
-  args?: SignerArgs & { docHash?: string },
-) {
+export async function createFlareDID(args?: SignerArgs & { docHash?: string }) {
   const signer = resolveSigner(args)
   const registryWrite = new ethers.Contract(
     DID_REGISTRY_ADDRESS,
     DID_REGISTRY_ABI as InterfaceAbi,
     signer,
   )
-  const receipt = await (
-    await registryWrite.createDID(args?.docHash ?? ethers.ZeroHash)
-  ).wait()
+  const receipt = await (await registryWrite.createDID(args?.docHash ?? ethers.ZeroHash)).wait()
 
   return {
     did: await didRegistry.didOf(await signer.getAddress()),
@@ -137,11 +125,7 @@ export async function issueFlareCredential(
     signer,
   )
   const receipt = await (
-    await nftWrite.mintCredential(
-      ethers.getAddress(args.to),
-      toBytes32(args.vcHash),
-      args.uri,
-    )
+    await nftWrite.mintCredential(ethers.getAddress(args.to), toBytes32(args.vcHash), args.uri)
   ).wait()
 
   /* Extract event for tokenId */
@@ -153,10 +137,7 @@ export async function issueFlareCredential(
         return null
       }
     })
-    .find(
-      (d: LogDescription | null): d is LogDescription =>
-        !!d && d.name === 'CredentialMinted',
-    )
+    .find((d: LogDescription | null): d is LogDescription => !!d && d.name === 'CredentialMinted')
 
   if (!parsedLog) throw new Error('CredentialMinted event not found')
 

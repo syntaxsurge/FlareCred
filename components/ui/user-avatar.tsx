@@ -3,9 +3,9 @@
 import * as React from 'react'
 
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import type { UserAvatarProps } from '@/lib/types/ui'
 import { cn } from '@/lib/utils'
 import { getAvatarInitials } from '@/lib/utils/avatar'
-import type { UserAvatarProps } from '@/lib/types/ui'
 
 /**
  * Drop-in replacement for <Avatar> that auto-generates fallback

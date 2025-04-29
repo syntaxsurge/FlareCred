@@ -36,16 +36,16 @@ export function normaliseAddress(value: string): string {
 export function extractAddressFromDid(value: string | null): `0x${string}` | null {
   if (!value) return null
 
-  const trimmed = value.trim();
-  if (trimmed === '') return null;
+  const trimmed = value.trim()
+  if (trimmed === '') return null
 
-  const didMatch = trimmed.match(/^did:flare:(0x[0-9a-fA-F]{40})$/);
-  if (didMatch) return didMatch[1] as `0x${string}`;
+  const didMatch = trimmed.match(/^did:flare:(0x[0-9a-fA-F]{40})$/)
+  if (didMatch) return didMatch[1] as `0x${string}`
 
-  const rawMatch = trimmed.match(/^0x[0-9a-fA-F]{40}$/);
-  if (rawMatch) return rawMatch[0] as `0x${string}`;
+  const rawMatch = trimmed.match(/^0x[0-9a-fA-F]{40}$/)
+  if (rawMatch) return rawMatch[0] as `0x${string}`
 
-  return null;
+  return null
 }
 
 /**
@@ -58,9 +58,7 @@ export function extractAddressFromDid(value: string | null): `0x${string}` | nul
  */
 export function toBytes32(input: string): string {
   const trimmed = input.trim()
-  return ethers.isHexString(trimmed, 32)
-    ? trimmed
-    : ethers.keccak256(ethers.toUtf8Bytes(trimmed))
+  return ethers.isHexString(trimmed, 32) ? trimmed : ethers.keccak256(ethers.toUtf8Bytes(trimmed))
 }
 
 export function truncateAddress(addr?: string | null) {

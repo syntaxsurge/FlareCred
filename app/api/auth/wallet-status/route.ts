@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
 import { NextResponse } from 'next/server'
-import { z } from 'zod'
-import { ethers } from 'ethers'
-import { eq } from 'drizzle-orm'
 
+import { eq } from 'drizzle-orm'
+import { ethers } from 'ethers'
+import { z } from 'zod'
+
+import { setSession } from '@/lib/auth/session'
 import { db } from '@/lib/db/drizzle'
 import { users } from '@/lib/db/schema'
-import { setSession } from '@/lib/auth/session'
 
 /* -------------------------------------------------------------------------- */
 /*                                   SCHEMA                                   */
@@ -31,11 +32,7 @@ export async function GET(req: Request) {
     const address = ethers.getAddress(parsed.data.address)
 
     /* Fetch full user record so we can initialise a session */
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.walletAddress, address))
-      .limit(1)
+    const [user] = await db.select().from(users).where(eq(users.walletAddress, address)).limit(1)
 
     const profileComplete =
       !!user &&

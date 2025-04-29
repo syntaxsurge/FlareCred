@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
-import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { z } from 'zod'
+import { NextResponse } from 'next/server'
+
 import { eq } from 'drizzle-orm'
 import { ethers } from 'ethers'
+import { z } from 'zod'
 
 import { db } from '@/lib/db/drizzle'
 import { users } from '@/lib/db/schema'

@@ -15,15 +15,11 @@ const isBrowser = typeof window !== 'undefined'
  */
 export function getEnv(
   name: string,
-  {
-    kind = 'string',
-    optional = false,
-  }: { kind?: EnvKind; optional?: boolean } = {},
+  { kind = 'string', optional = false }: { kind?: EnvKind; optional?: boolean } = {},
 ): string | number | undefined {
   let raw: string | undefined
 
   if (isBrowser) {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
     raw = (window as any).__NEXT_PUBLIC_ENV__?.[name] ?? process.env[name]
   } else {
     raw = process.env[name]

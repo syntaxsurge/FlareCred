@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+
 import type { Pagination } from './index'
 
 /** Aggregate counts for each credential status shown on candidate dashboards. */

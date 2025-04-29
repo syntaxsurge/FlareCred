@@ -1,16 +1,16 @@
 import './globals.css'
 import '@rainbow-me/rainbowkit/styles.css'
 import { Manrope } from 'next/font/google'
-import type { Metadata, Viewport } from 'next'
 
+import type { Metadata, Viewport } from 'next'
 import { Toaster } from 'sonner'
 
+import PublicEnvScript from '@/components/public-env-script'
 import SiteHeader from '@/components/site-header'
 import { ThemeProvider } from '@/components/theme-provider'
 import { UserProvider } from '@/lib/auth'
-import { Web3Provider } from '@/lib/wallet'
 import { getUser } from '@/lib/db/queries/queries'
-import PublicEnvScript from '@/components/public-env-script'
+import { Web3Provider } from '@/lib/wallet'
 
 export const metadata: Metadata = {
   title: 'FlareCred',

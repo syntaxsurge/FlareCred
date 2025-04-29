@@ -3,15 +3,14 @@ import { redirect } from 'next/navigation'
 import { eq, sql } from 'drizzle-orm'
 import { KeyRound } from 'lucide-react'
 
+import { CreateDidButton } from '@/app/(dashboard)/candidate/create-did/create-did-button'
+import { AppModal } from '@/components/ui/app-modal'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
 import PageCard from '@/components/ui/page-card'
 import { UserAvatar } from '@/components/ui/user-avatar'
-import { AppModal } from '@/components/ui/app-modal'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
 import { teamMembers, users as usersT, teams } from '@/lib/db/schema/core'
-
-import { CreateDidButton } from '@/app/(dashboard)/candidate/create-did/create-did-button'
 
 export const revalidate = 0
 
@@ -137,8 +136,8 @@ export default async function CreateDidPage() {
 
         <p className='text-sm leading-relaxed'>
           A Decentralised Identifier (DID) acts like a verified username for your company. Once
-          created, your team can issue <span className='font-semibold'>signed</span> credentials that
-          employers, clients, and platforms can trust instantly.
+          created, your team can issue <span className='font-semibold'>signed</span> credentials
+          that employers, clients, and platforms can trust instantly.
         </p>
 
         <CreateDidButton />

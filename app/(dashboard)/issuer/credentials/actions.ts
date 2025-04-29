@@ -4,18 +4,14 @@ import { eq, and } from 'drizzle-orm'
 import { z } from 'zod'
 
 import { validatedActionWithUser } from '@/lib/auth/middleware'
+import { isGithubRepoCredential } from '@/lib/constants/credential'
 import { issueFlareCredential, verifyFdcProof } from '@/lib/contracts/flare'
 import { db } from '@/lib/db/drizzle'
-import {
-  candidateCredentials,
-  CredentialStatus,
-  candidates,
-} from '@/lib/db/schema/candidate'
+import { candidateCredentials, CredentialStatus, candidates } from '@/lib/db/schema/candidate'
 import { users, teams, teamMembers } from '@/lib/db/schema/core'
 import { issuers } from '@/lib/db/schema/issuer'
-import { isGithubRepoCredential } from '@/lib/constants/credential'
-import { extractAddressFromDid, toBytes32 } from '@/lib/utils/address'
 import { buildError } from '@/lib/utils'
+import { extractAddressFromDid, toBytes32 } from '@/lib/utils/address'
 
 /* -------------------------------------------------------------------------- */
 /*                       A P P R O V E  /  S I G N  V C                       */
@@ -70,7 +66,11 @@ export const approveCredentialAction = validatedActionWithUser(
     let proofTx: string | undefined
     try {
       if (cred.proofType === 'EVM' || cred.proofType === 'PAYMENT') {
-        if (typeof cred.proofData === 'string' && cred.proofData.startsWith('0x') && cred.proofData.length === 66) {
+        if (
+          typeof cred.proofData === 'string' &&
+          cred.proofData.startsWith('0x') &&
+          cred.proofData.length === 66
+        ) {
           proofTx = cred.proofData
         } else {
           const obj = JSON.parse(cred.proofData)

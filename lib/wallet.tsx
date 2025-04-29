@@ -1,17 +1,12 @@
 'use client'
-
+import { useRouter } from 'next/navigation'
 import { ReactNode, useEffect, useRef } from 'react'
-import {
-  getDefaultConfig,
-  RainbowKitProvider,
-  darkTheme,
-  lightTheme,
-} from '@rainbow-me/rainbowkit'
+
+import { getDefaultConfig, RainbowKitProvider, darkTheme, lightTheme } from '@rainbow-me/rainbowkit'
 import '@rainbow-me/rainbowkit/styles.css'
-import { WagmiProvider, http, useAccount } from 'wagmi'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useTheme } from 'next-themes'
-import { useRouter } from 'next/navigation'
+import { WagmiProvider, http, useAccount } from 'wagmi'
 
 import { WALLETCONNECT_PROJECT_ID } from './config'
 

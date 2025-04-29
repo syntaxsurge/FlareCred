@@ -18,7 +18,11 @@ export default function CTASection() {
         </p>
 
         <div className='mt-10 flex justify-center'>
-          <Button asChild size='lg' className='rounded-full bg-white/10 text-white hover:bg-white/20'>
+          <Button
+            asChild
+            size='lg'
+            className='rounded-full bg-white/10 text-white hover:bg-white/20'
+          >
             <Link href='/connect-wallet'>Connect Wallet</Link>
           </Button>
         </div>

@@ -3,8 +3,8 @@
 import { CheckCircle2, Clock, XCircle, HelpCircle, type LucideIcon } from 'lucide-react'
 
 import { STAGES } from '@/lib/constants/recruiter'
-import { cn } from '@/lib/utils'
 import type { StatusBadgeProps } from '@/lib/types/components'
+import { cn } from '@/lib/utils'
 
 /* -------------------------------------------------------------------------- */
 /*                               Color mapping                                */

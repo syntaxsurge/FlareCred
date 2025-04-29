@@ -12,17 +12,14 @@ import {
   declineInvitationAction,
   deleteInvitationAction,
 } from '@/app/(dashboard)/invitations/actions'
+import { AcceptIcon, DeclineIcon } from '@/components/ui/colored-icons'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
-import {
-  TableRowActions,
-  type TableRowAction,
-} from '@/components/ui/tables/row-actions'
-import { AcceptIcon, DeclineIcon } from '@/components/ui/colored-icons'
-import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
+import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
 import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
-import type { InvitationRow } from '@/lib/types/table-rows'
+import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { TableProps } from '@/lib/types/table-props'
+import type { InvitationRow } from '@/lib/types/table-rows'
 
 /* -------------------------------------------------------------------------- */
 /*                       Bulk-actions hook for invitations                    */
@@ -67,14 +64,16 @@ function useInvitationBulkActions(router: ReturnType<typeof useRouter>) {
     {
       label: 'Accept',
       icon: AcceptIcon,
-      handler: (rows) => runBulk(rows, acceptInvitationAction, 'Accepting…', 'Invitations accepted.'),
+      handler: (rows) =>
+        runBulk(rows, acceptInvitationAction, 'Accepting…', 'Invitations accepted.'),
       isAvailable: canAccept,
       isDisabled: (rows) => !canAccept(rows),
     },
     {
       label: 'Decline',
       icon: DeclineIcon,
-      handler: (rows) => runBulk(rows, declineInvitationAction, 'Declining…', 'Invitations declined.'),
+      handler: (rows) =>
+        runBulk(rows, declineInvitationAction, 'Declining…', 'Invitations declined.'),
       isAvailable: canDecline,
       isDisabled: (rows) => !canDecline(rows),
     },
@@ -197,9 +196,7 @@ export default function InvitationsTable({
         key: 'invitedAt',
         header: sortableHeader('Invited', 'invitedAt'),
         sortable: false,
-        render: (v) => (
-          <span>{formatDistanceToNow(new Date(v as Date), { addSuffix: true })}</span>
-        ),
+        render: (v) => <span>{formatDistanceToNow(new Date(v as Date), { addSuffix: true })}</span>,
       },
       {
         key: 'id',

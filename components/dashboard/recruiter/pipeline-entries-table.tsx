@@ -7,14 +7,13 @@ import { Trash2, FolderKanban } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { deletePipelineCandidateAction } from '@/app/(dashboard)/recruiter/pipelines/actions'
+import StatusBadge from '@/components/ui/status-badge'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
-import StatusBadge from '@/components/ui/status-badge'
 import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
-import type { PipelineEntryRow } from '@/lib/types/table-rows'
 import type { TableProps } from '@/lib/types/table-props'
-
+import type { PipelineEntryRow } from '@/lib/types/table-rows'
 
 export default function PipelineEntriesTable({
   rows,

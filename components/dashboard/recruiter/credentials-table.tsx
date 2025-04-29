@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import * as React from 'react'
 
 import { FileText } from 'lucide-react'
@@ -8,9 +7,8 @@ import { FileText } from 'lucide-react'
 import StatusBadge from '@/components/ui/status-badge'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
-import type { RecruiterCredentialRow } from '@/lib/types/table-rows'
 import type { TableProps } from '@/lib/types/table-props'
-
+import type { RecruiterCredentialRow } from '@/lib/types/table-rows'
 
 export default function CredentialsTable({
   rows,

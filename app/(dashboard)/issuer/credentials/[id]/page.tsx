@@ -3,8 +3,9 @@ import { redirect } from 'next/navigation'
 import { eq, and } from 'drizzle-orm'
 import { BadgeCheck, Clock, XCircle, FileText, Github } from 'lucide-react'
 
-import RequireDidGate from '@/components/dashboard/require-did-gate'
 import { CredentialActions } from '@/components/dashboard/issuer/credential-actions'
+import RequireDidGate from '@/components/dashboard/require-did-gate'
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import {
   Dialog,
   DialogTrigger,
@@ -12,34 +13,27 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import PageCard from '@/components/ui/page-card'
+import { isGithubRepoCredential } from '@/lib/constants/credential'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
-import {
-  candidateCredentials,
-  CredentialStatus,
-  candidates,
-} from '@/lib/db/schema/candidate'
+import { candidateCredentials, CredentialStatus, candidates } from '@/lib/db/schema/candidate'
 import { users } from '@/lib/db/schema/core'
 import { issuers } from '@/lib/db/schema/issuer'
 import { cn } from '@/lib/utils'
-import { isGithubRepoCredential } from '@/lib/constants/credential'
 
 export const revalidate = 0
 
 /* ---------------------------- UI Helpers ---------------------------- */
 
 function StatusBadge({ status }: { status: CredentialStatus }) {
-  const cls =
-    'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize'
+  const cls = 'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize'
   const map: Record<CredentialStatus, string> = {
     [CredentialStatus.VERIFIED]:
       'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
     [CredentialStatus.PENDING]:
       'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-    [CredentialStatus.REJECTED]:
-      'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
+    [CredentialStatus.REJECTED]: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
     [CredentialStatus.UNVERIFIED]: 'bg-muted text-foreground/80',
   }
   return <span className={cn(cls, map[status])}>{status.toLowerCase()}</span>
@@ -77,7 +71,7 @@ function GithubProofDialog({ proofJson }: { proofJson: string }) {
             GitHub Proof JSON
           </DialogTitle>
         </DialogHeader>
-        <pre className='max-h-[70vh] overflow-auto whitespace-pre-wrap rounded-md bg-muted p-4 text-xs leading-relaxed'>
+        <pre className='bg-muted max-h-[70vh] overflow-auto rounded-md p-4 text-xs leading-relaxed whitespace-pre-wrap'>
           {proofJson}
         </pre>
       </DialogContent>
@@ -101,11 +95,7 @@ export default async function CredentialDetailPage({
   if (!user) redirect('/connect-wallet')
 
   /* Issuer ownership */
-  const [issuer] = await db
-    .select()
-    .from(issuers)
-    .where(eq(issuers.ownerUserId, user.id))
-    .limit(1)
+  const [issuer] = await db.select().from(issuers).where(eq(issuers.ownerUserId, user.id)).limit(1)
   if (!issuer) redirect('/issuer/onboard')
 
   /* Credential lookup */
@@ -148,7 +138,7 @@ export default async function CredentialDetailPage({
             <div className='flex items-center gap-4'>
               <StatusIcon status={status} />
               <div className='flex-1'>
-                <h2 className='text-3xl font-extrabold leading-tight tracking-tight'>
+                <h2 className='text-3xl leading-tight font-extrabold tracking-tight'>
                   {cred.title}
                 </h2>
                 <p className='text-muted-foreground text-sm'>
@@ -217,11 +207,7 @@ export default async function CredentialDetailPage({
               ].includes(status) && (
                 <CardFooter className='bg-muted/50 border-t py-4'>
                   <div className='ml-auto'>
-                    <CredentialActions
-                      credentialId={cred.id}
-                      status={status}
-                      isGithub={isGithub}
-                    />
+                    <CredentialActions credentialId={cred.id} status={status} isGithub={isGithub} />
                   </div>
                 </CardFooter>
               )}

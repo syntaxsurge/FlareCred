@@ -1,15 +1,13 @@
 'use client'
 
-import * as React from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import * as React from 'react'
+
 import { ArrowUpDown } from 'lucide-react'
 
+import type { TableNavigationOptions as Options } from '@/lib/types/ui'
 import { buildLink } from '@/lib/utils'
-import type {
-  TableNavigationParamKeys as ParamKeys,
-  TableNavigationOptions as Options,
-} from '@/lib/types/ui'
 
 /**
  * Centralised navigation helpers for server-side paged tables.
@@ -69,17 +67,7 @@ export function useTableNavigation({
         </Link>
       )
     },
-    [
-      basePath,
-      initialParams,
-      sort,
-      order,
-      sortKey,
-      orderKey,
-      pageKey,
-      searchKey,
-      search,
-    ],
+    [basePath, initialParams, sort, order, sortKey, orderKey, pageKey, searchKey, search],
   )
 
   return { search, handleSearchChange, sortableHeader }

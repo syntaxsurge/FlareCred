@@ -1,10 +1,11 @@
 'use client'
 
-import React, { useEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import React, { useEffect, useRef, useState, useTransition } from 'react'
+
+import { Loader2, UserPlus } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAccount } from 'wagmi'
-import { Loader2, UserPlus } from 'lucide-react'
 
 import { AppModal } from '@/components/ui/app-modal'
 import { Button } from '@/components/ui/button'
@@ -37,7 +38,6 @@ export default function WalletOnboardModal({ isConnected, user }: WalletOnboardM
     if (!isConnected || user || !address || attemptedAutoRef.current) return
 
     attemptedAutoRef.current = true
-
     ;(async () => {
       try {
         const res = await fetch(`/api/auth/wallet-status?address=${address}`, {
@@ -136,13 +136,7 @@ export default function WalletOnboardModal({ isConnected, user }: WalletOnboardM
         {/* Email */}
         <div className='space-y-2'>
           <Label htmlFor='email'>Email</Label>
-          <Input
-            id='email'
-            name='email'
-            type='email'
-            placeholder='you@example.com'
-            required
-          />
+          <Input id='email' name='email' type='email' placeholder='you@example.com' required />
         </div>
 
         {/* Role */}

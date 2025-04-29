@@ -1,15 +1,11 @@
 import { and, sql } from 'drizzle-orm'
 
+import type { TalentRow } from '@/lib/types/table-rows'
+
 import { db } from '../drizzle'
+import { buildOrderExpr, buildSearchCondition, paginate } from './query-helpers'
 import { candidates } from '../schema/candidate'
 import { users } from '../schema/core'
-
-import {
-  buildOrderExpr,
-  buildSearchCondition,
-  paginate,
-} from './query-helpers'
-import type { TalentRow } from '@/lib/types/table-rows'
 
 /**
  * Paginated talent search with filters.
@@ -36,11 +32,7 @@ export async function getTalentSearchPage(
   /* ----------------------------- WHERE clause ---------------------------- */
   const filters: any[] = []
 
-  const searchCond = buildSearchCondition(searchTerm, [
-    users.name,
-    users.email,
-    candidates.bio,
-  ])
+  const searchCond = buildSearchCondition(searchTerm, [users.name, users.email, candidates.bio])
   if (searchCond) filters.push(searchCond)
 
   if (verifiedOnly) {
@@ -103,11 +95,7 @@ export async function getTalentSearchPage(
     .where(whereClause as any)
     .orderBy(orderBy)
 
-  const { rows, hasNext } = await paginate<TalentRow>(
-    baseQuery as any,
-    page,
-    pageSize,
-  )
+  const { rows, hasNext } = await paginate<TalentRow>(baseQuery as any, page, pageSize)
 
   return { candidates: rows as TalentRow[], hasNext }
 }

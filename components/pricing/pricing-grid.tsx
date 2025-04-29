@@ -1,9 +1,10 @@
 'use client'
 
-import { Suspense } from 'react'
 import Link from 'next/link'
-import { Check } from 'lucide-react'
+import { Suspense } from 'react'
+
 import { formatUnits } from 'ethers'
+import { Check } from 'lucide-react'
 
 import { SubmitButton } from '@/app/(dashboard)/pricing/submit-button'
 import { Button } from '@/components/ui/button'
@@ -32,8 +33,7 @@ export function PricingGrid({ currentPlanName }: PricingGridProps) {
           const usdLabel = usd ? ` ≈ $${(priceFlr * usd).toFixed(2)}` : ''
 
           const isCurrent =
-            !!currentPlanName &&
-            currentPlanName.toLowerCase() === meta.name.toLowerCase()
+            !!currentPlanName && currentPlanName.toLowerCase() === meta.name.toLowerCase()
 
           return (
             <PricingCard
@@ -78,9 +78,7 @@ function PricingCard({
       ) : (
         <p className='text-foreground mb-6 text-4xl font-extrabold'>
           {priceFlr}
-          <span className='text-muted-foreground ml-1 text-xl font-medium'>
-            FLR{usdLabel}
-          </span>
+          <span className='text-muted-foreground ml-1 text-xl font-medium'>FLR{usdLabel}</span>
         </p>
       )}
 

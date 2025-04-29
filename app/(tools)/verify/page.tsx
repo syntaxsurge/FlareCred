@@ -1,13 +1,14 @@
 'use client'
 
 import React, { useState, useTransition } from 'react'
+
 import { CheckCircle2, Clipboard, Fingerprint, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
-import { usePublicClient } from 'wagmi'
 import type { Abi } from 'viem'
+import { usePublicClient } from 'wagmi'
 
-import PageCard from '@/components/ui/page-card'
 import { Button } from '@/components/ui/button'
+import PageCard from '@/components/ui/page-card'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { CHAIN_ID, DID_REGISTRY_ADDRESS } from '@/lib/config'
 import { DID_REGISTRY_ABI } from '@/lib/contracts/abis'
@@ -67,8 +68,7 @@ export default function VerifyDIDPage() {
       } catch (err: any) {
         setResult('error')
         setMessage(
-          'Error while querying the contract: ' +
-            String(err?.shortMessage || err?.message || err),
+          'Error while querying the contract: ' + String(err?.shortMessage || err?.message || err),
         )
         toast.error('Verification failed')
       }
@@ -93,11 +93,11 @@ export default function VerifyDIDPage() {
       <div className='space-y-6'>
         <p className='text-sm leading-relaxed'>
           This tool talks directly to the&nbsp;
-          <code className='rounded bg-muted px-1 py-0.5 text-xs'>DIDRegistry</code> smart contract.
+          <code className='bg-muted rounded px-1 py-0.5 text-xs'>DIDRegistry</code> smart contract.
           A <strong>verified DID</strong> means the address has successfully called&nbsp;
-          <code className='rounded bg-muted px-1 py-0.5 text-xs'>createDID</code> and therefore
-          owns a permanent, on-chain identifier (<code className='font-mono'>did:flare:0x…</code>).
-          If the DID is <em>unregistered</em>, no such transaction exists.
+          <code className='bg-muted rounded px-1 py-0.5 text-xs'>createDID</code> and therefore owns
+          a permanent, on-chain identifier (<code className='font-mono'>did:flare:0x…</code>). If
+          the DID is <em>unregistered</em>, no such transaction exists.
         </p>
 
         <form onSubmit={handleSubmit} className='space-y-4'>

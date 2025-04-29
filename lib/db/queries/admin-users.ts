@@ -1,12 +1,8 @@
-import { db } from '../drizzle'
-import { users } from '../schema/core'
-
-import {
-  buildOrderExpr,
-  buildSearchCondition,
-  paginate,
-} from './query-helpers'
 import type { AdminUserRow } from '@/lib/types/table-rows'
+
+import { db } from '../drizzle'
+import { buildOrderExpr, buildSearchCondition, paginate } from './query-helpers'
+import { users } from '../schema/core'
 
 /* -------------------------------------------------------------------------- */
 /*                        A D M I N   U S E R S                               */
@@ -47,11 +43,7 @@ export async function getAdminUsersPage(
   const orderedQuery = filteredQuery.orderBy(orderBy)
 
   /* --------------------------- PAGINATE ------------------------------- */
-  const { rows, hasNext } = await paginate<AdminUserRow>(
-    orderedQuery as any,
-    page,
-    pageSize,
-  )
+  const { rows, hasNext } = await paginate<AdminUserRow>(orderedQuery as any, page, pageSize)
 
   return { users: rows, hasNext }
 }

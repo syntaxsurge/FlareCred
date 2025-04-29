@@ -4,12 +4,13 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 
 import { and, eq } from 'drizzle-orm'
-import { z } from 'zod'
 import { getAddress } from 'ethers'
+import { z } from 'zod'
 
 import { validatedAction, validatedActionWithUser } from '@/lib/auth/middleware'
 import { setSession } from '@/lib/auth/session'
 import { db } from '@/lib/db/drizzle'
+import { getUserWithTeam } from '@/lib/db/queries/queries'
 import {
   users,
   teams,
@@ -22,7 +23,6 @@ import {
   type NewActivityLog,
   ActivityType,
 } from '@/lib/db/schema'
-import { getUserWithTeam } from '@/lib/db/queries/queries'
 
 /* -------------------------------------------------------------------------- */
 /*                               H E L P E R S                                */

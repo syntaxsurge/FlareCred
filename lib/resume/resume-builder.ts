@@ -13,7 +13,6 @@ import {
 } from '@/lib/db/schema/candidate'
 import { users } from '@/lib/db/schema/core'
 import { issuers } from '@/lib/db/schema/issuer'
-
 import type { ResumeData } from '@/lib/types/resume'
 
 /* -------------------------------------------------------------------------- */

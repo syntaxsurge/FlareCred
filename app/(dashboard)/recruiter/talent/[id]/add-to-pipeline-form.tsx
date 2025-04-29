@@ -11,10 +11,9 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select'
+import type { AddToPipelineFormProps } from '@/lib/types/forms'
 
 import { addCandidateToPipelineAction } from '../../pipelines/actions'
-
-import type { AddToPipelineFormProps } from '@/lib/types/forms'
 
 export default function AddToPipelineForm({ candidateId, pipelines }: AddToPipelineFormProps) {
   const router = useRouter()

@@ -17,12 +17,11 @@ import {
 } from '@/components/ui/dialog'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
-import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
-import { formatDateTime } from '@/lib/utils/time'
-import type { AdminUserRow } from '@/lib/types/table-rows'
+import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { TableProps } from '@/lib/types/table-props'
-
+import type { AdminUserRow } from '@/lib/types/table-rows'
+import { formatDateTime } from '@/lib/utils/time'
 
 export default function AdminUsersTable({
   rows,
@@ -86,9 +85,7 @@ export default function AdminUsersTable({
             const fd = new FormData()
             fd.append('userId', row.id.toString())
             const res = await deleteUserAction({}, fd)
-            res?.error
-              ? toast.error(res.error)
-              : toast.success(res?.success ?? 'User deleted.')
+            res?.error ? toast.error(res.error) : toast.success(res?.success ?? 'User deleted.')
             router.refresh()
           }),
         disabled: () => isPending,

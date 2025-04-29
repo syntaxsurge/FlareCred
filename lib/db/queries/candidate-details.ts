@@ -3,7 +3,6 @@ import { eq, ilike, and, sql } from 'drizzle-orm'
 import { db } from '@/lib/db/drizzle'
 import { candidateCredentials } from '@/lib/db/schema/candidate'
 import { issuers } from '@/lib/db/schema/issuer'
-
 import type { StatusCounts } from '@/lib/types/candidate'
 import type { CandidateCredentialRow, PageResult } from '@/lib/types/table-rows'
 
@@ -34,13 +33,12 @@ export async function getCandidateCredentialsSection(
   const orderBy = buildOrderExpr(sortCols, sort, order)
 
   /* -------------------------- WHERE clause ---------------------------- */
-  const whereExpr =
-    hasSearch
-      ? and(
-          eq(candidateCredentials.candidateId, candidateId),
-          ilike(candidateCredentials.title, `%${term}%`),
-        )
-      : eq(candidateCredentials.candidateId, candidateId)
+  const whereExpr = hasSearch
+    ? and(
+        eq(candidateCredentials.candidateId, candidateId),
+        ilike(candidateCredentials.title, `%${term}%`),
+      )
+    : eq(candidateCredentials.candidateId, candidateId)
 
   /* ------------------------------ Rows -------------------------------- */
   const baseQuery = db
@@ -58,11 +56,7 @@ export async function getCandidateCredentialsSection(
     .where(whereExpr as any)
     .orderBy(orderBy)
 
-  const { rows, hasNext } = await paginate<CandidateCredentialRow>(
-    baseQuery as any,
-    page,
-    pageSize,
-  )
+  const { rows, hasNext } = await paginate<CandidateCredentialRow>(baseQuery as any, page, pageSize)
 
   /* ------------------------- Status counts --------------------------- */
   const countsRaw = await db
@@ -80,9 +74,7 @@ export async function getCandidateCredentialsSection(
     rejected: 0,
     unverified: 0,
   }
-  countsRaw.forEach(
-    (r) => (statusCounts[r.status as keyof StatusCounts] = Number(r.count)),
-  )
+  countsRaw.forEach((r) => (statusCounts[r.status as keyof StatusCounts] = Number(r.count)))
 
   return {
     rows: rows as CandidateCredentialRow[],

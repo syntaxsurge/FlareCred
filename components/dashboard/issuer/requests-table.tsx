@@ -7,15 +7,15 @@ import { FileSignature } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { rejectCredentialAction } from '@/app/(dashboard)/issuer/credentials/actions'
+import { RejectIcon } from '@/components/ui/colored-icons'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
-import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
-import { getProofTx } from '@/lib/utils'
-import { RejectIcon } from '@/components/ui/colored-icons'
-import type { IssuerRequestRow } from '@/lib/types/table-rows'
+import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { TableProps } from '@/lib/types/table-props'
+import type { IssuerRequestRow } from '@/lib/types/table-rows'
+import { getProofTx } from '@/lib/utils'
 
 /* -------------------------------------------------------------------------- */
 /*                         Bulk-selection actions                             */
@@ -40,7 +40,10 @@ function useBulkReject(router: ReturnType<typeof useRouter>) {
         const errors = results
           .filter(
             (r): r is { error: string } =>
-              typeof r === 'object' && r !== null && 'error' in r && typeof (r as any).error === 'string',
+              typeof r === 'object' &&
+              r !== null &&
+              'error' in r &&
+              typeof (r as any).error === 'string',
           )
           .map((r) => r.error)
 
@@ -70,7 +73,6 @@ function useRowActions(): (row: IssuerRequestRow) => TableRowAction<IssuerReques
     [],
   )
 }
-
 
 export default function IssuerRequestsTable({
   rows,

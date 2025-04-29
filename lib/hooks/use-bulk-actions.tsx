@@ -1,7 +1,6 @@
 'use client'
 
 import * as React from 'react'
-import type { LucideIcon } from 'lucide-react'
 
 import type { BulkAction, BulkActionConfig } from '@/lib/types/components'
 
@@ -43,9 +42,7 @@ export function useBulkActions<Row extends Record<string, any>>(
       /* Wrap the caller-supplied handler inside a transition. */
       onClick: (rows) => startTransition(async () => cfg.handler(rows)),
       /* Disable while pending or when the caller predicate returns true. */
-      isDisabled: (rows) =>
-        isPending || (cfg.isDisabled ? cfg.isDisabled(rows) : false),
+      isDisabled: (rows) => isPending || (cfg.isDisabled ? cfg.isDisabled(rows) : false),
     }))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(configs), isPending])
 }

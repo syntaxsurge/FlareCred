@@ -1,18 +1,10 @@
 import { eq, ilike, and, sql } from 'drizzle-orm'
 
 import { db } from '@/lib/db/drizzle'
-import {
-  candidateCredentials,
-  CredentialStatus,
-  candidates,
-} from '@/lib/db/schema/candidate'
+import { candidateCredentials, CredentialStatus, candidates } from '@/lib/db/schema/candidate'
 import { issuers } from '@/lib/db/schema/issuer'
-
 import type { StatusCounts } from '@/lib/types/candidate'
-import type {
-  PageResult,
-  CandidateCredentialRow,
-} from '@/lib/types/table-rows'
+import type { PageResult, CandidateCredentialRow } from '@/lib/types/table-rows'
 
 import { buildOrderExpr, paginate } from './query-helpers'
 
@@ -49,14 +41,7 @@ export async function getCandidateCredentialsPage(
       },
     }
 
-  return getCandidateCredentialsSection(
-    cand.id,
-    page,
-    pageSize,
-    sort,
-    order,
-    searchTerm,
-  )
+  return getCandidateCredentialsSection(cand.id, page, pageSize, sort, order, searchTerm)
 }
 
 /**

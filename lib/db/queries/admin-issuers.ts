@@ -1,15 +1,11 @@
 import { eq } from 'drizzle-orm'
 
+import type { AdminIssuerRow } from '@/lib/types/table-rows'
+
 import { db } from '../drizzle'
+import { buildOrderExpr, buildSearchCondition, paginate } from './query-helpers'
 import { users } from '../schema/core'
 import { issuers } from '../schema/issuer'
-
-import {
-  buildOrderExpr,
-  buildSearchCondition,
-  paginate,
-} from './query-helpers'
-import type { AdminIssuerRow } from '@/lib/types/table-rows'
 
 /* -------------------------------------------------------------------------- */
 /*                         A D M I N   I S S U E R S                          */
@@ -36,11 +32,7 @@ export async function getAdminIssuersPage(
   const orderBy = buildOrderExpr(sortMap, sortBy, order)
 
   /* ---------------------------- WHERE ---------------------------------- */
-  const searchCond = buildSearchCondition(searchTerm, [
-    issuers.name,
-    issuers.domain,
-    users.email,
-  ])
+  const searchCond = buildSearchCondition(searchTerm, [issuers.name, issuers.domain, users.email])
 
   /* ----------------------------- QUERY --------------------------------- */
   const baseQuery = db
@@ -60,11 +52,7 @@ export async function getAdminIssuersPage(
   const orderedQuery = filteredQuery.orderBy(orderBy)
 
   /* --------------------------- PAGINATE ------------------------------- */
-  const { rows, hasNext } = await paginate<AdminIssuerRow>(
-    orderedQuery as any,
-    page,
-    pageSize,
-  )
+  const { rows, hasNext } = await paginate<AdminIssuerRow>(orderedQuery as any, page, pageSize)
 
   return { issuers: rows, hasNext }
 }

@@ -1,17 +1,12 @@
 import { asc, desc, ilike, or, and, eq } from 'drizzle-orm'
+import { ShieldCheck } from 'lucide-react'
 
 import IssuerFilters from '@/components/issuer-directory/issuer-filters'
 import IssuersTable from '@/components/issuer-directory/issuers-table'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { db } from '@/lib/db/drizzle'
-import {
-  issuers,
-  IssuerStatus,
-  IssuerCategory,
-  IssuerIndustry,
-} from '@/lib/db/schema/issuer'
-import { ShieldCheck } from 'lucide-react'
+import { issuers, IssuerStatus, IssuerCategory, IssuerIndustry } from '@/lib/db/schema/issuer'
 import type { IssuerDirectoryRow } from '@/lib/types/table-rows'
 
 /* -------------------------------------------------------------------------- */

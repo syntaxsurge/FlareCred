@@ -1,20 +1,17 @@
 'use client'
 
 import * as React from 'react'
-import { toast } from 'sonner'
-import { Loader2 } from 'lucide-react'
-import {
-  useAccount,
-  useSwitchChain,
-  useWalletClient,
-  usePublicClient,
-} from 'wagmi'
+
 import { ZeroHash } from 'ethers'
+import { Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
+import { useAccount, useSwitchChain, useWalletClient, usePublicClient } from 'wagmi'
 
 import { Button } from '@/components/ui/button'
-import { createDidAction } from './actions'
 import { CHAIN_ID, DID_REGISTRY_ADDRESS } from '@/lib/config'
 import { DID_REGISTRY_ABI } from '@/lib/contracts/abis'
+
+import { createDidAction } from './actions'
 
 /* -------------------------------------------------------------------------- */
 /*                               COMPONENT                                    */

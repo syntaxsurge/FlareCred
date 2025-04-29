@@ -1,14 +1,10 @@
-import { and, eq, ilike, desc } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
+
+import type { PipelineEntryRow } from '@/lib/types/table-rows'
 
 import { db } from '../drizzle'
+import { buildOrderExpr, buildSearchCondition, paginate } from './query-helpers'
 import { recruiterPipelines, pipelineCandidates } from '../schema/recruiter'
-
-import {
-  buildOrderExpr,
-  buildSearchCondition,
-  paginate,
-} from './query-helpers'
-import type { PipelineEntryRow } from '@/lib/types/table-rows'
 
 /* -------------------------------------------------------------------------- */
 /*                             Paginated fetch                                */
@@ -60,11 +56,7 @@ export async function getCandidatePipelineEntriesPage(
     .where(whereClause as any)
     .orderBy(orderBy)
 
-  const { rows, hasNext } = await paginate<PipelineEntryRow>(
-    baseQuery as any,
-    page,
-    pageSize,
-  )
+  const { rows, hasNext } = await paginate<PipelineEntryRow>(baseQuery as any, page, pageSize)
 
   /* Cast Date → ISO string for uniform consumption */
   const entries = rows.map((r) => ({

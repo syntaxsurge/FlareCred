@@ -1,11 +1,12 @@
 import { redirect } from 'next/navigation'
-import { eq } from 'drizzle-orm'
 import type { ReactNode } from 'react'
 
-import { db } from '@/lib/db/drizzle'
-import { teamMembers, teams } from '@/lib/db/schema/core'
-import { getUser } from '@/lib/db/queries/queries'
+import { eq } from 'drizzle-orm'
+
 import { AppModal } from '@/components/ui/app-modal'
+import { db } from '@/lib/db/drizzle'
+import { getUser } from '@/lib/db/queries/queries'
+import { teamMembers, teams } from '@/lib/db/schema/core'
 
 type Props = {
   /** Page content rendered only when a DID exists */

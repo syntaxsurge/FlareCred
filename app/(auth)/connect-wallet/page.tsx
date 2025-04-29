@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Wallet } from 'lucide-react'
+import { useEffect, useState } from 'react'
+
 import { ConnectButton } from '@rainbow-me/rainbowkit'
+import { Wallet } from 'lucide-react'
 import { useAccount } from 'wagmi'
 
 /**
@@ -49,7 +50,7 @@ export default function ConnectWalletPage() {
   return (
     <section className='mx-auto flex min-h-[calc(100dvh-64px)] max-w-md flex-col items-center justify-center gap-6 px-4 text-center'>
       <div className='flex flex-col items-center gap-4'>
-        <Wallet className='h-10 w-10 text-primary' strokeWidth={1.5} />
+        <Wallet className='text-primary h-10 w-10' strokeWidth={1.5} />
         <h1 className='text-3xl font-extrabold tracking-tight'>Connect Your Wallet</h1>
         <p className='text-muted-foreground max-w-xs text-sm'>
           To continue, please connect an EVM wallet such as MetaMask or WalletConnect.
@@ -57,13 +58,11 @@ export default function ConnectWalletPage() {
       </div>
 
       {/* Full-width ConnectButton without invalid className prop */}
-      <div className='w-full flex justify-center'>
+      <div className='flex w-full justify-center'>
         <ConnectButton accountStatus='avatar' chainStatus='icon' showBalance={false} />
       </div>
 
-      {checking && (
-        <p className='text-muted-foreground text-xs'>Verifying wallet session…</p>
-      )}
+      {checking && <p className='text-muted-foreground text-xs'>Verifying wallet session…</p>}
     </section>
   )
 }

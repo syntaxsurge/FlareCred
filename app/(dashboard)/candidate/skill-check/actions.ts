@@ -2,15 +2,15 @@
 
 import { eq } from 'drizzle-orm'
 
+import { PLATFORM_ISSUER_DID } from '@/lib/config'
 import { issueFlareCredential } from '@/lib/contracts/flare'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
 import { quizAttempts, skillQuizzes, candidates } from '@/lib/db/schema/candidate'
 import { teams, teamMembers } from '@/lib/db/schema/core'
+import { extractAddressFromDid, toBytes32 } from '@/lib/utils/address'
 
 import { openAIAssess } from './openai'
-import { PLATFORM_ISSUER_DID } from '@/lib/config'
-import { extractAddressFromDid, toBytes32 } from '@/lib/utils/address'
 
 /* -------------------------------------------------------------------------- */
 /*                               A C T I O N                                  */

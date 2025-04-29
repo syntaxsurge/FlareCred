@@ -1,12 +1,12 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+
 import { z } from 'zod'
 
 import { validatedActionWithUser } from '@/lib/auth/middleware'
 import { createFlareDID } from '@/lib/contracts/flare'
 import { upsertEnv } from '@/lib/utils/env'
-
 
 /* -------------------------------------------------------------------------- */
 /*                               A C T I O N                                  */

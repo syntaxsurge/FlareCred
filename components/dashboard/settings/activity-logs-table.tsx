@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+
 import {
   Settings,
   LogOut,
@@ -15,12 +16,11 @@ import {
 } from 'lucide-react'
 
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
-import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import { ActivityType } from '@/lib/db/schema'
-import type { ActivityLogRow } from '@/lib/types/table-rows'
+import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { TableProps } from '@/lib/types/table-props'
+import type { ActivityLogRow } from '@/lib/types/table-rows'
 import { relativeTime } from '@/lib/utils/time'
-
 
 const iconMap: Record<ActivityType, LucideIcon> = {
   [ActivityType.SIGN_UP]: UserPlus,
@@ -64,7 +64,6 @@ function formatAction(action: ActivityType): string {
       return 'Unknown action'
   }
 }
-
 
 export default function ActivityLogsTable({
   rows,

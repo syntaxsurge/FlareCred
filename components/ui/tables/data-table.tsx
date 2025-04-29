@@ -15,7 +15,7 @@ import {
   RowSelectionState,
   SortingState,
 } from '@tanstack/react-table'
-import { ArrowUpDown, ChevronDown, MoreHorizontal, type LucideIcon } from 'lucide-react'
+import { ArrowUpDown, ChevronDown, MoreHorizontal } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -37,8 +37,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/tables/table'
-import { cn } from '@/lib/utils'
 import type { Column, BulkAction } from '@/lib/types/components'
+import { cn } from '@/lib/utils'
 
 /* Re-export for backwards compatibility */
 export type { Column, BulkAction } from '@/lib/types/components'

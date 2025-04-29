@@ -23,10 +23,9 @@ export const CREDENTIAL_NFT_ADDRESS = getEnv('NEXT_PUBLIC_CREDENTIAL_NFT_ADDRESS
   kind: 'address',
 }) as `0x${string}`
 
-export const SUBSCRIPTION_MANAGER_ADDRESS = getEnv(
-  'NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS',
-  { kind: 'address' },
-) as `0x${string}`
+export const SUBSCRIPTION_MANAGER_ADDRESS = getEnv('NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS', {
+  kind: 'address',
+}) as `0x${string}`
 
 export const FDC_VERIFIER_ADDRESS = getEnv('NEXT_PUBLIC_FDC_VERIFIER_ADDRESS', {
   kind: 'address',

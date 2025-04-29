@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers'
+
 import { SignJWT, jwtVerify } from 'jose'
 
 import type { NewUser } from '@/lib/db/schema'

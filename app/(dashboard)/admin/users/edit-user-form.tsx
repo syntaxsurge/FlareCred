@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
-import { useActionState, startTransition } from 'react'
+import { startTransition } from 'react'
 
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -10,10 +10,9 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import type { EditUserFormProps, ActionState } from '@/lib/types/forms'
 
 import { updateUserAction } from './actions'
-
-import type { EditUserFormProps, ActionState } from '@/lib/types/forms'
 
 const ROLES = ['candidate', 'recruiter', 'issuer', 'admin'] as const
 

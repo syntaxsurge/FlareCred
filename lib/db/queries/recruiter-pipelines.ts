@@ -1,14 +1,10 @@
 import { eq, and } from 'drizzle-orm'
 
-import { db } from '../drizzle'
-import { recruiterPipelines } from '../schema/recruiter'
-
-import {
-  buildOrderExpr,
-  buildSearchCondition,
-  paginate,
-} from './query-helpers'
 import type { PipelineRow } from '@/lib/types/table-rows'
+
+import { db } from '../drizzle'
+import { buildOrderExpr, buildSearchCondition, paginate } from './query-helpers'
+import { recruiterPipelines } from '../schema/recruiter'
 
 /**
  * Paginate pipelines for the given recruiter with optional search and sorting.
@@ -46,11 +42,7 @@ export async function getRecruiterPipelinesPage(
     .where(whereClause as any)
     .orderBy(orderBy)
 
-  const { rows, hasNext } = await paginate<PipelineRow>(
-    baseQuery as any,
-    page,
-    pageSize,
-  )
+  const { rows, hasNext } = await paginate<PipelineRow>(baseQuery as any, page, pageSize)
 
   return { pipelines: rows as PipelineRow[], hasNext }
 }

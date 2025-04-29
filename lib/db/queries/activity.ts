@@ -1,14 +1,10 @@
 import { eq, and } from 'drizzle-orm'
 
-import { db } from '../drizzle'
-import { activityLogs, ActivityType } from '../schema/core'
-
-import {
-  buildOrderExpr,
-  buildSearchCondition,
-  paginate,
-} from './query-helpers'
 import type { ActivityLogRow } from '@/lib/types/table-rows'
+
+import { db } from '../drizzle'
+import { buildOrderExpr, buildSearchCondition, paginate } from './query-helpers'
+import { activityLogs, ActivityType } from '../schema/core'
 
 /**
  * Fetch a page of activity logs with optional full-text search, pagination and sorting.
@@ -30,10 +26,7 @@ export async function getActivityLogsPage(
   const orderBy = buildOrderExpr(sortMap, sortBy, order)
 
   /* ---------------------------- WHERE ---------------------------------- */
-  const searchCond = buildSearchCondition(searchTerm, [
-    activityLogs.action,
-    activityLogs.ipAddress,
-  ])
+  const searchCond = buildSearchCondition(searchTerm, [activityLogs.action, activityLogs.ipAddress])
   const whereClause = searchCond
     ? and(eq(activityLogs.userId, userId), searchCond)
     : eq(activityLogs.userId, userId)
@@ -47,8 +40,7 @@ export async function getActivityLogsPage(
     id: r.id,
     type: r.action as ActivityType,
     ipAddress: r.ipAddress,
-    timestamp:
-      r.timestamp instanceof Date ? r.timestamp.toISOString() : String(r.timestamp),
+    timestamp: r.timestamp instanceof Date ? r.timestamp.toISOString() : String(r.timestamp),
   }))
 
   return { logs, hasNext }

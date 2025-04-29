@@ -1,15 +1,11 @@
-import { eq, ilike, and, asc, desc } from 'drizzle-orm'
+import { eq, and, desc } from 'drizzle-orm'
+
+import type { RecruiterCredentialRow } from '@/lib/types/table-rows'
 
 import { db } from '../drizzle'
-import { candidateCredentials, CredentialStatus } from '../schema/candidate'
+import { buildOrderExpr, buildSearchCondition, paginate } from './query-helpers'
+import { candidateCredentials } from '../schema/candidate'
 import { issuers } from '../schema/issuer'
-
-import {
-  buildOrderExpr,
-  buildSearchCondition,
-  paginate,
-} from './query-helpers'
-import type { RecruiterCredentialRow } from '@/lib/types/table-rows'
 
 /* -------------------------------------------------------------------------- */
 /*                             Paginated fetch                                */
@@ -45,14 +41,11 @@ export async function getRecruiterCandidateCredentialsPage(
     : [secondary]
 
   /* ----------------------------- WHERE clause ---------------------------- */
-  const searchCond = buildSearchCondition(searchTerm, [
-    candidateCredentials.title,
-  ])
+  const searchCond = buildSearchCondition(searchTerm, [candidateCredentials.title])
 
-  const where =
-    searchCond
-      ? and(eq(candidateCredentials.candidateId, candidateId), searchCond)
-      : eq(candidateCredentials.candidateId, candidateId)
+  const where = searchCond
+    ? and(eq(candidateCredentials.candidateId, candidateId), searchCond)
+    : eq(candidateCredentials.candidateId, candidateId)
 
   /* ------------------------------ Query ---------------------------------- */
   const baseQuery = db
@@ -73,11 +66,7 @@ export async function getRecruiterCandidateCredentialsPage(
     .where(where as any)
     .orderBy(...(orderByParts as any))
 
-  const { rows, hasNext } = await paginate<RecruiterCredentialRow>(
-    baseQuery as any,
-    page,
-    pageSize,
-  )
+  const { rows, hasNext } = await paginate<RecruiterCredentialRow>(baseQuery as any, page, pageSize)
 
   return { credentials: rows as RecruiterCredentialRow[], hasNext }
 }

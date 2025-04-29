@@ -7,8 +7,8 @@ import { z } from 'zod'
 
 import { validatedActionWithUser } from '@/lib/auth/middleware'
 import { db } from '@/lib/db/drizzle'
-import { issuers, IssuerStatus, IssuerCategory, IssuerIndustry } from '@/lib/db/schema/issuer'
 import { teams, teamMembers } from '@/lib/db/schema/core'
+import { issuers, IssuerStatus, IssuerCategory, IssuerIndustry } from '@/lib/db/schema/issuer'
 
 /* -------------------------------------------------------------------------- */
 /*                              H E L P E R S                                 */
@@ -130,7 +130,8 @@ export const updateIssuerDetailsAction = validatedActionWithUser(
       .where(eq(issuers.ownerUserId, user.id))
       .limit(1)
     if (!issuer) return { error: 'Issuer not found.' }
-    if (issuer.status !== IssuerStatus.REJECTED) return { error: 'Only rejected issuers can be updated.' }
+    if (issuer.status !== IssuerStatus.REJECTED)
+      return { error: 'Only rejected issuers can be updated.' }
 
     await db
       .update(issuers)

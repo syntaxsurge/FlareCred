@@ -10,15 +10,15 @@
  * without unsafe casts or TypeScript complaints.
  */
 
-import type { Abi } from 'viem'
 import type { InterfaceAbi } from 'ethers'
+import type { Abi } from 'viem'
 
-import DIDRegistryArtifact from '../../blockchain/artifacts/contracts/DIDRegistry.sol/DIDRegistry.json'
 import CredentialNFTArtifact from '../../blockchain/artifacts/contracts/CredentialNFT.sol/CredentialNFT.json'
-import SubscriptionManagerArtifact from '../../blockchain/artifacts/contracts/SubscriptionManager.sol/SubscriptionManager.json'
+import DIDRegistryArtifact from '../../blockchain/artifacts/contracts/DIDRegistry.sol/DIDRegistry.json'
 import FlareCredVerifierArtifact from '../../blockchain/artifacts/contracts/FlareCredVerifier.sol/FlareCredVerifier.json'
 import FtsoHelperArtifact from '../../blockchain/artifacts/contracts/FtsoHelper.sol/FtsoHelper.json'
 import RngHelperArtifact from '../../blockchain/artifacts/contracts/RngHelper.sol/RngHelper.json'
+import SubscriptionManagerArtifact from '../../blockchain/artifacts/contracts/SubscriptionManager.sol/SubscriptionManager.json'
 
 /* -------------------------------------------------------------------------- */
 /*                                   TYPES                                    */
@@ -38,9 +38,7 @@ type DualAbi = Abi & InterfaceAbi
 
 export const DID_REGISTRY_ABI = DIDRegistryArtifact.abi as unknown as DualAbi
 export const CREDENTIAL_NFT_ABI = CredentialNFTArtifact.abi as unknown as DualAbi
-export const SUBSCRIPTION_MANAGER_ABI =
-  SubscriptionManagerArtifact.abi as unknown as DualAbi
-export const FDC_VERIFIER_ABI =
-  FlareCredVerifierArtifact.abi as unknown as DualAbi
+export const SUBSCRIPTION_MANAGER_ABI = SubscriptionManagerArtifact.abi as unknown as DualAbi
+export const FDC_VERIFIER_ABI = FlareCredVerifierArtifact.abi as unknown as DualAbi
 export const FTSO_HELPER_ABI = FtsoHelperArtifact.abi as unknown as DualAbi
 export const RNG_HELPER_ABI = RngHelperArtifact.abi as unknown as DualAbi

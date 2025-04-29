@@ -37,15 +37,12 @@ function prettify(text?: string | null) {
 }
 
 function StatusPill({ status }: { status: string }) {
-  const base =
-    'inline-flex items-center rounded-full px-3 py-0.5 text-sm font-semibold capitalize'
+  const base = 'inline-flex items-center rounded-full px-3 py-0.5 text-sm font-semibold capitalize'
   const map: Record<string, string> = {
     [IssuerStatus.ACTIVE]:
       'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
-    [IssuerStatus.PENDING]:
-      'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-    [IssuerStatus.REJECTED]:
-      'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
+    [IssuerStatus.PENDING]: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+    [IssuerStatus.REJECTED]: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
   }
   return (
     <span className={cn(base, map[status] ?? 'bg-muted text-foreground/80')}>
@@ -98,11 +95,7 @@ export default async function IssuerOnboardPage() {
   const user = await getUser()
   if (!user) redirect('/connect-wallet')
 
-  const [issuer] = await db
-    .select()
-    .from(issuers)
-    .where(eq(issuers.ownerUserId, user.id))
-    .limit(1)
+  const [issuer] = await db.select().from(issuers).where(eq(issuers.ownerUserId, user.id)).limit(1)
 
   /* ---------------------------------------------------------------------- */
   /*  Entire view is now wrapped in RequireDidGate so issuers without a     */
@@ -138,7 +131,12 @@ export default async function IssuerOnboardPage() {
                 <div className='space-y-2'>
                   <Detail icon={Building2} label='Name' value={issuer.name} />
                   <Detail icon={AtSign} label='Domain' value={issuer.domain} />
-                  <Detail icon={Tag} label='Category' value={prettify(issuer.category)} capitalize />
+                  <Detail
+                    icon={Tag}
+                    label='Category'
+                    value={prettify(issuer.category)}
+                    capitalize
+                  />
                   <Detail
                     icon={BriefcaseBusiness}
                     label='Industry'
@@ -164,7 +162,8 @@ export default async function IssuerOnboardPage() {
 
                 {issuer.rejectionReason && (
                   <p className='rounded-md bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-900/20 dark:text-rose-300'>
-                    <span className='font-semibold'>Rejection reason:</span> {issuer.rejectionReason}
+                    <span className='font-semibold'>Rejection reason:</span>{' '}
+                    {issuer.rejectionReason}
                   </p>
                 )}
               </CardContent>

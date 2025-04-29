@@ -1,14 +1,10 @@
 'use client'
 
 import * as React from 'react'
+
+import { CheckCircle2, XCircle, ShieldCheck, ShieldX, type LucideProps } from 'lucide-react'
+
 import { cn } from '@/lib/utils'
-import {
-  CheckCircle2,
-  XCircle,
-  ShieldCheck,
-  ShieldX,
-  type LucideProps,
-} from 'lucide-react'
 
 /**
  * Utility that wraps a Lucide icon with default colour classes while preserving ref support.
@@ -19,11 +15,9 @@ function withColor(
   >,
   defaultClasses: string,
 ) {
-  return React.forwardRef<SVGSVGElement, LucideProps>(
-    ({ className, ...props }, ref) => (
-      <Base ref={ref} {...props} className={cn(defaultClasses, className)} />
-    ),
-  )
+  return React.forwardRef<SVGSVGElement, LucideProps>(({ className, ...props }, ref) => (
+    <Base ref={ref} {...props} className={cn(defaultClasses, className)} />
+  ))
 }
 
 /* -------------------------------------------------------------------------- */
@@ -36,10 +30,7 @@ export const AcceptIcon = withColor(
 )
 AcceptIcon.displayName = 'AcceptIcon'
 
-export const DeclineIcon = withColor(
-  XCircle,
-  'mr-2 h-4 w-4 text-amber-600 dark:text-amber-400',
-)
+export const DeclineIcon = withColor(XCircle, 'mr-2 h-4 w-4 text-amber-600 dark:text-amber-400')
 DeclineIcon.displayName = 'DeclineIcon'
 
 export const VerifyIcon = withColor(
@@ -48,14 +39,8 @@ export const VerifyIcon = withColor(
 )
 VerifyIcon.displayName = 'VerifyIcon'
 
-export const UnverifyIcon = withColor(
-  ShieldX,
-  'mr-2 h-4 w-4 text-amber-600 dark:text-amber-400',
-)
+export const UnverifyIcon = withColor(ShieldX, 'mr-2 h-4 w-4 text-amber-600 dark:text-amber-400')
 UnverifyIcon.displayName = 'UnverifyIcon'
 
-export const RejectIcon = withColor(
-  XCircle,
-  'mr-2 h-4 w-4 text-rose-600 dark:text-rose-400',
-)
+export const RejectIcon = withColor(XCircle, 'mr-2 h-4 w-4 text-rose-600 dark:text-rose-400')
 RejectIcon.displayName = 'RejectIcon'

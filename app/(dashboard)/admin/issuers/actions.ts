@@ -54,7 +54,7 @@ const _updateIssuerStatus = validatedActionWithUser(
       .update(issuers)
       .set({
         status,
-        rejectionReason: status === IssuerStatus.REJECTED ? rejectionReason ?? null : null,
+        rejectionReason: status === IssuerStatus.REJECTED ? (rejectionReason ?? null) : null,
       })
       .where(eq(issuers.id, issuerId))
 

@@ -6,6 +6,7 @@ import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
 
 import { validatedActionWithUser } from '@/lib/auth/middleware'
+import { PROOF_TYPES } from '@/lib/constants/credential'
 import { db } from '@/lib/db/drizzle'
 import {
   candidateCredentials,
@@ -15,7 +16,6 @@ import {
 } from '@/lib/db/schema/candidate'
 import { teams, teamMembers } from '@/lib/db/schema/core'
 import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
-import { PROOF_TYPES } from '@/lib/constants/credential'
 
 /* -------------------------------------------------------------------------- */
 /*                               A D D  C R E D                               */
@@ -34,11 +34,7 @@ export const addCredential = validatedActionWithUser(
     proofData: z.string().min(1, 'Proof is required'),
     issuerId: z.coerce.number().optional(),
   }),
-  async (
-    { title, category, type, fileUrl, proofType, proofData, issuerId },
-    _formData,
-    user,
-  ) => {
+  async ({ title, category, type, fileUrl, proofType, proofData, issuerId }, _formData, user) => {
     /* --------------------------- issuer lookup -------------------------- */
     let linkedIssuerId: number | undefined
     let status: CredentialStatus = CredentialStatus.UNVERIFIED

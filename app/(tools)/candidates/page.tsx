@@ -1,15 +1,11 @@
 import { asc, desc, ilike, sql } from 'drizzle-orm'
+import { Users } from 'lucide-react'
 
 import CandidatesTable from '@/components/candidate-directory/candidates-table'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { db } from '@/lib/db/drizzle'
-import {
-  candidates,
-  candidateCredentials,
-  users,
-} from '@/lib/db/schema'
-import { Users } from 'lucide-react'
+import { candidates, candidateCredentials, users } from '@/lib/db/schema'
 import type { CandidateDirectoryRow } from '@/lib/types/table-rows'
 
 export const revalidate = 0
@@ -68,9 +64,10 @@ export default async function CandidateDirectoryPage({
       id: candidates.id,
       name: users.name,
       email: users.email,
-      verified: sql<number>`COUNT(CASE WHEN ${candidateCredentials.status} = 'verified' THEN 1 END)`.as(
-        'verified_count',
-      ),
+      verified:
+        sql<number>`COUNT(CASE WHEN ${candidateCredentials.status} = 'verified' THEN 1 END)`.as(
+          'verified_count',
+        ),
     })
     .from(candidates)
     .innerJoin(users, sql`${candidates.userId} = ${users.id}`)

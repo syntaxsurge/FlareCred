@@ -3,16 +3,13 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 
-import { ChevronDown } from 'lucide-react'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
+import { ChevronDown } from 'lucide-react'
+
 import { ModeToggle } from '@/components/theme-toggle'
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from '@/components/ui/hover-card'
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
 import { useUser } from '@/lib/auth'
 
 /* -------------------------------------------------------------------------- */
@@ -67,7 +64,7 @@ export default function SiteHeader() {
           {/* Brand */}
           <Link
             href='/'
-            className='text-primary flex items-center gap-2 whitespace-nowrap text-lg font-extrabold tracking-tight'
+            className='text-primary flex items-center gap-2 text-lg font-extrabold tracking-tight whitespace-nowrap'
           >
             <Image
               src='/images/flarecred-logo.png'
@@ -97,11 +94,7 @@ export default function SiteHeader() {
                   <ChevronDown className='mt-0.5 h-3 w-3' />
                 </span>
               </HoverCardTrigger>
-              <HoverCardContent
-                side='bottom'
-                align='start'
-                className='w-40 rounded-lg p-2'
-              >
+              <HoverCardContent side='bottom' align='start' className='w-40 rounded-lg p-2'>
                 <ul className='space-y-1'>
                   {LEARN_SECTIONS.map((s) => (
                     <li key={s.id}>
@@ -125,11 +118,7 @@ export default function SiteHeader() {
                   <ChevronDown className='mt-0.5 h-3 w-3' />
                 </span>
               </HoverCardTrigger>
-              <HoverCardContent
-                side='bottom'
-                align='start'
-                className='w-40 rounded-lg p-2'
-              >
+              <HoverCardContent side='bottom' align='start' className='w-40 rounded-lg p-2'>
                 <ul className='space-y-1'>
                   {TOOLS_MENU.map((t) => (
                     <li key={t.href}>

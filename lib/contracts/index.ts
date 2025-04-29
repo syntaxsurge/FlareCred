@@ -2,15 +2,6 @@ import { ethers } from 'ethers'
 import type { InterfaceAbi } from 'ethers'
 
 import {
-  DID_REGISTRY_ABI,
-  CREDENTIAL_NFT_ABI,
-  SUBSCRIPTION_MANAGER_ABI,
-  FDC_VERIFIER_ABI,
-  FTSO_HELPER_ABI,
-  RNG_HELPER_ABI,
-} from '@/lib/contracts/abis'
-
-import {
   FLARE_RPC_URL,
   CHAIN_ID,
   DID_REGISTRY_ADDRESS,
@@ -20,6 +11,14 @@ import {
   FTSO_HELPER_ADDRESS,
   RNG_HELPER_ADDRESS,
 } from '@/lib/config'
+import {
+  DID_REGISTRY_ABI,
+  CREDENTIAL_NFT_ABI,
+  SUBSCRIPTION_MANAGER_ABI,
+  FDC_VERIFIER_ABI,
+  FTSO_HELPER_ABI,
+  RNG_HELPER_ABI,
+} from '@/lib/contracts/abis'
 
 /* -------------------------------------------------------------------------- */
 /*                              P R O V I D E R                               */
@@ -47,10 +46,7 @@ export const getContract = <T extends ethers.Contract = ethers.Contract>(
 /* -------------------------------------------------------------------------- */
 
 export const didRegistry = getContract(DID_REGISTRY_ADDRESS, DID_REGISTRY_ABI)
-export const credentialNft = getContract(
-  CREDENTIAL_NFT_ADDRESS,
-  CREDENTIAL_NFT_ABI,
-)
+export const credentialNft = getContract(CREDENTIAL_NFT_ADDRESS, CREDENTIAL_NFT_ABI)
 export const subscriptionManager = getContract(
   SUBSCRIPTION_MANAGER_ADDRESS,
   SUBSCRIPTION_MANAGER_ABI,

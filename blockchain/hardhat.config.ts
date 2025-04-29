@@ -96,9 +96,7 @@ const config: HardhatUserConfig = {
           // faucet: https://faucet.towolabs.com/
           apiURL:
             "https://coston-explorer.flare.network/api" +
-            (FLARE_EXPLORER_API_KEY
-              ? `?x-apikey=${FLARE_EXPLORER_API_KEY}`
-              : ""), // Must not have / endpoint
+            (FLARE_EXPLORER_API_KEY ? `?x-apikey=${FLARE_EXPLORER_API_KEY}` : ""), // Must not have / endpoint
           browserURL: "https://coston-explorer.flare.network",
         },
       },
@@ -109,9 +107,7 @@ const config: HardhatUserConfig = {
           // faucet: https://coston2-faucet.towolabs.com/
           apiURL:
             "https://coston2-explorer.flare.network/api" +
-            (FLARE_EXPLORER_API_KEY
-              ? `?x-apikey=${FLARE_EXPLORER_API_KEY}`
-              : ""), // Must not have / endpoint
+            (FLARE_EXPLORER_API_KEY ? `?x-apikey=${FLARE_EXPLORER_API_KEY}` : ""), // Must not have / endpoint
           browserURL: "https://coston2-explorer.flare.network",
         },
       },
@@ -121,9 +117,7 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL:
             "https://songbird-explorer.flare.network/api" +
-            (FLARE_EXPLORER_API_KEY
-              ? `?x-apikey=${FLARE_EXPLORER_API_KEY}`
-              : ""), // Must not have / endpoint
+            (FLARE_EXPLORER_API_KEY ? `?x-apikey=${FLARE_EXPLORER_API_KEY}` : ""), // Must not have / endpoint
           browserURL: "https://songbird-explorer.flare.network/",
         },
       },
@@ -133,9 +127,7 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL:
             "https://flare-explorer.flare.network/api" +
-            (FLARE_EXPLORER_API_KEY
-              ? `?x-apikey=${FLARE_EXPLORER_API_KEY}`
-              : ""), // Must not have / endpoint
+            (FLARE_EXPLORER_API_KEY ? `?x-apikey=${FLARE_EXPLORER_API_KEY}` : ""), // Must not have / endpoint
           browserURL: "https://flare-explorer.flare.network/",
         },
       },

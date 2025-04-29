@@ -12,8 +12,8 @@ import {
   ChartLegendContent,
   type ChartConfig,
 } from '@/components/ui/charts/chart'
-import { cn } from '@/lib/utils'
 import type { PieChartProps } from '@/lib/types/charts'
+import { cn } from '@/lib/utils'
 
 function sliceColour(sliceKey: string, cfg: ChartConfig): string | undefined {
   const entry = cfg[sliceKey]

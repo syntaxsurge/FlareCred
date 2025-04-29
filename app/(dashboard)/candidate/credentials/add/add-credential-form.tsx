@@ -16,10 +16,7 @@ import {
   SelectItem,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  PROOF_TYPES,
-  type ProofType,
-} from '@/lib/constants/credential'
+import { PROOF_TYPES, type ProofType } from '@/lib/constants/credential'
 import type { AddCredentialFormProps } from '@/lib/types/forms'
 
 /* -------------------------------------------------------------------------- */
@@ -37,16 +34,13 @@ const CATEGORIES = [
 
 const SUB_TYPES = ['github_repo'] as const
 
-const GITHUB_REPO_REGEX =
-  /^https?:\/\/github\.com\/([\w.-]+)\/([\w.-]+)(?:\/?|\.git)$/i
+const GITHUB_REPO_REGEX = /^https?:\/\/github\.com\/([\w.-]+)\/([\w.-]+)(?:\/?|\.git)$/i
 
 /* -------------------------------------------------------------------------- */
 /*                                    VIEW                                    */
 /* -------------------------------------------------------------------------- */
 
-export default function AddCredentialForm({
-  addCredentialAction,
-}: AddCredentialFormProps) {
+export default function AddCredentialForm({ addCredentialAction }: AddCredentialFormProps) {
   const [isPending, startTransition] = useTransition()
 
   const [proofType, setProofType] = useState<ProofType>('EVM')
@@ -86,13 +80,11 @@ export default function AddCredentialForm({
     setProofType('JSON')
     setAttachPending(true)
     setProofAttached(false)
-
     ;(async () => {
       try {
-        const res = await fetch(
-          `/api/tools/github-metrics?repo=${encodeURIComponent(repoPath)}`,
-          { cache: 'no-store' },
-        )
+        const res = await fetch(`/api/tools/github-metrics?repo=${encodeURIComponent(repoPath)}`, {
+          cache: 'no-store',
+        })
         if (!res.ok) {
           throw new Error(`Endpoint error (${res.status})`)
         }
@@ -100,9 +92,7 @@ export default function AddCredentialForm({
         setProofJson(JSON.stringify(proof))
         setProofAttached(true)
       } catch (err: any) {
-        toast.error(
-          err?.message || 'Failed to attach GitHub proof – try again later.',
-        )
+        toast.error(err?.message || 'Failed to attach GitHub proof – try again later.')
         setRepoDetected(false)
         setProofType('EVM')
         setSubType('')
@@ -225,14 +215,9 @@ export default function AddCredentialForm({
             <input type='hidden' name='fileUrl' value={fileUrl} />
             <div className='flex items-end gap-2'>
               <Label className='sr-only'>Repository URL</Label>
-              <Input
-                value={fileUrl}
-                readOnly
-                disabled
-                className='flex-1 opacity-70'
-              />
+              <Input value={fileUrl} readOnly disabled className='flex-1 opacity-70' />
               {attachPending ? (
-                <Loader2 className='h-4 w-4 animate-spin text-muted-foreground' />
+                <Loader2 className='text-muted-foreground h-4 w-4 animate-spin' />
               ) : proofAttached ? (
                 <span className='inline-flex items-center gap-1 text-xs font-medium text-emerald-600'>
                   <CheckCircle className='h-4 w-4' />
@@ -269,13 +254,7 @@ export default function AddCredentialForm({
 
         {/* Proof data */}
         {repoDetected ? (
-          <textarea
-            name='proofData'
-            value={proofJson}
-            readOnly
-            hidden
-            aria-hidden='true'
-          />
+          <textarea name='proofData' value={proofJson} readOnly hidden aria-hidden='true' />
         ) : (
           <div className='space-y-2 sm:col-span-2'>
             <Label htmlFor='proofData'>Proof Data / URL / Tx-hash</Label>

@@ -3,8 +3,8 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-import { cn } from '@/lib/utils'
 import type { SidebarNavItem } from '@/lib/types/components'
+import { cn } from '@/lib/utils'
 
 /* -------------------------------------------------------------------------- */
 /*                            S I D E B A R   N A V                           */
@@ -32,15 +32,14 @@ export function SidebarNav({
   return (
     <nav className={cn('mb-4', className)}>
       {title && (
-        <p className='text-muted-foreground/70 mt-6 ml-3 select-none text-xs font-semibold uppercase tracking-wider'>
+        <p className='text-muted-foreground/70 mt-6 ml-3 text-xs font-semibold tracking-wider uppercase select-none'>
           {title}
         </p>
       )}
 
       <ul className='mt-2 space-y-1'>
         {items.map(({ href, icon: Icon, label, badgeCount }) => {
-          const active =
-            pathname === href || (href !== '/' && pathname.startsWith(`${href}/`))
+          const active = pathname === href || (href !== '/' && pathname.startsWith(`${href}/`))
 
           return (
             <li key={href}>
@@ -59,7 +58,7 @@ export function SidebarNav({
 
                 {badgeCount !== undefined && badgeCount > 0 && (
                   <span
-                    className='bg-primary/90 text-primary-foreground ml-auto inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[11px] font-semibold leading-none shadow'
+                    className='bg-primary/90 text-primary-foreground ml-auto inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[11px] leading-none font-semibold shadow'
                     aria-label={`${badgeCount} pending`}
                   >
                     {badgeCount > 99 ? '99+' : badgeCount}

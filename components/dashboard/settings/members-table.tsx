@@ -1,7 +1,8 @@
 'use client'
 
-import * as React from 'react'
 import { useRouter } from 'next/navigation'
+import * as React from 'react'
+
 import { formatDistanceToNow } from 'date-fns'
 import { Pencil, Trash2, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -19,12 +20,11 @@ import {
 import { Label } from '@/components/ui/label'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
-import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
-import { truncateAddress } from '@/lib/utils/address'
-import type { MemberRow } from '@/lib/types/table-rows'
+import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { TableProps } from '@/lib/types/table-props'
-
+import type { MemberRow } from '@/lib/types/table-rows'
+import { truncateAddress } from '@/lib/utils/address'
 
 const ROLES = ['member', 'owner'] as const
 
@@ -77,7 +77,6 @@ function EditMemberForm({ row, onDone }: { row: MemberRow; onDone: () => void })
     </form>
   )
 }
-
 
 export default function MembersTable({
   rows,
@@ -144,9 +143,7 @@ export default function MembersTable({
             const fd = new FormData()
             fd.append('memberId', row.id.toString())
             const res = await removeTeamMember({}, fd)
-            res?.error
-              ? toast.error(res.error)
-              : toast.success(res?.success ?? 'Member removed.')
+            res?.error ? toast.error(res.error) : toast.success(res?.success ?? 'Member removed.')
             router.refresh()
           }),
         disabled: () => isPending,
@@ -174,9 +171,7 @@ export default function MembersTable({
         key: 'walletAddress',
         header: 'Wallet',
         sortable: false,
-        render: (v) => (
-          <span className='font-mono text-xs'>{truncateAddress(v as string)}</span>
-        ),
+        render: (v) => <span className='font-mono text-xs'>{truncateAddress(v as string)}</span>,
       },
       {
         key: 'role',

@@ -42,13 +42,11 @@ export function prettyDate(
     relativeCutoffMs = 3 * 24 * 60 * 60 * 1_000,
     formatRelative = (d: Date) => formatDistanceToNow(d, { addSuffix: true }),
     formatAbsolute = (d: Date) => format(d, 'PPP'),
-  } = {}
+  } = {},
 ): string {
-  if (!date) return placeholder;
-  const diff = Math.abs(Date.now() - date.getTime());
-  return diff < relativeCutoffMs
-    ? formatRelative(date)
-    : formatAbsolute(date);
+  if (!date) return placeholder
+  const diff = Math.abs(Date.now() - date.getTime())
+  return diff < relativeCutoffMs ? formatRelative(date) : formatAbsolute(date)
 }
 
 export function formatDateTime(iso: string) {

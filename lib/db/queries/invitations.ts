@@ -1,14 +1,10 @@
 import { eq, and } from 'drizzle-orm'
 
-import { db } from '../drizzle'
-import { invitations, teams, users } from '../schema/core'
-
-import {
-  buildOrderExpr,
-  buildSearchCondition,
-  paginate,
-} from './query-helpers'
 import type { InvitationRow } from '@/lib/types/table-rows'
+
+import { db } from '../drizzle'
+import { buildOrderExpr, buildSearchCondition, paginate } from './query-helpers'
+import { invitations, teams, users } from '../schema/core'
 
 /**
  * Return a page of invitations addressed to the given email with optional
@@ -61,11 +57,7 @@ export async function getInvitationsPage(
     .where(whereClause as any)
     .orderBy(orderBy)
 
-  const { rows, hasNext } = await paginate<InvitationRow>(
-    baseQuery as any,
-    page,
-    pageSize,
-  )
+  const { rows, hasNext } = await paginate<InvitationRow>(baseQuery as any, page, pageSize)
 
   return { invitations: rows as InvitationRow[], hasNext }
 }

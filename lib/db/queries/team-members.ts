@@ -1,14 +1,10 @@
 import { eq, and } from 'drizzle-orm'
 
-import { db } from '../drizzle'
-import { teamMembers, users } from '../schema/core'
-
-import {
-  buildOrderExpr,
-  buildSearchCondition,
-  paginate,
-} from './query-helpers'
 import type { MemberRow } from '@/lib/types/table-rows'
+
+import { db } from '../drizzle'
+import { buildOrderExpr, buildSearchCondition, paginate } from './query-helpers'
+import { teamMembers, users } from '../schema/core'
 
 /**
  * Return a single page of team members with optional search, sorting and pagination.
@@ -33,11 +29,7 @@ export async function getTeamMembersPage(
 
   /* ------------------------------ WHERE ---------------------------------- */
   const base = eq(teamMembers.teamId, teamId)
-  const searchCond = buildSearchCondition(searchTerm, [
-    users.name,
-    users.email,
-    teamMembers.role,
-  ])
+  const searchCond = buildSearchCondition(searchTerm, [users.name, users.email, teamMembers.role])
   const whereClause = searchCond ? and(base, searchCond) : base
 
   /* ------------------------------ QUERY ---------------------------------- */
@@ -55,11 +47,7 @@ export async function getTeamMembersPage(
     .where(whereClause as any)
     .orderBy(orderBy)
 
-  const { rows, hasNext } = await paginate<MemberRow>(
-    baseQuery as any,
-    page,
-    pageSize,
-  )
+  const { rows, hasNext } = await paginate<MemberRow>(baseQuery as any, page, pageSize)
 
   return { members: rows as MemberRow[], hasNext }
 }

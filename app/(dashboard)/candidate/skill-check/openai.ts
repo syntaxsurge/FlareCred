@@ -1,7 +1,8 @@
 'use server'
 
-import { OPENAI_API_KEY } from '@/lib/config'
 import OpenAI from 'openai'
+
+import { OPENAI_API_KEY } from '@/lib/config'
 
 /**
  * If OPENAI_API_KEY is missing, return a random score.

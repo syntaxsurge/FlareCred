@@ -1,19 +1,11 @@
 import { eq, and, sql } from 'drizzle-orm'
 
-import { db } from '../drizzle'
-import {
-  candidateCredentials,
-  candidates,
-  CredentialStatus,
-} from '../schema/candidate'
-import { users } from '../schema/core'
-
-import {
-  buildOrderExpr,
-  buildSearchCondition,
-  paginate,
-} from './query-helpers'
 import type { IssuerRequestRow } from '@/lib/types/table-rows'
+
+import { db } from '../drizzle'
+import { buildOrderExpr, buildSearchCondition, paginate } from './query-helpers'
+import { candidateCredentials, candidates, CredentialStatus } from '../schema/candidate'
+import { users } from '../schema/core'
 
 /**
  * Fetch a paginated, searchable list of credential-verification requests

@@ -10,24 +10,15 @@ import {
   updateIssuerStatusAction,
   deleteIssuerAction,
 } from '@/app/(dashboard)/admin/issuers/actions'
-import { Button } from '@/components/ui/button'
+import { VerifyIcon, UnverifyIcon, RejectIcon } from '@/components/ui/colored-icons'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
-import {
-  TableRowActions,
-  type TableRowAction,
-} from '@/components/ui/tables/row-actions'
-import {
-  VerifyIcon,
-  UnverifyIcon,
-  RejectIcon,
-} from '@/components/ui/colored-icons'
-import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
-import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
+import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
 import { IssuerStatus } from '@/lib/db/schema/issuer'
-import type { AdminIssuerRow } from '@/lib/types/table-rows'
+import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
+import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { TableProps } from '@/lib/types/table-props'
-
+import type { AdminIssuerRow } from '@/lib/types/table-rows'
 
 export default function AdminIssuersTable({
   rows,

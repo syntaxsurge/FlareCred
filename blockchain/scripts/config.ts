@@ -12,7 +12,7 @@
  * ────────────────────────────────────────────────────────────────────────────
  */
 
-import { getAddress } from 'ethers'
+import { getAddress } from "ethers";
 
 /* -------------------------------------------------------------------------- */
 /*                               H E L P E R S                                */
@@ -20,29 +20,25 @@ import { getAddress } from 'ethers'
 
 /** EIP-55-checksum an address and trim stray whitespace. */
 function normalise(addr: string): string {
-  return getAddress(addr.trim())
+  return getAddress(addr.trim());
 }
 
 /** Unique filter helper. */
-const uniq = <T>(arr: T[]) => Array.from(new Set(arr))
+const uniq = <T>(arr: T[]) => Array.from(new Set(arr));
 
 /* -------------------------------------------------------------------------- */
 /*                              E N V   L O A D                               */
 /* -------------------------------------------------------------------------- */
 
-const env = process.env as Record<string, string | undefined>
+const env = process.env as Record<string, string | undefined>;
 
 /* -------------------------------------------------------------------------- */
 /*                             C O R E  R O L E S                             */
 /* -------------------------------------------------------------------------- */
 
-export const adminAddress = env.ADMIN_ADDRESS
-  ? normalise(env.ADMIN_ADDRESS)
-  : ''
+export const adminAddress = env.ADMIN_ADDRESS ? normalise(env.ADMIN_ADDRESS) : "";
 
-export const platformAddress = env.PLATFORM_ADDRESS
-  ? normalise(env.PLATFORM_ADDRESS)
-  : ''
+export const platformAddress = env.PLATFORM_ADDRESS ? normalise(env.PLATFORM_ADDRESS) : "";
 
 /* -------------------------------------------------------------------------- */
 /*                         I S S U E R   A D D R E S S E S                    */
@@ -53,9 +49,9 @@ export const platformAddress = env.PLATFORM_ADDRESS
  * strings and never re-adding admin / platform addresses.
  */
 export const issuerAddresses: string[] = uniq(
-  (env.ISSUER_ADDRESSES ?? '')
-    .split(',')
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0)
-    .map(normalise),
-).filter((a) => a !== adminAddress && a !== platformAddress)
+  (env.ISSUER_ADDRESSES ?? "")
+    .split(",")
+    .map(s => s.trim())
+    .filter(s => s.length > 0)
+    .map(normalise)
+).filter(a => a !== adminAddress && a !== platformAddress);

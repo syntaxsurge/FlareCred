@@ -5,12 +5,14 @@ import * as React from 'react'
 
 import { ActionButton } from '@/components/ui/action-button'
 import { STAGES, type Stage } from '@/lib/constants/recruiter'
+import type { UpdateStageFormProps } from '@/lib/types/forms'
 
 import { updateCandidateStageAction } from './actions'
 
-import type { UpdateStageFormProps } from '@/lib/types/forms'
-
-export default function UpdateStageForm({ pipelineCandidateId, initialStage }: UpdateStageFormProps) {
+export default function UpdateStageForm({
+  pipelineCandidateId,
+  initialStage,
+}: UpdateStageFormProps) {
   const [stage, setStage] = React.useState<Stage>(initialStage)
   const router = useRouter()
 

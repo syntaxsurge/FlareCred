@@ -1,17 +1,12 @@
 import { NextResponse } from 'next/server'
-import { z } from 'zod'
+
 import { eq } from 'drizzle-orm'
 import { ethers } from 'ethers'
+import { z } from 'zod'
 
-import { db } from '@/lib/db/drizzle'
-import {
-  users,
-  teams,
-  teamMembers,
-  activityLogs,
-  ActivityType,
-} from '@/lib/db/schema'
 import { setSession } from '@/lib/auth/session'
+import { db } from '@/lib/db/drizzle'
+import { users, teams, teamMembers, activityLogs, ActivityType } from '@/lib/db/schema'
 
 /* -------------------------------------------------------------------------- */
 /*                                    SCHEMA                                  */
@@ -68,10 +63,7 @@ export async function POST(req: Request) {
     }
 
     /* Create user --------------------------------------------------------- */
-    const [user] = await db
-      .insert(users)
-      .values({ name, email, role, walletAddress })
-      .returning()
+    const [user] = await db.insert(users).values({ name, email, role, walletAddress }).returning()
 
     /* Personal placeholder team ------------------------------------------ */
     const [team] = await db

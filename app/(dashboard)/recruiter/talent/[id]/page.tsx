@@ -135,8 +135,8 @@ export default async function RecruiterCandidateProfile({
     pipelineEntriesAll.length === 0
       ? undefined
       : pipelineEntriesAll.length === 1
-      ? `In ${pipelineEntriesAll[0].pipelineName}`
-      : `In ${pipelineEntriesAll.length} Pipelines`
+        ? `In ${pipelineEntriesAll[0].pipelineName}`
+        : `In ${pipelineEntriesAll.length} Pipelines`
 
   /* ----------------------------- Credentials section ----------------------------- */
   const page = Math.max(1, Number(first(q, 'page') ?? '1'))

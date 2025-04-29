@@ -4,11 +4,7 @@ import React from 'react'
 
 import { Bar, BarChart as ReBarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from '@/components/ui/charts/chart'
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/charts/chart'
 import type { BarChartProps } from '@/lib/types/charts'
 
 export function BarChart<D extends Record<string, any> = any>({

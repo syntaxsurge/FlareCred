@@ -14,10 +14,8 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { UserAvatar } from '@/components/ui/user-avatar'
+import type { ProfileHeaderProps } from '@/lib/types/components'
 import { truncateAddress } from '@/lib/utils/address'
-import type {
-  ProfileHeaderProps,
-} from '@/lib/types/components'
 
 /* -------------------------------------------------------------------------- */
 /*                                   View                                     */

@@ -17,11 +17,7 @@ import { CredentialStatus } from '@/lib/db/schema/candidate'
 import type { CredentialActionsProps } from '@/lib/types/components'
 import type { ActionState } from '@/lib/types/forms'
 
-export function CredentialActions({
-  credentialId,
-  status,
-  isGithub,
-}: CredentialActionsProps) {
+export function CredentialActions({ credentialId, status, isGithub }: CredentialActionsProps) {
   const router = useRouter()
 
   /* ------------------ approve ------------------ */

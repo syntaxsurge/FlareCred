@@ -15,10 +15,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import type { QuizMeta as Quiz } from '@/lib/types/components'
+import { copyToClipboard } from '@/lib/utils'
 
 import { startQuizAction } from './actions'
-import { copyToClipboard } from '@/lib/utils'
-import type { QuizMeta as Quiz } from '@/lib/types/components'
 
 /* -------------------------------------------------------------------------- */
 /*                                    VIEW                                    */
@@ -149,7 +149,7 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
 
             {/* Seed display / copy */}
             <div className='flex items-center gap-2'>
-              <span className='rounded-md bg-muted px-2 py-1 font-mono text-xs'>{seed}</span>
+              <span className='bg-muted rounded-md px-2 py-1 font-mono text-xs'>{seed}</span>
               <Button variant='ghost' size='icon' onClick={() => copyToClipboard(seed)}>
                 <Copy className='h-4 w-4' />
                 <span className='sr-only'>Copy seed</span>

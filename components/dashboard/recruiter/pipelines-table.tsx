@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
+
 import { formatDistanceToNow } from 'date-fns'
 import { Trash2, FolderKanban } from 'lucide-react'
 import { toast } from 'sonner'
@@ -38,9 +39,7 @@ function PipelineRowActions({ row }: { row: PipelineRow }) {
             const fd = new FormData()
             fd.append('pipelineId', row.id.toString())
             const res = await deletePipelineAction({}, fd)
-            res?.error
-              ? toast.error(res.error)
-              : toast.success(res?.success ?? 'Pipeline deleted.')
+            res?.error ? toast.error(res.error) : toast.success(res?.success ?? 'Pipeline deleted.')
             router.refresh()
           }),
         disabled: () => isPending,
@@ -51,7 +50,6 @@ function PipelineRowActions({ row }: { row: PipelineRow }) {
 
   return <TableRowActions row={row} actions={actions} />
 }
-
 
 export default function PipelinesTable({
   rows,
@@ -112,8 +110,7 @@ export default function PipelinesTable({
         key: 'createdAt',
         header: sortableHeader('Created', 'createdAt'),
         sortable: false,
-        render: (v) =>
-          formatDistanceToNow(new Date(v as string), { addSuffix: true }),
+        render: (v) => formatDistanceToNow(new Date(v as string), { addSuffix: true }),
       },
       {
         key: 'id',

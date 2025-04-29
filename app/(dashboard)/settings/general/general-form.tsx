@@ -7,7 +7,6 @@ import { updateAccount } from '@/app/(auth)/actions'
 import { ActionButton } from '@/components/ui/action-button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-
 import type { GeneralFormProps } from '@/lib/types/forms'
 
 export default function GeneralForm({ defaultName, defaultEmail }: GeneralFormProps) {

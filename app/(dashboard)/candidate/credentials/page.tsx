@@ -4,6 +4,7 @@ import { eq } from 'drizzle-orm'
 import { FileText } from 'lucide-react'
 
 import AddCredentialDialog from '@/components/dashboard/candidate/add-credential-dialog'
+import CandidateCredentialsTable from '@/components/dashboard/candidate/credentials-table'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { db } from '@/lib/db/drizzle'
@@ -11,7 +12,6 @@ import { getCandidateCredentialsPage } from '@/lib/db/queries/candidate-credenti
 import { getUser } from '@/lib/db/queries/queries'
 import { teams, teamMembers } from '@/lib/db/schema/core'
 import type { CandidateCredentialRow } from '@/lib/types/table-rows'
-import CandidateCredentialsTable from '@/components/dashboard/candidate/credentials-table'
 
 export const revalidate = 0
 

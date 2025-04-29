@@ -1,8 +1,10 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import type { LucideIcon } from 'lucide-react'
 import React from 'react'
+
+import type { LucideIcon } from 'lucide-react'
+import { X, UserRound, KeyRound, Bot, Star } from 'lucide-react'
 
 import {
   AlertDialog,
@@ -12,7 +14,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import { X, UserRound, KeyRound, Bot, Star } from 'lucide-react'
 import type { AppModalProps } from '@/lib/types/components'
 
 /* -------------------------------------------------------------------------- */
@@ -64,7 +65,7 @@ export function AppModal({
           <button
             type='button'
             onClick={close}
-            className='text-muted-foreground hover:text-foreground focus:ring-ring absolute right-4 top-4 rounded-md p-1 focus:outline-none focus:ring-2'
+            className='text-muted-foreground hover:text-foreground focus:ring-ring absolute top-4 right-4 rounded-md p-1 focus:ring-2 focus:outline-none'
           >
             <X className='h-4 w-4' aria-hidden='true' />
             <span className='sr-only'>Close</span>

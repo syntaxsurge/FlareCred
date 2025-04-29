@@ -7,7 +7,7 @@
 export const PLAN_KEYS = ['free', 'base', 'plus'] as const
 
 /** Union type for plan keys (`'free' | 'base' | 'plus'`). */
-export type PlanKey = typeof PLAN_KEYS[number]
+export type PlanKey = (typeof PLAN_KEYS)[number]
 
 /** Native FLR token decimals (18). */
 export const FLR_DECIMALS = 18

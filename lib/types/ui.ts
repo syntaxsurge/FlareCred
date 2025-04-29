@@ -1,4 +1,5 @@
 import type { ComponentPropsWithoutRef } from 'react'
+
 import type { Avatar } from '@/components/ui/avatar'
 
 /* -------------------------------------------------------------------------- */
@@ -10,8 +11,7 @@ import type { Avatar } from '@/components/ui/avatar'
  * Extends the underlying shadcn/ui <Avatar> whilst adding domain-specific
  * convenience fields used across the app.
  */
-export interface UserAvatarProps
-  extends ComponentPropsWithoutRef<typeof Avatar> {
+export interface UserAvatarProps extends ComponentPropsWithoutRef<typeof Avatar> {
   /** Optional remote image URL */
   src?: string | null
   /** User’s display name */

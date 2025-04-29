@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import * as React from 'react'
+
 import { Eye, Copy } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -10,10 +11,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { StatusBadge } from '@/components/ui/status-badge'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
-import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
-import type { IssuerDirectoryRow } from '@/lib/types/table-rows'
+import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { TableProps } from '@/lib/types/table-props'
+import type { IssuerDirectoryRow } from '@/lib/types/table-rows'
 
 /* -------------------------------------------------------------------------- */
 /*                        Per-row actions + dialog UI                         */
@@ -64,7 +65,6 @@ function ActionsCell({ row }: { row: IssuerDirectoryRow }) {
   )
 }
 
-
 export default function IssuersTable({
   rows,
   sort,
@@ -86,7 +86,10 @@ export default function IssuersTable({
       label: 'Copy DIDs',
       icon: Copy,
       handler: async (selected) => {
-        const dids = selected.map((r) => r.did).filter(Boolean).join('\n')
+        const dids = selected
+          .map((r) => r.did)
+          .filter(Boolean)
+          .join('\n')
         if (!dids) {
           toast.error('No DIDs available in the selection.')
           return
@@ -159,9 +162,7 @@ export default function IssuersTable({
         header: sortableHeader('Created', 'createdAt'),
         sortable: false,
         render: (v) =>
-          v
-            ? new Date(v as string).toLocaleDateString(undefined, { dateStyle: 'medium' })
-            : '—',
+          v ? new Date(v as string).toLocaleDateString(undefined, { dateStyle: 'medium' }) : '—',
       },
       {
         key: 'id',

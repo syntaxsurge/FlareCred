@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
+
 import { Octokit } from '@octokit/rest'
 
-import { formatIso } from '@/lib/utils/time'
-import { getUser } from '@/lib/db/queries/queries'
 import { GITHUB_TOKEN } from '@/lib/config'
+import { getUser } from '@/lib/db/queries/queries'
+import { formatIso } from '@/lib/utils/time'
 
 /**
  * GET /api/tools/github-metrics?repo={owner}/{repo}
@@ -26,9 +27,7 @@ export async function GET(req: NextRequest) {
 
   /* ----------------------- GitHub fetch + proof ----------------------- */
   try {
-    const octokit = new Octokit(
-      { auth: GITHUB_TOKEN }
-    )
+    const octokit = new Octokit({ auth: GITHUB_TOKEN })
     const { data } = await octokit.rest.repos.get({ owner, repo })
 
     const metrics = {

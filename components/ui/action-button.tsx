@@ -7,8 +7,8 @@ import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
 import type { ActionButtonProps, ActionResult } from '@/lib/types/components'
+import { cn } from '@/lib/utils'
 
 /**
  * A drop-in replacement for <Button> that

@@ -1,16 +1,12 @@
 import { eq } from 'drizzle-orm'
 
+import type { AdminCredentialRow } from '@/lib/types/table-rows'
+
 import { db } from '../drizzle'
+import { buildOrderExpr, buildSearchCondition, paginate } from './query-helpers'
 import { candidateCredentials, candidates } from '../schema/candidate'
 import { users } from '../schema/core'
 import { issuers } from '../schema/issuer'
-
-import {
-  buildOrderExpr,
-  buildSearchCondition,
-  paginate,
-} from './query-helpers'
-import type { AdminCredentialRow } from '@/lib/types/table-rows'
 
 /* -------------------------------------------------------------------------- */
 /*                      A D M I N   C R E D E N T I A L S                     */
@@ -65,11 +61,7 @@ export async function getAdminCredentialsPage(
   const orderedQuery = filteredQuery.orderBy(orderBy)
 
   /* --------------------------- PAGINATE -------------------------------- */
-  const { rows, hasNext } = await paginate<AdminCredentialRow>(
-    orderedQuery as any,
-    page,
-    pageSize,
-  )
+  const { rows, hasNext } = await paginate<AdminCredentialRow>(orderedQuery as any, page, pageSize)
 
   return { credentials: rows, hasNext }
 }
