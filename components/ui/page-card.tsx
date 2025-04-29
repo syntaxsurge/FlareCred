@@ -1,21 +1,5 @@
-import type { ElementType, ReactNode } from 'react'
-
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card'
-
-interface PageCardProps {
-  /** Lucide icon component */
-  icon: ElementType
-  /** Card title text */
-  title: string
-  /** Optional small description below the title */
-  description?: string
-  /** Optional right-aligned header actions (e.g. buttons) */
-  actions?: ReactNode
-  /** Main body content */
-  children: ReactNode
-  /** Extra classes applied to the Card wrapper */
-  className?: string
-}
+import type { PageCardProps } from '@/lib/types/components'
 
 /**
  * Encapsulates the repeated "page section” card pattern

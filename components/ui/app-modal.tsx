@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { X, UserRound, KeyRound, Bot, Star } from 'lucide-react'
+import type { AppModalProps } from '@/lib/types/components'
 
 /* -------------------------------------------------------------------------- */
 /*                                 Icon Map                                   */
@@ -23,29 +24,6 @@ const ICON_MAP: Record<string, LucideIcon> = {
   keyround: KeyRound,
   bot: Bot,
   star: Star,
-}
-
-/* -------------------------------------------------------------------------- */
-/*                                   Props                                    */
-/* -------------------------------------------------------------------------- */
-
-export interface AppModalProps {
-  /** Direct LucideIcon component (client only) */
-  icon?: LucideIcon
-  /** String identifier mapped through ICON_MAP (SSR safe) */
-  iconKey?: string
-  /** Bold heading text */
-  title: string
-  /** Helper text under the title */
-  description?: string
-  /** CTA label (ignored when custom children provided) */
-  buttonText?: string
-  /** Route pushed on CTA click (ignored when custom children provided) */
-  redirectTo?: string
-  /** Optional custom body; when provided, default button section is omitted */
-  children?: React.ReactNode
-  /** If true, modal cannot be closed (no outside-click close & no X). */
-  required?: boolean
 }
 
 /* -------------------------------------------------------------------------- */

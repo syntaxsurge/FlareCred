@@ -316,3 +316,57 @@ export interface PipelineBoardProps {
   pipelineId: number
   initialData: Record<Stage, PipelineCandidateCard[]>
 }
+
+/* -------------------------------------------------------------------------- */
+/*                        Newly centralised component props                   */
+/* -------------------------------------------------------------------------- */
+
+/** Props for the encapsulated page section card component. */
+export interface PageCardProps {
+  /** Lucide icon component */
+  icon: ElementType
+  /** Card title text */
+  title: string
+  /** Optional small description below the title */
+  description?: string
+  /** Optional right-aligned header actions (e.g. buttons) */
+  actions?: ReactNode
+  /** Main body content */
+  children: ReactNode
+  /** Extra classes applied to the Card wrapper */
+  className?: string
+}
+
+/** Props for the universal status badge component. */
+export interface StatusBadgeProps {
+  /** Status string used for colour/icon mapping */
+  status: string
+  /** Additional class names */
+  className?: string
+  /** Show status-specific icon. Defaults to false. */
+  showIcon?: boolean
+  /** 'left' | 'right'; icon placement relative to text. Defaults to 'left'. */
+  iconPosition?: 'left' | 'right'
+  /** Optional number to display after the label (e.g. count). */
+  count?: number
+}
+
+/** Generic application modal props shared across the app. */
+export interface AppModalProps {
+  /** Direct LucideIcon component (client only) */
+  icon?: LucideIcon
+  /** String identifier mapped through ICON_MAP (SSR safe) */
+  iconKey?: string
+  /** Bold heading text */
+  title: string
+  /** Helper text under the title */
+  description?: string
+  /** CTA label (ignored when custom children provided) */
+  buttonText?: string
+  /** Route pushed on CTA click (ignored when custom children provided) */
+  redirectTo?: string
+  /** Optional custom body; when provided, default button section is omitted */
+  children?: ReactNode
+  /** If true, modal cannot be closed (no outside-click close & no X). */
+  required?: boolean
+}

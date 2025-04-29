@@ -4,13 +4,13 @@ import { CheckCircle2, Clock, XCircle, HelpCircle, type LucideIcon } from 'lucid
 
 import { STAGES } from '@/lib/constants/recruiter'
 import { cn } from '@/lib/utils'
+import type { StatusBadgeProps } from '@/lib/types/components'
 
 /* -------------------------------------------------------------------------- */
-/*                               Color mapping                                */
+/*                               Color mapping                                */
 /* -------------------------------------------------------------------------- */
 
 const STYLE_MAP: Record<string, string> = {
-  /* Credential / generic states */
   verified: 'bg-emerald-600/15 text-emerald-800 dark:bg-emerald-400/20 dark:text-emerald-200',
   active: 'bg-emerald-600/15 text-emerald-800 dark:bg-emerald-400/20 dark:text-emerald-200',
   accepted: 'bg-emerald-600/15 text-emerald-800 dark:bg-emerald-400/20 dark:text-emerald-200',
@@ -22,7 +22,7 @@ const STYLE_MAP: Record<string, string> = {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                               Icon mapping                                 */
+/*                               Icon mapping                                 */
 /* -------------------------------------------------------------------------- */
 
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -37,7 +37,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                     Dynamic recruiter‑pipeline stages                      */
+/*                     Dynamic recruiter-pipeline stages                      */
 /* -------------------------------------------------------------------------- */
 
 const PIPELINE_STYLE = 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-200'
@@ -49,17 +49,6 @@ STAGES.forEach((stage) => {
 /* -------------------------------------------------------------------------- */
 /*                                   Badge                                    */
 /* -------------------------------------------------------------------------- */
-
-export interface StatusBadgeProps {
-  status: string
-  className?: string
-  /** Show status‑specific icon. Defaults to false. */
-  showIcon?: boolean
-  /** 'left' | 'right'; icon placement relative to text. Defaults to 'left'. */
-  iconPosition?: 'left' | 'right'
-  /** Optional number to display after the label, e.g. "Verified: 3”. */
-  count?: number
-}
 
 export function StatusBadge({
   status,
@@ -83,7 +72,7 @@ export function StatusBadge({
       {showIcon && iconPosition === 'left' && Icon && <Icon className='size-3 shrink-0' />}
 
       <span className='capitalize'>{status}</span>
-      {count !== undefined && <span>: {count}</span>}
+      {count !== undefined && <span>: {count}</span>}
 
       {showIcon && iconPosition === 'right' && Icon && <Icon className='size-3 shrink-0' />}
     </span>
