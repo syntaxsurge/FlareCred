@@ -10,9 +10,7 @@ import { db } from '@/lib/db/drizzle'
 import { getCandidateCredentialsPage } from '@/lib/db/queries/candidate-credentials'
 import { getUser } from '@/lib/db/queries/queries'
 import { teams, teamMembers } from '@/lib/db/schema/core'
-
-import { addCredential } from './actions'
-import { CandidateCredentialRow } from '@/lib/types/table-rows'
+import type { CandidateCredentialRow } from '@/lib/types/table-rows'
 import CandidateCredentialsTable from '@/components/dashboard/candidate/credentials-table'
 
 export const revalidate = 0
@@ -43,7 +41,7 @@ export default async function CredentialsPage({
   /* --------------------- Add Credential SA ------------------ */
   const addCredentialAction = async (formData: FormData): Promise<{ error?: string } | void> => {
     'use server'
-    return await addCredential({}, formData)
+    return await (await import('./actions')).addCredential({}, formData)
   }
 
   /* ------------------------ Params ------------------------- */
@@ -64,7 +62,7 @@ export default async function CredentialsPage({
     searchTerm,
   )
 
-  const rows: CandidateCredentialRow[] = credentialRows.map((c) => ({
+  const rows = credentialRows.map<CandidateCredentialRow>((c) => ({
     id: c.id,
     title: c.title,
     category: c.category,

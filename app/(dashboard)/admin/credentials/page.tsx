@@ -52,7 +52,7 @@ export default async function AdminCredentialsPage({
     searchTerm,
   )
 
-  const rows: AdminCredentialRow[] = credentials.map((c) => ({
+  const rows = credentials.map<AdminCredentialRow>((c) => ({
     id: c.id,
     title: c.title,
     candidate: c.candidate,
