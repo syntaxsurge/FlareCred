@@ -21,36 +21,26 @@ import { WALLETCONNECT_PROJECT_ID } from './config'
 /*                                    CHAINS                                  */
 /* -------------------------------------------------------------------------- */
 
-/** Flare main-net */
 export const flare = {
   id: 14,
   name: 'Flare',
   nativeCurrency: { name: 'Flare', symbol: 'FLR', decimals: 18 },
-  rpcUrls: {
-    default: { http: ['https://flare-api.flare.network/ext/C/rpc'] },
-  },
-  blockExplorers: {
-    default: { name: 'Flare Explorer', url: 'https://flare-explorer.flare.network' },
-  },
+  rpcUrls: { default: { http: ['https://flare-api.flare.network/ext/C/rpc'] } },
+  blockExplorers: { default: { name: 'Flare Explorer', url: 'https://flare-explorer.flare.network' } },
   testnet: false,
 } as const
 
-/** Coston2 test-net */
 export const coston2 = {
   id: 114,
   name: 'Coston2',
   nativeCurrency: { name: 'Coston Flare', symbol: 'CFLR', decimals: 18 },
-  rpcUrls: {
-    default: { http: ['https://coston2-api.flare.network/ext/C/rpc'] },
-  },
-  blockExplorers: {
-    default: { name: 'Coston2 Explorer', url: 'https://coston2-explorer.flare.network' },
-  },
+  rpcUrls: { default: { http: ['https://coston2-api.flare.network/ext/C/rpc'] } },
+  blockExplorers: { default: { name: 'Coston2 Explorer', url: 'https://coston2-explorer.flare.network' } },
   testnet: true,
 } as const
 
 /* -------------------------------------------------------------------------- */
-/*                         R A I N B O W K I T  /  W A G M I                  */
+/*                       R A I N B O W   K I T / W A G M I                    */
 /* -------------------------------------------------------------------------- */
 
 const wagmiConfig = getDefaultConfig({
@@ -67,44 +57,54 @@ const wagmiConfig = getDefaultConfig({
 const queryClient = new QueryClient()
 
 /* -------------------------------------------------------------------------- */
-/*          W A L L E T   C O N N E C T I O N   &   S E S S I O N             */
+/*                 W A L L E T   &   S E S S I O N   L I S T E N E R          */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Watches wallet state:
- * – On **disconnect**: clears the HTTP-only session cookie and navigates to /connect-wallet.
- * – On **connect**: sets/refreshes the session (via wallet-status) then either
- *   ① redirects from /connect-wallet to /dashboard or ② refreshes the current page
- *   so role-gated server components pick up the new session immediately.
- */
 function WalletConnectionListener() {
   const { isConnected, address } = useAccount()
   const router = useRouter()
   const pathname = usePathname()
 
   const prevConnected = useRef(isConnected)
-  const ensuredSession = useRef(false)
 
-  /* Handle disconnects */
+  /* ------- Helpers -------- */
+  const sessionFlagKey = address ? `fc_session_${address}` : undefined
+  const sessionAlreadyEnsured = () =>
+    typeof window !== 'undefined' && sessionFlagKey
+      ? sessionStorage.getItem(sessionFlagKey) === '1'
+      : false
+  const markSessionEnsured = () => {
+    if (typeof window !== 'undefined' && sessionFlagKey) {
+      sessionStorage.setItem(sessionFlagKey, '1')
+    }
+  }
+  const clearSessionFlag = () => {
+    if (typeof window !== 'undefined' && sessionFlagKey) {
+      sessionStorage.removeItem(sessionFlagKey)
+    }
+  }
+
+  /* -------- Disconnect: clear cookie + flag, redirect to connect page ------- */
   useEffect(() => {
     if (prevConnected.current && !isConnected) {
       ;(async () => {
         try {
           await fetch('/api/auth/signout', { method: 'POST', credentials: 'include' })
         } catch {
-          /* ignore network errors */
+          /* silent network error */
         } finally {
+          clearSessionFlag()
           if (pathname !== '/connect-wallet') router.replace('/connect-wallet')
         }
       })()
     }
     prevConnected.current = isConnected
-  }, [isConnected, pathname, router])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConnected])
 
-  /* Handle first connection (one-shot per mount) */
+  /* -------- First connect: establish/refresh session then redirect/refresh --- */
   useEffect(() => {
-    if (!isConnected || ensuredSession.current || !address) return
-    ensuredSession.current = true
+    if (!isConnected || !address || sessionAlreadyEnsured()) return
 
     ;(async () => {
       try {
@@ -116,24 +116,28 @@ function WalletConnectionListener() {
         const json = await res.json().catch(() => ({}))
 
         if (res.ok && json?.exists) {
+          markSessionEnsured()
+
+          /* When landing on the connect screen, go to dashboard; otherwise
+             just refresh once so server components pick up the new session. */
           if (pathname === '/connect-wallet') {
             router.replace('/dashboard')
           } else {
-            /* Refresh so server components rehydrate with the new session */
             router.refresh()
           }
         }
-      } finally {
-        /* no global catch needed */
+      } catch {
+        /* ignore fetch errors */
       }
     })()
-  }, [isConnected, address, pathname, router])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConnected, address])
 
   return null
 }
 
 /* -------------------------------------------------------------------------- */
-/*                       R A I N B O W K I T   T H E M E                      */
+/*                             R A I N B O W  T H E M E                       */
 /* -------------------------------------------------------------------------- */
 
 function RainbowKitWithTheme({ children }: { children: ReactNode }) {
@@ -152,7 +156,7 @@ function RainbowKitWithTheme({ children }: { children: ReactNode }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                 P R O V I D E R                            */
+/*                                   P R O V I D E R                          */
 /* -------------------------------------------------------------------------- */
 
 export function Web3Provider({ children }: { children: ReactNode }) {
