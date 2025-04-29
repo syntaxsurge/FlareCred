@@ -1,8 +1,8 @@
 import { asc, desc, eq, ilike, or } from 'drizzle-orm'
 
 import { db } from '../drizzle'
-import { users as usersT } from '../schema/core'
-import { issuers as issuersT } from '../schema/issuer'
+import { users } from '../schema/core'
+import { issuers } from '../schema/issuer'
 
 export type AdminIssuerRow = {
   id: number
@@ -30,55 +30,55 @@ export async function getAdminIssuersPage(
   const orderBy =
     sortBy === 'name'
       ? order === 'asc'
-        ? asc(issuersT.name)
-        : desc(issuersT.name)
+        ? asc(issuers.name)
+        : desc(issuers.name)
       : sortBy === 'domain'
         ? order === 'asc'
-          ? asc(issuersT.domain)
-          : desc(issuersT.domain)
+          ? asc(issuers.domain)
+          : desc(issuers.domain)
         : sortBy === 'owner'
           ? order === 'asc'
-            ? asc(usersT.email)
-            : desc(usersT.email)
+            ? asc(users.email)
+            : desc(users.email)
           : sortBy === 'category'
             ? order === 'asc'
-              ? asc(issuersT.category)
-              : desc(issuersT.category)
+              ? asc(issuers.category)
+              : desc(issuers.category)
             : sortBy === 'industry'
               ? order === 'asc'
-                ? asc(issuersT.industry)
-                : desc(issuersT.industry)
+                ? asc(issuers.industry)
+                : desc(issuers.industry)
               : sortBy === 'status'
                 ? order === 'asc'
-                  ? asc(issuersT.status)
-                  : desc(issuersT.status)
+                  ? asc(issuers.status)
+                  : desc(issuers.status)
                 : order === 'asc'
-                  ? asc(issuersT.id)
-                  : desc(issuersT.id)
+                  ? asc(issuers.id)
+                  : desc(issuers.id)
 
   /* ----------------------------- WHERE clause ---------------------------- */
   const where =
     searchTerm.trim().length === 0
       ? undefined
       : or(
-          ilike(issuersT.name, `%${searchTerm}%`),
-          ilike(issuersT.domain, `%${searchTerm}%`),
-          ilike(usersT.email, `%${searchTerm}%`),
+          ilike(issuers.name, `%${searchTerm}%`),
+          ilike(issuers.domain, `%${searchTerm}%`),
+          ilike(users.email, `%${searchTerm}%`),
         )
 
   /* ------------------------------ Query ---------------------------------- */
   let q = db
     .select({
-      id: issuersT.id,
-      name: issuersT.name,
-      domain: issuersT.domain,
-      owner: usersT.email,
-      category: issuersT.category,
-      industry: issuersT.industry,
-      status: issuersT.status,
+      id: issuers.id,
+      name: issuers.name,
+      domain: issuers.domain,
+      owner: users.email,
+      category: issuers.category,
+      industry: issuers.industry,
+      status: issuers.status,
     })
-    .from(issuersT)
-    .leftJoin(usersT, eq(issuersT.ownerUserId, usersT.id))
+    .from(issuers)
+    .leftJoin(users, eq(issuers.ownerUserId, users.id))
 
   if (where) q = q.where(where)
 
