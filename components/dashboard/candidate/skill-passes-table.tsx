@@ -15,6 +15,10 @@ import type { SkillPassRow, TableProps } from '@/lib/types/tables'
 import { copyToClipboard } from '@/lib/utils'
 import { txUrl } from '@/lib/utils/explorer'
 
+/* -------------------------------------------------------------------------- */
+/*                              Skill Passes Table                            */
+/* -------------------------------------------------------------------------- */
+
 export default function SkillPassesTable({
   rows,
   sort,
@@ -25,9 +29,10 @@ export default function SkillPassesTable({
 }: TableProps<SkillPassRow>) {
   const router = useRouter()
 
-  /* Skill passes are immutable – no destructive bulk actions */
+  /* ---------------------- Bulk-selection actions ------------------------ */
   const bulkActions = useBulkActions<SkillPassRow>([])
 
+  /* -------------------- Centralised navigation helpers ------------------ */
   const { search, handleSearchChange, sortableHeader } = useTableNavigation({
     basePath,
     initialParams,
@@ -37,6 +42,7 @@ export default function SkillPassesTable({
     paramKeys: { sort: 'passSort', order: 'passOrder', search: 'passQ', page: 'passPage' },
   })
 
+  /* --------------------------- Row actions ------------------------------ */
   const makeActions = React.useCallback(
     (row: SkillPassRow): TableRowAction<SkillPassRow>[] => {
       const actions: TableRowAction<SkillPassRow>[] = []
@@ -57,6 +63,7 @@ export default function SkillPassesTable({
     [],
   )
 
+  /* ------------------------------ Columns ------------------------------- */
   const columns = React.useMemo<Column<SkillPassRow>[]>(() => {
     return [
       {
@@ -106,6 +113,7 @@ export default function SkillPassesTable({
     ]
   }, [sortableHeader, makeActions])
 
+  /* ------------------------------- View --------------------------------- */
   return (
     <DataTable
       columns={columns}
@@ -114,6 +122,10 @@ export default function SkillPassesTable({
       filterValue={search}
       onFilterChange={handleSearchChange}
       bulkActions={bulkActions}
+      /* Disable client-side pagination to rely on server-side TablePagination */
+      pageSize={rows.length}
+      pageSizeOptions={[rows.length]}
+      hidePagination
     />
   )
 }
