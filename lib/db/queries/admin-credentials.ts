@@ -1,10 +1,7 @@
 import { asc, desc, eq, ilike, or } from 'drizzle-orm'
 
 import { db } from '../drizzle'
-import {
-  candidateCredentials,
-  candidates,
-} from '../schema/candidate'
+import { candidateCredentials, candidates } from '../schema/candidate'
 import { users } from '../schema/core'
 import { issuers } from '../schema/issuer'
 import type { AdminCredentialRow } from '@/lib/types/table-rows'
@@ -63,6 +60,7 @@ export async function getAdminCredentialsPage(
       issuer: issuers.name,
       proofType: candidateCredentials.proofType,
       proofData: candidateCredentials.proofData,
+      vcJson: candidateCredentials.vcJson,
     })
     .from(candidateCredentials)
     .leftJoin(candidates, eq(candidateCredentials.candidateId, candidates.id))

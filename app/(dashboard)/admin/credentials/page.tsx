@@ -59,7 +59,7 @@ export default async function AdminCredentialsPage({
     issuer: c.issuer,
     status: c.status as any,
     proofType: c.proofType,
-    vcJson: c.proofData,
+    vcJson: c.vcJson,
   }))
 
   /* ------------------------ Build initialParams -------------------------- */
