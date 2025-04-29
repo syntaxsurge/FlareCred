@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { copyToClipboard } from '@/lib/utils'
 import type { DidActionState, UpdateDidFormProps } from '@/lib/types/forms'
 
 import { upsertPlatformDidAction } from './actions'
@@ -84,15 +85,6 @@ export default function UpdateDidForm({ defaultDid }: UpdateDidFormProps) {
     startTransition(() => genAction(new FormData()))
   }
 
-  async function copyDid() {
-    try {
-      await navigator.clipboard.writeText(currentDid)
-      toast.success('Platform DID copied to clipboard.')
-    } catch {
-      toast.error('Failed to copy DID.')
-    }
-  }
-
   /* -------------------------------------------------------------------------- */
   /*                                   UI                                       */
   /* -------------------------------------------------------------------------- */
@@ -112,7 +104,7 @@ export default function UpdateDidForm({ defaultDid }: UpdateDidFormProps) {
         <Button
           variant='outline'
           size='icon'
-          onClick={copyDid}
+          onClick={() => copyToClipboard(currentDid)}
           disabled={!currentDid}
           className='shrink-0'
           type='button'
