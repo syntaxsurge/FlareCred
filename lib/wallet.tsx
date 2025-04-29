@@ -70,40 +70,56 @@ const queryClient = new QueryClient()
 /* -------------------------------------------------------------------------- */
 
 /**
- * Listens for wallet connection state changes and:
- * – on disconnect: clears the session and routes to /connect-wallet;
- * – on connect: pings /api/auth/wallet-status to set/refresh the cookie
- *               then triggers `router.refresh()` so role-gated UI appears.
+ * Watches wallet state:
+ * – On **disconnect**: calls <code>/api/auth/signout</code> to clear the HTTP-only session
+ *   cookie, then redirects to <code>/connect-wallet</code>.
+ * – On **connect**: refreshes/sets the session and reloads the app shell.
  */
 function WalletConnectionListener() {
   const { isConnected, address } = useAccount()
   const router = useRouter()
-  const wasConnected = useRef(isConnected)
+  const prevConnected = useRef(isConnected)
 
   useEffect(() => {
-    if (wasConnected.current === isConnected) return
+    if (prevConnected.current === isConnected) return
 
-    /* ----------------------- Disconnected ----------------------- */
+    /* --------------------------- Disconnected ---------------------------- */
     if (!isConnected) {
-      fetch('/api/auth/signout', { method: 'POST' }).catch(() => {})
-      router.push('/connect-wallet')
+      const signOut = async () => {
+        try {
+          await fetch('/api/auth/signout', {
+            method: 'POST',
+            credentials: 'include',
+          })
+        } catch {
+          /* best-effort – ignore network errors */
+        } finally {
+          router.replace('/connect-wallet')
+          router.refresh()
+        }
+      }
+      signOut()
     }
 
-    /* ------------------------- Connected ------------------------ */
+    /* ----------------------------- Connected ----------------------------- */
     if (isConnected) {
       const ensureSession = async () => {
-        if (address) {
-          await fetch(`/api/auth/wallet-status?address=${address}`, {
-            method: 'GET',
-            cache: 'no-store',
-          }).catch(() => {})
+        try {
+          if (address) {
+            await fetch(`/api/auth/wallet-status?address=${address}`, {
+              method: 'GET',
+              cache: 'no-store',
+              credentials: 'include',
+            })
+          }
+        } finally {
+          router.refresh()
         }
-        router.refresh()
       }
       ensureSession()
     }
 
-    wasConnected.current = isConnected
+    prevConnected.current = isConnected
   }, [isConnected, address, router])
 
   return null
