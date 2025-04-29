@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import * as React from 'react'
-import { Eye, Copy as CopyIcon } from 'lucide-react'
+import { Eye, Copy } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
@@ -52,7 +52,7 @@ function ActionsCell({ row }: { row: IssuerDirectoryRow }) {
             <div className='flex flex-col gap-4'>
               <code className='bg-muted rounded-md px-3 py-2 text-sm break-all'>{row.did}</code>
               <Button variant='outline' size='sm' className='self-end' onClick={copyDid}>
-                <CopyIcon className='mr-2 h-4 w-4' /> Copy
+                <Copy className='mr-2 h-4 w-4' /> Copy
               </Button>
             </div>
           ) : (
@@ -84,7 +84,7 @@ export default function IssuersTable({
   const bulkActions = useBulkActions<IssuerDirectoryRow>([
     {
       label: 'Copy DIDs',
-      icon: CopyIcon,
+      icon: Copy,
       handler: async (selected) => {
         const dids = selected.map((r) => r.did).filter(Boolean).join('\n')
         if (!dids) {
