@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 
-import { Clipboard, ExternalLink } from 'lucide-react'
+import { ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
@@ -10,7 +10,6 @@ import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row
 import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { SkillPassRow, TableProps } from '@/lib/types/tables'
-import { copyToClipboard } from '@/lib/utils'
 import { txUrl } from '@/lib/utils/explorer'
 
 /* -------------------------------------------------------------------------- */
@@ -43,22 +42,18 @@ export default function SkillPassesTable({
     (row: SkillPassRow): TableRowAction<SkillPassRow>[] => {
       const actions: TableRowAction<SkillPassRow>[] = []
 
-      if (row.vcJson) {
-        actions.push({
-          label: 'Copy VC JSON',
-          icon: Clipboard,
-          onClick: async () => {
-            await copyToClipboard(row.vcJson!)
-            toast.success('VC JSON copied to clipboard')
-          },
-        })
-      }
-
       if (row.txHash) {
         actions.push({
           label: 'View on Flare',
           icon: ExternalLink,
           href: txUrl(row.txHash),
+        })
+      } else {
+        /* Inform user when no on-chain link is available */
+        actions.push({
+          label: 'No transaction',
+          icon: ExternalLink,
+          disabled: () => true,
         })
       }
 
