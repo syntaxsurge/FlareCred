@@ -7,13 +7,13 @@ import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getActivityLogsPage } from '@/lib/db/queries/activity'
 import { getUser } from '@/lib/db/queries/queries'
-import { ActivityType } from '@/lib/db/schema'
 import type { ActivityLogRow } from '@/lib/types/table-rows'
 
 export const revalidate = 0
 
 type Query = Record<string, string | string[] | undefined>
 
+/** Safely return the first value of a query param. */
 function getParam(params: Query, key: string): string | undefined {
   const v = params[key]
   return Array.isArray(v) ? v[0] : v
@@ -50,12 +50,7 @@ export default async function ActivityPage({
     searchTerm,
   )
 
-  const rows: ActivityLogRow[] = logs.map((log) => ({
-    id: log.id,
-    type: log.action as ActivityType,
-    ipAddress: log.ipAddress,
-    timestamp: log.timestamp instanceof Date ? log.timestamp.toISOString() : String(log.timestamp),
-  }))
+  const rows: ActivityLogRow[] = logs
 
   /* -------------------- Preserve query state -------------------- */
   const initialParams: Record<string, string> = {}
@@ -67,11 +62,12 @@ export default async function ActivityPage({
   add('order')
   if (searchTerm) initialParams['q'] = searchTerm
 
+  /* ---------------------------- View ---------------------------- */
   return (
     <PageCard
       icon={ActivityIcon}
       title='Activity Log'
-      description='Review your recent account activity and connect-wallets.'
+      description='Review your recent account activity and wallet connections.'
     >
       <div className='space-y-4 overflow-x-auto'>
         <ActivityLogsTable

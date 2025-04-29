@@ -1,7 +1,7 @@
 import { eq, asc, desc, and, or, ilike } from 'drizzle-orm'
 
 import { db } from '../drizzle'
-import { activityLogs } from '../schema/core'
+import { activityLogs, ActivityType } from '../schema/core'
 import type { ActivityLogRow } from '@/lib/types/table-rows'
 
 /**
@@ -27,7 +27,7 @@ export async function getActivityLogsPage(
         ? asc(activityLogs.timestamp)
         : desc(activityLogs.timestamp)
 
-  /* ----------------------------- Where clause ---------------------------- */
+  /* ----------------------------- WHERE clause ---------------------------- */
   const baseWhere = eq(activityLogs.userId, userId)
 
   const whereClause =
@@ -47,11 +47,20 @@ export async function getActivityLogsPage(
     .from(activityLogs)
     .where(whereClause)
     .orderBy(orderBy)
-    .limit(pageSize + 1) // fetch one extra to detect "next”
+    .limit(pageSize + 1) // fetch one extra to detect "next"
     .offset(offset)
 
   const hasNext = rows.length > pageSize
   if (hasNext) rows.pop()
 
-  return { logs: rows as ActivityLogRow[], hasNext }
+  /* ------------------------- Shape conversion ---------------------------- */
+  const logs: ActivityLogRow[] = rows.map((r) => ({
+    id: r.id,
+    type: r.action as ActivityType,
+    ipAddress: r.ipAddress,
+    timestamp:
+      r.timestamp instanceof Date ? r.timestamp.toISOString() : String(r.timestamp),
+  }))
+
+  return { logs, hasNext }
 }
