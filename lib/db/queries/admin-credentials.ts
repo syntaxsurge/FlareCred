@@ -2,12 +2,12 @@ import { asc, desc, eq, ilike, or } from 'drizzle-orm'
 
 import { db } from '../drizzle'
 import {
-  candidateCredentials as credsT,
-  candidates as candT,
+  candidateCredentials,
+  candidates,
   CredentialStatus,
 } from '../schema/candidate'
-import { users as usersT } from '../schema/core'
-import { issuers as issuersT } from '../schema/issuer'
+import { users } from '../schema/core'
+import { issuers } from '../schema/issuer'
 
 export type AdminCredentialRow = {
   id: number
@@ -35,49 +35,49 @@ export async function getAdminCredentialsPage(
   const orderBy =
     sortBy === 'title'
       ? order === 'asc'
-        ? asc(credsT.title)
-        : desc(credsT.title)
+        ? asc(candidateCredentials.title)
+        : desc(candidateCredentials.title)
       : sortBy === 'candidate'
         ? order === 'asc'
-          ? asc(usersT.email)
-          : desc(usersT.email)
+          ? asc(users.email)
+          : desc(users.email)
         : sortBy === 'issuer'
           ? order === 'asc'
-            ? asc(issuersT.name)
-            : desc(issuersT.name)
+            ? asc(issuers.name)
+            : desc(issuers.name)
           : sortBy === 'status'
             ? order === 'asc'
-              ? asc(credsT.status)
-              : desc(credsT.status)
+              ? asc(candidateCredentials.status)
+              : desc(candidateCredentials.status)
             : /* id fallback */ order === 'asc'
-              ? asc(credsT.id)
-              : desc(credsT.id)
+              ? asc(candidateCredentials.id)
+              : desc(candidateCredentials.id)
 
   /* ---------- where ---------- */
   const where =
     searchTerm.trim().length === 0
       ? undefined
       : or(
-          ilike(credsT.title, `%${searchTerm}%`),
-          ilike(usersT.email, `%${searchTerm}%`),
-          ilike(issuersT.name, `%${searchTerm}%`),
+          ilike(candidateCredentials.title, `%${searchTerm}%`),
+          ilike(users.email, `%${searchTerm}%`),
+          ilike(issuers.name, `%${searchTerm}%`),
         )
 
   /* ---------- query ---------- */
   let q = db
     .select({
-      id: credsT.id,
-      title: credsT.title,
-      status: credsT.status,
-      candidate: usersT.email,
-      issuer: issuersT.name,
-      proofType: credsT.proofType,
-      proofData: credsT.proofData,
+      id: candidateCredentials.id,
+      title: candidateCredentials.title,
+      status: candidateCredentials.status,
+      candidate: users.email,
+      issuer: issuers.name,
+      proofType: candidateCredentials.proofType,
+      proofData: candidateCredentials.proofData,
     })
-    .from(credsT)
-    .leftJoin(candT, eq(credsT.candidateId, candT.id))
-    .leftJoin(usersT, eq(candT.userId, usersT.id))
-    .leftJoin(issuersT, eq(credsT.issuerId, issuersT.id))
+    .from(candidateCredentials)
+    .leftJoin(candidates, eq(candidateCredentials.candidateId, candidates.id))
+    .leftJoin(users, eq(candidates.userId, users.id))
+    .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
 
   if (where) q = q.where(where)
 
