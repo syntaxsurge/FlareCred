@@ -25,29 +25,8 @@ import {
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import { IssuerStatus } from '@/lib/db/schema/issuer'
-
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
-
-export interface RowType {
-  id: number
-  name: string
-  domain: string
-  owner: string
-  category: string
-  industry: string
-  status: string
-}
-
-interface IssuersTableProps {
-  rows: RowType[]
-  sort: string
-  order: 'asc' | 'desc'
-  basePath: string
-  initialParams: Record<string, string>
-  searchQuery: string
-}
+import type { AdminIssuerRow } from '@/lib/types/table-rows'
+import type { TableProps } from '@/lib/types/table-props'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Table                                    */
@@ -60,11 +39,11 @@ export default function AdminIssuersTable({
   basePath,
   initialParams,
   searchQuery,
-}: IssuersTableProps) {
+}: TableProps<AdminIssuerRow>) {
   const router = useRouter()
 
   /* -------------------------- Bulk-selection actions ---------------------- */
-  const bulkActions = useBulkActions<RowType>([
+  const bulkActions = useBulkActions<AdminIssuerRow>([
     {
       label: 'Verify',
       icon: VerifyIcon,
@@ -148,8 +127,8 @@ export default function AdminIssuersTable({
 
   /* ----------------------- Row-level actions builder ---------------------- */
   const makeActions = React.useCallback(
-    (row: RowType): TableRowAction<RowType>[] => {
-      const actions: TableRowAction<RowType>[] = []
+    (row: AdminIssuerRow): TableRowAction<AdminIssuerRow>[] => {
+      const actions: TableRowAction<AdminIssuerRow>[] = []
 
       if (row.status !== 'ACTIVE') {
         actions.push({
@@ -229,7 +208,7 @@ export default function AdminIssuersTable({
   )
 
   /* ------------------------------- Columns -------------------------------- */
-  const columns = React.useMemo<Column<RowType>[]>(() => {
+  const columns = React.useMemo<Column<AdminIssuerRow>[]>(() => {
     return [
       {
         key: 'name',

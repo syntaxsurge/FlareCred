@@ -26,6 +26,16 @@ export interface PipelineRow {
   createdAt: string
 }
 
+export interface AdminIssuerRow {
+  id: number
+  name: string
+  domain: string
+  owner: string
+  category: string
+  industry: string
+  status: string
+}
+
 export interface CandidateCredentialRow {
   id: number
   title: string

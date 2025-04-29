@@ -8,15 +8,7 @@ import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { CandidateDirectoryRow } from '@/lib/types/table-rows'
-
-interface CandidatesTableProps {
-  rows: CandidateDirectoryRow[]
-  sort: string
-  order: 'asc' | 'desc'
-  basePath: string
-  initialParams: Record<string, string>
-  searchQuery: string
-}
+import type { TableProps } from '@/lib/types/table-props'
 
 export default function CandidatesTable({
   rows,
@@ -25,7 +17,7 @@ export default function CandidatesTable({
   basePath,
   initialParams,
   searchQuery,
-}: CandidatesTableProps) {
+}: TableProps<CandidateDirectoryRow>) {
   /* ---------------------------------------------------------------------- */
   /* Centralised navigation helpers                                         */
   /* ---------------------------------------------------------------------- */
