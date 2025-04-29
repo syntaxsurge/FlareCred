@@ -11,15 +11,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { IssuerStatus } from '@/lib/db/schema/issuer'
-
-interface Props {
-  issuerId: number
-  status: string
-}
+import type { IssuerStatusButtonsProps } from '@/lib/types/components'
 
 const PRESETS = ['Spam / fraudulent', 'Incorrect details', 'Other'] as const
 
-export default function IssuerStatusButtons({ issuerId, status }: Props) {
+export default function IssuerStatusButtons({ issuerId, status }: IssuerStatusButtonsProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 

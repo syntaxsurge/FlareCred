@@ -13,12 +13,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { STAGES, type Stage } from '@/lib/constants/recruiter'
-
-interface Props {
-  pipelineCandidateId: number
-  currentStage: Stage
-  children: ReactNode
-}
+import type { EditCandidateModalProps } from '@/lib/types/components'
 
 /**
  * Reusable modal wrapper around updateCandidateStageAction.
@@ -27,7 +22,7 @@ export default function EditCandidateModal({
   pipelineCandidateId,
   currentStage,
   children,
-}: Props) {
+}: EditCandidateModalProps) {
   const [open, setOpen] = useState(false)
   const [stage, setStage] = useState<Stage>(currentStage)
   const [saving, setSaving] = useState(false)

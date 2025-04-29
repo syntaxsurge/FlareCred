@@ -5,9 +5,9 @@
 
 import type { ReactNode, ElementType } from 'react'
 import type { LucideIcon } from 'lucide-react'
-import type { Button } from '@/components/ui/button'
 import type { Stage } from '@/lib/constants/recruiter'
 import type { MemberRow } from './table-rows'
+import type { CredentialStatus } from '@/lib/db/schema/candidate'
 
 /* -------------------------------------------------------------------------- */
 /*                               Quick Actions                                */
@@ -157,7 +157,7 @@ export type ActionResult = void | { success?: string; error?: string }
 
 /** Prop contract for the universal async ActionButton component. */
 export interface ActionButtonProps
-  extends React.ComponentProps<typeof Button> {
+  extends React.ComponentProps<typeof import('@/components/ui/button').Button> {
   /** Async handler executed on click. */
   onAction: () => Promise<ActionResult>
   /** Optional label shown while pending; defaults to children. */
@@ -264,6 +264,31 @@ export interface AddCredentialDialogProps {
 
 /* -------------------------------------------------------------------------- */
 /*                         Newly centralised component props                  */
+/* -------------------------------------------------------------------------- */
+
+/** Props for the issuer-side CredentialActions component. */
+export interface CredentialActionsProps {
+  credentialId: number
+  status: CredentialStatus
+  /** True when credential.type === 'github_repo' */
+  isGithub: boolean
+}
+
+/** Props for the recruiter EditCandidateModal component. */
+export interface EditCandidateModalProps {
+  pipelineCandidateId: number
+  currentStage: Stage
+  children: ReactNode
+}
+
+/** Props for the admin IssuerStatusButtons component. */
+export interface IssuerStatusButtonsProps {
+  issuerId: number
+  status: string
+}
+
+/* -------------------------------------------------------------------------- */
+/*                         Candidate Highlights Board                         */
 /* -------------------------------------------------------------------------- */
 
 /** Props for the candidate HighlightsBoard component. */

@@ -14,17 +14,14 @@ import {
 } from '@/app/(dashboard)/issuer/credentials/actions'
 import { Button } from '@/components/ui/button'
 import { CredentialStatus } from '@/lib/db/schema/candidate'
+import type { CredentialActionsProps } from '@/lib/types/components'
+import type { ActionState } from '@/lib/types/forms'
 
-type ActionState = { error?: string; success?: string }
-
-interface Props {
-  credentialId: number
-  status: CredentialStatus
-  /** True when credential.type === 'github_repo' */
-  isGithub: boolean
-}
-
-export function CredentialActions({ credentialId, status, isGithub }: Props) {
+export function CredentialActions({
+  credentialId,
+  status,
+  isGithub,
+}: CredentialActionsProps) {
   const router = useRouter()
 
   /* ------------------ approve ------------------ */
