@@ -14,6 +14,7 @@ import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row
 import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { IssuerDirectoryRow, TableProps } from '@/lib/types/tables'
+import { copyToClipboard } from '@/lib/utils'
 
 /* -------------------------------------------------------------------------- */
 /*                        Per-row actions + dialog UI                         */
@@ -33,11 +34,6 @@ function ActionsCell({ row }: { row: IssuerDirectoryRow }) {
     ]
   }, [row.did])
 
-  const copyDid = () => {
-    if (!row.did) return
-    navigator.clipboard.writeText(row.did).then(() => toast.success('DID copied to clipboard'))
-  }
-
   return (
     <>
       <TableRowActions row={row} actions={actions} />
@@ -51,7 +47,12 @@ function ActionsCell({ row }: { row: IssuerDirectoryRow }) {
           {row.did ? (
             <div className='flex flex-col gap-4'>
               <code className='bg-muted rounded-md px-3 py-2 text-sm break-all'>{row.did}</code>
-              <Button variant='outline' size='sm' className='self-end' onClick={copyDid}>
+              <Button
+                variant='outline'
+                size='sm'
+                className='self-end'
+                onClick={() => copyToClipboard(row.did!)}
+              >
                 <Copy className='mr-2 h-4 w-4' /> Copy
               </Button>
             </div>
@@ -93,8 +94,7 @@ export default function IssuersTable({
           toast.error('No DIDs available in the selection.')
           return
         }
-        await navigator.clipboard.writeText(dids)
-        toast.success('DIDs copied to clipboard')
+        copyToClipboard(dids)
       },
       isAvailable: (rows) => rows.some((r) => !!r.did),
       isDisabled: (rows) => rows.every((r) => !r.did),

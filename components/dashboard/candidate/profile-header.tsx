@@ -3,7 +3,6 @@
 import Link from 'next/link'
 
 import { Share2, Clipboard } from 'lucide-react'
-import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -16,6 +15,7 @@ import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/comp
 import { UserAvatar } from '@/components/ui/user-avatar'
 import type { ProfileHeaderProps } from '@/lib/types/components'
 import { truncateAddress } from '@/lib/utils/address'
+import { copyToClipboard } from '@/lib/utils'
 
 /* -------------------------------------------------------------------------- */
 /*                                   View                                     */
@@ -37,10 +37,7 @@ export default function ProfileHeader({
     if (!profilePath) return
     const url =
       typeof window !== 'undefined' ? `${window.location.origin}${profilePath}` : profilePath
-    navigator.clipboard
-      .writeText(url)
-      .then(() => toast.success('Profile link copied'))
-      .catch(() => toast.error('Copy failed'))
+    copyToClipboard(url)
   }
 
   /* --------------------- Filter invalid social links ------------------ */

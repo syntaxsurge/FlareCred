@@ -15,6 +15,7 @@ import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { TableProps, CandidateCredentialRow } from '@/lib/types/tables'
 import { getProofTx } from '@/lib/utils'
 import { txUrl } from '@/lib/utils/explorer'
+import { copyToClipboard } from '@/lib/utils'
 
 export default function CandidateCredentialsTable({
   rows,
@@ -75,14 +76,7 @@ export default function CandidateCredentialsTable({
         actions.push({
           label: 'Copy VC JSON',
           icon: Clipboard,
-          onClick: async (_row) => {
-            try {
-              await navigator.clipboard.writeText(row.vcJson!)
-              toast.success('VC JSON copied to clipboard')
-            } catch {
-              toast.error('Copy failed')
-            }
-          },
+          onClick: () => copyToClipboard(row.vcJson!),
         })
       }
 
