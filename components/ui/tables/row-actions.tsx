@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { Loader2, MoreHorizontal, type LucideIcon } from 'lucide-react'
+import { Loader2, MoreHorizontal } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -13,24 +13,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
+import type { TableRowAction } from '@/lib/types/components'
 
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
-
-/** Action descriptor used by the row-level dropdown. */
-export interface TableRowAction<Row> {
-  label: string
-  icon: LucideIcon
-  /** Click handler (ignored when `href` is supplied) */
-  onClick?: (row: Row) => void | Promise<void>
-  /** Optional external link rendered as <a>. */
-  href?: string
-  /** Visual variant – destructive actions get red styling. */
-  variant?: 'default' | 'destructive'
-  /** Disable predicate evaluated per-row. */
-  disabled?: (row: Row) => boolean
-}
+/* Re-export for backwards compatibility */
+export type { TableRowAction } from '@/lib/types/components'
 
 /* -------------------------------------------------------------------------- */
 /*                                 Component                                  */

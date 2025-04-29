@@ -38,53 +38,10 @@ import {
   TableRow,
 } from '@/components/ui/tables/table'
 import { cn } from '@/lib/utils'
+import type { Column, BulkAction } from '@/lib/types/components'
 
-/* -------------------------------------------------------------------------- */
-/*                                P U B L I C                                 */
-/* -------------------------------------------------------------------------- */
-
-export interface Column<T extends Record<string, any>> {
-  key: keyof T
-  header: string | React.ReactNode
-  render?: (value: T[keyof T], row: T) => React.ReactNode
-  enableHiding?: boolean
-  sortable?: boolean
-  className?: string
-}
-
-export interface BulkAction<T extends Record<string, any>> {
-  label: string
-  icon: LucideIcon
-  onClick: (selectedRows: T[]) => void | Promise<void>
-  variant?: 'default' | 'destructive' | 'outline'
-  isAvailable?: (selectedRows: T[]) => boolean
-  isDisabled?: (selectedRows: T[]) => boolean
-}
-
-interface DataTableProps<T extends Record<string, any>> {
-  columns: Column<T>[]
-  rows: T[]
-  /** Column key to use for the filter search input (optional). */
-  filterKey?: keyof T
-  /**
-   * Controlled filter value (use when performing server‑side search).
-   * When omitted, filtering is handled entirely client‑side.
-   */
-  filterValue?: string
-  /**
-   * Callback for controlled filter changes (server‑side search).
-   * Called on every keystroke; debounce in the caller if needed.
-   */
-  onFilterChange?: (value: string) => void
-  /** Bulk‑selection actions (optional). */
-  bulkActions?: BulkAction<T>[]
-  /** Initial page size - defaults to 10. */
-  pageSize?: number
-  /** Page‑size options shown in selector - defaults to [10, 20, 50]. */
-  pageSizeOptions?: number[]
-  /** Hide the intrinsic pagination/footer row (useful when the parent supplies its own). */
-  hidePagination?: boolean
-}
+/* Re-export for backwards compatibility */
+export type { Column, BulkAction } from '@/lib/types/components'
 
 /* -------------------------------------------------------------------------- */
 /*                               H E L P E R S                                */
@@ -124,7 +81,7 @@ function buildColumnDefs<T extends Record<string, any>>(cols: Column<T>[]): Colu
   })
 }
 
-/* Page‑numbers helper - returns an array of page indexes; -1 represents an ellipsis. */
+/* Page-numbers helper - returns an array of page indexes; -1 represents an ellipsis. */
 function getPageNumbers(current: number, total: number): number[] {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i)
 
@@ -135,8 +92,33 @@ function getPageNumbers(current: number, total: number): number[] {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                   T A B L E                                */
+/*                                   T A B L E                                */
 /* -------------------------------------------------------------------------- */
+
+interface DataTableProps<T extends Record<string, any>> {
+  columns: Column<T>[]
+  rows: T[]
+  /** Column key to use for the filter search input (optional). */
+  filterKey?: keyof T
+  /**
+   * Controlled filter value (use when performing server-side search).
+   * When omitted, filtering is handled entirely client-side.
+   */
+  filterValue?: string
+  /**
+   * Callback for controlled filter changes (server-side search).
+   * Called on every keystroke; debounce in the caller if needed.
+   */
+  onFilterChange?: (value: string) => void
+  /** Bulk-selection actions (optional). */
+  bulkActions?: BulkAction<T>[]
+  /** Initial page size - defaults to 10. */
+  pageSize?: number
+  /** Page-size options shown in selector - defaults to [10, 20, 50]. */
+  pageSizeOptions?: number[]
+  /** Hide the intrinsic pagination/footer row (useful when the parent supplies its own). */
+  hidePagination?: boolean
+}
 
 export function DataTable<T extends Record<string, any>>({
   columns,
@@ -246,7 +228,7 @@ export function DataTable<T extends Record<string, any>>({
   )
 
   /* ------------------------------------------------------------------------ */
-  /*                                  UI                                     */
+  /*                                  UI                                     */
   /* ------------------------------------------------------------------------ */
   return (
     <div className='w-full overflow-x-auto'>
@@ -271,7 +253,7 @@ export function DataTable<T extends Record<string, any>>({
             />
           )}
 
-          {/* Bulk‑actions */}
+          {/* Bulk-actions */}
           {bulkActions.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -317,7 +299,7 @@ export function DataTable<T extends Record<string, any>>({
             </DropdownMenu>
           )}
 
-          {/* Column‑visibility */}
+          {/* Column-visibility */}
           {table.getAllColumns().some((c) => c.getCanHide()) && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -401,7 +383,7 @@ export function DataTable<T extends Record<string, any>>({
           </div>
 
           <div className='flex flex-col items-center gap-3 sm:flex-row'>
-            {/* Page‑size selector */}
+            {/* Page-size selector */}
             <select
               value={size}
               onChange={(e) => {

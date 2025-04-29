@@ -3,29 +3,7 @@
 import * as React from 'react'
 import type { LucideIcon } from 'lucide-react'
 
-import { type BulkAction } from '@/components/ui/tables/data-table'
-
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Lightweight config describing a bulk-selection action.
- * The hook automatically wraps the `handler` inside a React Transition so tables
- * no longer need to re-implement `useTransition` boilerplate or manage
- * disabled-state logic for long-running tasks.
- */
-export interface BulkActionConfig<Row extends Record<string, any>> {
-  label: string
-  icon: LucideIcon
-  variant?: 'default' | 'destructive' | 'outline'
-  /** Async/Sync task that operates on the selected row set. */
-  handler: (rows: Row[]) => Promise<void> | void
-  /** Optional visibility predicate – hide when it returns false. */
-  isAvailable?: (rows: Row[]) => boolean
-  /** Extra disabled predicate in addition to the intrinsic pending flag. */
-  isDisabled?: (rows: Row[]) => boolean
-}
+import type { BulkAction, BulkActionConfig } from '@/lib/types/components'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Hook                                     */
