@@ -62,7 +62,7 @@ export interface TalentRow {
   topScore: number | null
 }
 
-/* ---------------------------- Admin – NEW -------------------------------- */
+/* ---------------------------- Admin – Misc ------------------------------- */
 /** Row schema for /admin/credentials table. */
 export interface AdminCredentialRow {
   id: number
@@ -81,4 +81,26 @@ export interface AdminUserRow {
   email: string
   role: string
   createdAt: string
+}
+
+/* ------------------------ Issuer – Requests ------------------------------ */
+/** Row schema for /issuer/requests table. */
+export interface IssuerRequestRow {
+  id: number
+  title: string
+  type: string
+  candidate: string
+  status: string
+  vcJson?: string | null
+}
+
+/* ------------------ Recruiter – Candidate Credentials -------------------- */
+/** Row schema for recruiter credential view. */
+export interface RecruiterCredentialRow {
+  id: number
+  title: string
+  category: string
+  issuer: string | null
+  status: string
+  fileUrl: string | null
 }

@@ -10,41 +10,19 @@ import { rejectCredentialAction } from '@/app/(dashboard)/issuer/credentials/act
 import { StatusBadge } from '@/components/ui/status-badge'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
-import { CredentialStatus } from '@/lib/db/schema/candidate'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import { getProofTx } from '@/lib/utils'
 import { RejectIcon } from '@/components/ui/colored-icons'
-
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
-
-export interface RowType {
-  id: number
-  title: string
-  type: string
-  candidate: string
-  status: CredentialStatus
-  vcJson?: string | null
-}
-
-interface Props {
-  rows: RowType[]
-  sort: string
-  order: 'asc' | 'desc'
-  basePath: string
-  initialParams: Record<string, string>
-  /** Current search term (from URL). */
-  searchQuery: string
-}
+import type { IssuerRequestRow } from '@/lib/types/table-rows'
+import type { TableProps } from '@/lib/types/table-props'
 
 /* -------------------------------------------------------------------------- */
 /*                         Bulk-selection actions                             */
 /* -------------------------------------------------------------------------- */
 
 function useBulkReject(router: ReturnType<typeof useRouter>) {
-  return useBulkActions<RowType>([
+  return useBulkActions<IssuerRequestRow>([
     {
       label: 'Reject',
       icon: RejectIcon,
@@ -59,7 +37,6 @@ function useBulkReject(router: ReturnType<typeof useRouter>) {
           }),
         )
 
-        /* ---------- Extract any error messages safely ---------- */
         const errors = results
           .filter(
             (r): r is { error: string } =>
@@ -81,9 +58,9 @@ function useBulkReject(router: ReturnType<typeof useRouter>) {
 /*                         Row-level action builder                           */
 /* -------------------------------------------------------------------------- */
 
-function useRowActions(): (row: RowType) => TableRowAction<RowType>[] {
+function useRowActions(): (row: IssuerRequestRow) => TableRowAction<IssuerRequestRow>[] {
   return React.useCallback(
-    (row: RowType) => [
+    (row: IssuerRequestRow) => [
       {
         label: 'Review & Sign',
         icon: FileSignature,
@@ -105,7 +82,7 @@ export default function IssuerRequestsTable({
   basePath,
   initialParams,
   searchQuery,
-}: Props) {
+}: TableProps<IssuerRequestRow>) {
   const router = useRouter()
   const bulkActions = useBulkReject(router)
   const makeActions = useRowActions()
@@ -120,7 +97,7 @@ export default function IssuerRequestsTable({
   })
 
   /* ------------------------ Column definitions --------------------------- */
-  const columns = React.useMemo<Column<RowType>[]>(() => {
+  const columns = React.useMemo<Column<IssuerRequestRow>[]>(() => {
     return [
       {
         key: 'title',
@@ -148,7 +125,7 @@ export default function IssuerRequestsTable({
         render: (v) => <StatusBadge status={String(v)} />,
       },
       {
-        key: 'vcJson', /* Proof column uses vcJson key from RowType */
+        key: 'vcJson',
         header: 'Proof',
         sortable: false,
         render: (_v, row) => {

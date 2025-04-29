@@ -7,30 +7,9 @@ import { FileText } from 'lucide-react'
 
 import StatusBadge from '@/components/ui/status-badge'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
-import { CredentialStatus } from '@/lib/db/schema/candidate'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
-
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
-
-export interface RowType {
-  id: number
-  title: string
-  category: string
-  issuer: string | null
-  status: CredentialStatus
-  fileUrl: string | null
-}
-
-interface CredentialsTableProps {
-  rows: RowType[]
-  sort: string
-  order: 'asc' | 'desc'
-  basePath: string
-  initialParams: Record<string, string>
-  searchQuery: string
-}
+import type { RecruiterCredentialRow } from '@/lib/types/table-rows'
+import type { TableProps } from '@/lib/types/table-props'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Table                                    */
@@ -43,7 +22,7 @@ export default function CredentialsTable({
   basePath,
   initialParams,
   searchQuery,
-}: CredentialsTableProps) {
+}: TableProps<RecruiterCredentialRow>) {
   /* -------------------- Centralised navigation helpers -------------------- */
   const { search, handleSearchChange, sortableHeader } = useTableNavigation({
     basePath,
@@ -54,7 +33,7 @@ export default function CredentialsTable({
   })
 
   /* ----------------------------- Columns ---------------------------------- */
-  const columns = React.useMemo<Column<RowType>[]>(() => {
+  const columns = React.useMemo<Column<RecruiterCredentialRow>[]>(() => {
     return [
       {
         key: 'title',
