@@ -66,27 +66,45 @@ const wagmiConfig = getDefaultConfig({
 const queryClient = new QueryClient()
 
 /* -------------------------------------------------------------------------- */
-/*               W A L L E T   D I S C O N N E C T   R E D I R E C T          */
+/*          W A L L E T   C O N N E C T I O N   &   S E S S I O N             */
 /* -------------------------------------------------------------------------- */
 
 /**
- * Watches the wagmi account state and, when the wallet transitions from
- * connected to disconnected (e.g. user clicks "Disconnect” in RainbowKit),
- * clears the session cookie and redirects to the Connect Wallet page.
+ * Listens for wallet connection state changes and:
+ * – on disconnect: clears the session and routes to /connect-wallet;
+ * – on connect: pings /api/auth/wallet-status to set/refresh the cookie
+ *               then triggers `router.refresh()` so role-gated UI appears.
  */
-function WalletDisconnectRedirect() {
-  const { isConnected } = useAccount()
+function WalletConnectionListener() {
+  const { isConnected, address } = useAccount()
   const router = useRouter()
   const wasConnected = useRef(isConnected)
 
   useEffect(() => {
-    if (wasConnected.current && !isConnected) {
-      // Clear server-side session; ignore network errors
+    if (wasConnected.current === isConnected) return
+
+    /* ----------------------- Disconnected ----------------------- */
+    if (!isConnected) {
       fetch('/api/auth/signout', { method: 'POST' }).catch(() => {})
       router.push('/connect-wallet')
     }
+
+    /* ------------------------- Connected ------------------------ */
+    if (isConnected) {
+      const ensureSession = async () => {
+        if (address) {
+          await fetch(`/api/auth/wallet-status?address=${address}`, {
+            method: 'GET',
+            cache: 'no-store',
+          }).catch(() => {})
+        }
+        router.refresh()
+      }
+      ensureSession()
+    }
+
     wasConnected.current = isConnected
-  }, [isConnected, router])
+  }, [isConnected, address, router])
 
   return null
 }
@@ -104,7 +122,7 @@ function RainbowKitWithTheme({ children }: { children: ReactNode }) {
 
   return (
     <RainbowKitProvider theme={rkTheme}>
-      <WalletDisconnectRedirect />
+      <WalletConnectionListener />
       {children}
     </RainbowKitProvider>
   )
