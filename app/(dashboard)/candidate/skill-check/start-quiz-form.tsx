@@ -79,10 +79,11 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
     setSignature('')
 
     const abort = new AbortController()
+    const max = Math.max(quiz.questions.length, 1) // modulus must be ≥ 1
 
     ;(async () => {
       try {
-        const res = await fetch('/api/rng-seed?max=1', { signal: abort.signal })
+        const res = await fetch(`/api/rng-seed?max=${max}`, { signal: abort.signal })
         if (!res.ok) throw new Error(await res.text())
         const { seed: s } = (await res.json()) as { seed: string }
         setSeed(s)
