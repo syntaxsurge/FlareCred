@@ -5,35 +5,21 @@ import { candidateCredentials, type CredentialStatus } from '@/lib/db/schema/can
 import { issuers } from '@/lib/db/schema/issuer'
 
 import type { StatusCounts } from '@/lib/types/candidate'
+import type { CandidateCredentialRow, PageResult } from '@/lib/types/table-rows'
 
 /* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
+/*                               Return Type                                  */
 /* -------------------------------------------------------------------------- */
 
-export interface CandidateCredentialRow {
-  id: number
-  title: string
-  issuer: string | null
-  status: CredentialStatus
-  fileUrl: string | null
-  proofType: string | null
-  proofData: string | null
-}
-
-export interface CandidateCredentialsSection {
-  rows: CandidateCredentialRow[]
-  hasNext: boolean
+export interface CandidateCredentialsSection
+  extends PageResult<CandidateCredentialRow> {
   statusCounts: StatusCounts
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                 Helper                                     */
+/*                                  Query                                     */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Fetch a page of credentials for a candidate, default-sorted so that
- * ‘verified’ rows appear first (status DESC), and return a status summary.
- */
 export async function getCandidateCredentialsSection(
   candidateId: number,
   page: number,
@@ -46,7 +32,7 @@ export async function getCandidateCredentialsSection(
   const term = searchTerm.trim().toLowerCase()
   const hasSearch = term.length > 0
 
-  /* --------------------------- ORDER BY --------------------------------- */
+  /* ----------------------------- ORDER BY ------------------------------ */
   const sortCols = {
     title: candidateCredentials.title,
     issuer: issuers.name,
@@ -56,10 +42,12 @@ export async function getCandidateCredentialsSection(
   const sortCol = sortCols[sort] ?? candidateCredentials.status
   const orderExpr = order === 'asc' ? asc(sortCol) : desc(sortCol)
 
-  /* --------------------------- WHERE CLAUSE ----------------------------- */
-  const whereExpr = hasSearch ? ilike(candidateCredentials.title, `%${term}%`) : sql`TRUE`
+  /* -------------------------- WHERE clause ---------------------------- */
+  const whereExpr = hasSearch
+    ? ilike(candidateCredentials.title, `%${term}%`)
+    : sql`TRUE`
 
-  /* ------------------------------ Rows ---------------------------------- */
+  /* ------------------------------ Rows -------------------------------- */
   const rowsRaw = await db
     .select({
       id: candidateCredentials.id,
@@ -72,7 +60,9 @@ export async function getCandidateCredentialsSection(
     })
     .from(candidateCredentials)
     .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
-    .where(sql`${eq(candidateCredentials.candidateId, candidateId)} AND ${whereExpr}`)
+    .where(
+      sql`${eq(candidateCredentials.candidateId, candidateId)} AND ${whereExpr}`,
+    )
     .orderBy(orderExpr)
     .limit(pageSize + 1)
     .offset(offset)
@@ -80,7 +70,7 @@ export async function getCandidateCredentialsSection(
   const hasNext = rowsRaw.length > pageSize
   if (hasNext) rowsRaw.pop()
 
-  /* -------------------------- Status counts ----------------------------- */
+  /* ------------------------- Status counts --------------------------- */
   const countsRaw = await db
     .select({
       status: candidateCredentials.status,
@@ -96,7 +86,9 @@ export async function getCandidateCredentialsSection(
     rejected: 0,
     unverified: 0,
   }
-  countsRaw.forEach((r) => (statusCounts[r.status as keyof StatusCounts] = Number(r.count)))
+  countsRaw.forEach(
+    (r) => (statusCounts[r.status as keyof StatusCounts] = Number(r.count)),
+  )
 
   return {
     rows: rowsRaw as CandidateCredentialRow[],

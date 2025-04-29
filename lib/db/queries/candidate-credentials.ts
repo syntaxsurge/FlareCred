@@ -1,39 +1,21 @@
 import { asc, desc, eq, ilike, sql, and } from 'drizzle-orm'
 
 import { db } from '@/lib/db/drizzle'
-import { candidateCredentials, CredentialStatus, candidates } from '@/lib/db/schema/candidate'
+import {
+  candidateCredentials,
+  CredentialStatus,
+  candidates,
+} from '@/lib/db/schema/candidate'
 import { issuers } from '@/lib/db/schema/issuer'
 
 import type { StatusCounts } from '@/lib/types/candidate'
+import type {
+  PageResult,
+  CandidateCredentialRow,
+} from '@/lib/types/table-rows'
 
 /* -------------------------------------------------------------------------- */
-/*                                   TYPES                                    */
-/* -------------------------------------------------------------------------- */
-
-/** Row shape consumed by recruiter & candidate credential tables */
-export interface CredentialRow {
-  id: number
-  title: string
-  category: string
-  /** Fine-grained credential sub-type (e.g. 'bachelor', 'github_repo') */
-  type: string
-  issuer: string | null
-  status: CredentialStatus
-  fileUrl: string | null
-  /** FDC proof meta */
-  proofType?: string | null
-  proofData?: string | null
-  /** VC JSON is not required by all consumers but kept for completeness. */
-  vcJson?: string | null
-}
-
-export interface PageResult<T> {
-  rows: T[]
-  hasNext: boolean
-}
-
-/* -------------------------------------------------------------------------- */
-/*                          H E L P E R   F U N C T I O N S                   */
+/*                               Helpers                                      */
 /* -------------------------------------------------------------------------- */
 
 function buildOrderExpr(
@@ -51,11 +33,11 @@ function buildOrderExpr(
 }
 
 /* -------------------------------------------------------------------------- */
-/*                   P U B L I C   Q U E R Y   H E L P E R S                  */
+/*                       Public Query Helpers                                 */
 /* -------------------------------------------------------------------------- */
 
 /**
- * Paginate the caller’s own credentials (candidate dashboard)
+ * Paginate the caller’s own credentials (candidate dashboard).
  */
 export async function getCandidateCredentialsPage(
   userId: number,
@@ -64,21 +46,37 @@ export async function getCandidateCredentialsPage(
   sort: 'title' | 'category' | 'status' | 'createdAt',
   order: 'asc' | 'desc',
   searchTerm: string,
-): Promise<PageResult<CredentialRow>> {
-  /* Resolve candidate id first */
+): Promise<PageResult<CandidateCredentialRow> & { statusCounts: StatusCounts }> {
   const [cand] = await db
     .select({ id: candidates.id })
     .from(candidates)
     .where(eq(candidates.userId, userId))
     .limit(1)
 
-  if (!cand) return { rows: [], hasNext: false }
+  if (!cand)
+    return {
+      rows: [],
+      hasNext: false,
+      statusCounts: {
+        verified: 0,
+        pending: 0,
+        rejected: 0,
+        unverified: 0,
+      },
+    }
 
-  return getCandidateCredentialsSection(cand.id, page, pageSize, sort, order, searchTerm)
+  return getCandidateCredentialsSection(
+    cand.id,
+    page,
+    pageSize,
+    sort,
+    order,
+    searchTerm,
+  )
 }
 
 /**
- * Paginate credentials by candidateId (used by recruiter & public profiles)
+ * Paginate credentials by candidateId (used by recruiter & public profiles).
  */
 export async function getCandidateCredentialsSection(
   candidateId: number,
@@ -87,8 +85,8 @@ export async function getCandidateCredentialsSection(
   sort: 'title' | 'category' | 'status' | 'createdAt',
   order: 'asc' | 'desc',
   searchTerm: string,
-): Promise<PageResult<CredentialRow> & { statusCounts: StatusCounts }> {
-  /* ----------------------------- Status counts --------------------------- */
+): Promise<PageResult<CandidateCredentialRow> & { statusCounts: StatusCounts }> {
+  /* -------------------------- Status counts --------------------------- */
   const [counts] = await db
     .select({
       verified:
@@ -111,13 +109,16 @@ export async function getCandidateCredentialsSection(
     .from(candidateCredentials)
     .where(eq(candidateCredentials.candidateId, candidateId))
 
-  /* ----------------------------- Base where ------------------------------ */
+  /* -------------------------- WHERE clause ---------------------------- */
   let whereExpr: any = eq(candidateCredentials.candidateId, candidateId)
   if (searchTerm) {
-    whereExpr = and(whereExpr, ilike(candidateCredentials.title, `%${searchTerm}%`))
+    whereExpr = and(
+      whereExpr,
+      ilike(candidateCredentials.title, `%${searchTerm}%`),
+    )
   }
 
-  /* ----------------------------- Fetch rows ----------------------------- */
+  /* ------------------------------ Rows -------------------------------- */
   const offset = (page - 1) * pageSize
   const rowsRaw = await db
     .select({
@@ -142,7 +143,7 @@ export async function getCandidateCredentialsSection(
   const hasNext = rowsRaw.length > pageSize
   if (hasNext) rowsRaw.pop()
 
-  const rows: CredentialRow[] = rowsRaw.map((r) => ({
+  const rows: CandidateCredentialRow[] = rowsRaw.map((r) => ({
     id: r.id,
     title: r.title,
     category: r.category,

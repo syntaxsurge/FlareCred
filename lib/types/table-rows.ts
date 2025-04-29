@@ -1,11 +1,26 @@
 import type { ActivityType } from '@/lib/db/schema'
 
 /**
- * Shared table-row interfaces for DataTable-based UI components.
- * Centralising these definitions eliminates duplication and keeps schemas in sync.
+ * Shared table-row interfaces and pagination helpers for DataTable-based UI components.
+ * Keeping everything in one module eliminates duplication and guarantees consistency.
  */
 
-/* --------------------------- Directory & public -------------------------- */
+/* --------------------------------------------------------------------- */
+/*                            Pagination                                 */
+/* --------------------------------------------------------------------- */
+
+/** Generic pager envelope returned by DB query helpers. */
+export type PageResult<T> = {
+  /** Row slice for the current page. */
+  rows: T[]
+  /** Whether another page exists beyond the current slice. */
+  hasNext: boolean
+}
+
+/* --------------------------------------------------------------------- */
+/*                         Directory & Public                            */
+/* --------------------------------------------------------------------- */
+
 export interface CandidateDirectoryRow {
   id: number
   name: string | null
@@ -13,7 +28,10 @@ export interface CandidateDirectoryRow {
   verified: number
 }
 
-/* ------------------------------ Invitations ------------------------------ */
+/* --------------------------------------------------------------------- */
+/*                              Invitations                              */
+/* --------------------------------------------------------------------- */
+
 export interface InvitationRow {
   id: number
   team: string
@@ -23,7 +41,10 @@ export interface InvitationRow {
   invitedAt: Date
 }
 
-/* ------------------------------- Pipelines ------------------------------- */
+/* --------------------------------------------------------------------- */
+/*                               Pipelines                               */
+/* --------------------------------------------------------------------- */
+
 export interface PipelineRow {
   id: number
   name: string
@@ -31,7 +52,10 @@ export interface PipelineRow {
   createdAt: string
 }
 
-/* ---------------- Recruiter – Pipeline Entries --------------------------- */
+/* --------------------------------------------------------------------- */
+/*                  Recruiter – Pipeline Entries                         */
+/* --------------------------------------------------------------------- */
+
 export interface PipelineEntryRow {
   id: number
   pipelineId: number
@@ -39,7 +63,10 @@ export interface PipelineEntryRow {
   stage: string
 }
 
-/* --------------------------- Admin – Issuers ----------------------------- */
+/* --------------------------------------------------------------------- */
+/*                         Admin – Issuer table                          */
+/* --------------------------------------------------------------------- */
+
 export interface AdminIssuerRow {
   id: number
   name: string
@@ -50,19 +77,36 @@ export interface AdminIssuerRow {
   status: string
 }
 
-/* ------------------------ Candidate – Credentials ------------------------ */
+/* --------------------------------------------------------------------- */
+/*                Candidate / Recruiter / Admin – Credentials            */
+/* --------------------------------------------------------------------- */
+
+/**
+ * Credential row schema reused across candidate, recruiter and admin screens.
+ * Optional properties cover view-specific needs while keeping a single source of truth.
+ */
 export interface CandidateCredentialRow {
   id: number
   title: string
-  category: string
-  type: string
+  /** Broad category – education, experience, etc. */
+  category?: string
+  /** Fine-grained sub-type – e.g. ‘github_repo’. */
+  type?: string
   issuer: string | null
   status: string
-  fileUrl: string | null
-  vcJson: string | null
+  /** Attached document / repo URL (nullable). */
+  fileUrl?: string | null
+  /** Optional FDC proof metadata. */
+  proofType?: string | null
+  proofData?: string | null
+  /** Optional Verifiable Credential JSON blob. */
+  vcJson?: string | null
 }
 
-/* ------------------------------ Recruiter -------------------------------- */
+/* --------------------------------------------------------------------- */
+/*                       Recruiter – Talent Search                       */
+/* --------------------------------------------------------------------- */
+
 export interface TalentRow {
   id: number
   name: string | null
@@ -72,7 +116,10 @@ export interface TalentRow {
   topScore: number | null
 }
 
-/* ---------------------------- Admin – Misc ------------------------------- */
+/* --------------------------------------------------------------------- */
+/*                         Admin – Miscellaneous                         */
+/* --------------------------------------------------------------------- */
+
 export interface AdminCredentialRow {
   id: number
   title: string
@@ -91,7 +138,10 @@ export interface AdminUserRow {
   createdAt: string
 }
 
-/* ------------------------ Issuer – Requests ------------------------------ */
+/* --------------------------------------------------------------------- */
+/*                       Issuer – Verification Requests                  */
+/* --------------------------------------------------------------------- */
+
 export interface IssuerRequestRow {
   id: number
   title: string
@@ -101,7 +151,10 @@ export interface IssuerRequestRow {
   vcJson?: string | null
 }
 
-/* ---------------- Recruiter – Candidate Credentials --------------------- */
+/* --------------------------------------------------------------------- */
+/*                 Recruiter – Candidate Credentials                     */
+/* --------------------------------------------------------------------- */
+
 export interface RecruiterCredentialRow {
   id: number
   title: string
@@ -111,7 +164,10 @@ export interface RecruiterCredentialRow {
   fileUrl: string | null
 }
 
-/* --------------------------- Team – Members ------------------------------ */
+/* --------------------------------------------------------------------- */
+/*                          Team Settings – Members                      */
+/* --------------------------------------------------------------------- */
+
 export interface MemberRow {
   id: number
   name: string
@@ -121,7 +177,10 @@ export interface MemberRow {
   joinedAt: string
 }
 
-/* -------------------- Settings – Activity Logs --------------------------- */
+/* --------------------------------------------------------------------- */
+/*                        Settings – Activity Logs                       */
+/* --------------------------------------------------------------------- */
+
 export interface ActivityLogRow {
   id: number
   type: ActivityType
@@ -129,7 +188,10 @@ export interface ActivityLogRow {
   timestamp: string
 }
 
-/* ------------------- Issuer Directory – Issuers -------------------------- */
+/* --------------------------------------------------------------------- */
+/*                    Issuer Directory – Issuers                         */
+/* --------------------------------------------------------------------- */
+
 export interface IssuerDirectoryRow {
   id: number
   name: string
