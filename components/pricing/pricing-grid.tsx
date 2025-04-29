@@ -9,15 +9,7 @@ import { SubmitButton } from '@/app/(dashboard)/pricing/submit-button'
 import { Button } from '@/components/ui/button'
 import { PLAN_META, FLR_DECIMALS } from '@/lib/constants/pricing'
 import { useFlareUsdPrice } from '@/lib/hooks/use-flare-usd-price'
-
-/* -------------------------------------------------------------------------- */
-/*                               T Y P E S                                    */
-/* -------------------------------------------------------------------------- */
-
-interface PricingGridProps {
-  /** Team’s current plan (`Free` | `Base` | `Plus`) or null if anonymous. */
-  currentPlanName?: string | null
-}
+import type { PricingGridProps } from '@/lib/types/ui'
 
 /* -------------------------------------------------------------------------- */
 /*                         P R I C I N G   G R I D                            */
