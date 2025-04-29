@@ -23,15 +23,15 @@ import { Input } from '@/components/ui/input'
 import { upsertPlatformDidAction } from './actions'
 
 import type {
-  DidActionState as ActionState,
-  UpdateDidFormProps as Props,
+  DidActionState,
+  UpdateDidFormProps,
 } from '@/lib/types/forms'
 
 /**
  * Form for displaying, copying, editing or generating the platform DID.
  * All terminology now explicitly references the Flare network.
  */
-export default function UpdateDidForm({ defaultDid }: Props) {
+export default function UpdateDidForm({ defaultDid }: UpdateDidFormProps) {
   /* -------------------------------------------------------------------------- */
   /*                                S T A T E                                   */
   /* -------------------------------------------------------------------------- */
@@ -39,11 +39,11 @@ export default function UpdateDidForm({ defaultDid }: Props) {
   const [didInput, setDidInput] = React.useState<string>(currentDid)
   const [editing, setEditing] = React.useState<boolean>(false)
 
-  const [saveState, saveAction, saving] = React.useActionState<ActionState, FormData>(
+  const [saveState, saveAction, saving] = React.useActionState<DidActionState, FormData>(
     upsertPlatformDidAction,
     {},
   )
-  const [genState, genAction, generating] = React.useActionState<ActionState, FormData>(
+  const [genState, genAction, generating] = React.useActionState<DidActionState, FormData>(
     upsertPlatformDidAction,
     {},
   )

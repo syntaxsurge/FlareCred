@@ -4,9 +4,6 @@ import { asc, eq } from 'drizzle-orm'
 import { Star } from 'lucide-react'
 
 import { AppModal } from '@/components/ui/app-modal'
-import HighlightsBoard, {
-  type Credential as HighlightCredential,
-} from '@/components/dashboard/candidate/highlights-board'
 import ProfileHeader from '@/components/dashboard/candidate/profile-header'
 import PageCard from '@/components/ui/page-card'
 import { db } from '@/lib/db/drizzle'
@@ -18,6 +15,8 @@ import {
   candidates,
 } from '@/lib/db/schema/candidate'
 import { issuers } from '@/lib/db/schema/issuer'
+import { HighlightCredential } from '@/lib/types/components'
+import HighlightsBoard from '@/components/dashboard/candidate/highlights-board'
 
 export const revalidate = 0
 

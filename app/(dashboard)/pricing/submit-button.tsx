@@ -11,9 +11,9 @@ import { useFlareUsdPrice } from '@/lib/hooks/use-flare-usd-price'
 import { SUBSCRIPTION_MANAGER_ADDRESS, CHAIN_ID } from '@/lib/config'
 import { SUBSCRIPTION_MANAGER_ABI } from '@/lib/contracts/abis'
 
-import type { SubmitButtonProps as Props } from '@/lib/types/forms'
+import type { SubmitButtonProps } from '@/lib/types/forms'
 
-export function SubmitButton({ planKey, priceWei }: Props) {
+export function SubmitButton({ planKey, priceWei }: SubmitButtonProps) {
   const { address, chain, isConnected } = useAccount()
   const { switchChainAsync } = useSwitchChain()
   const { data: walletClient } = useWalletClient()
