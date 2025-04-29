@@ -22,28 +22,15 @@ import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import { truncateAddress } from '@/lib/utils/address'
+import type { MemberRow } from '@/lib/types/table-rows'
+import type { TableProps } from '@/lib/types/table-props'
 
 /* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
+/*                                   Props                                    */
 /* -------------------------------------------------------------------------- */
 
-export interface RowType {
-  id: number
-  name: string
-  email: string
-  walletAddress?: string | null
-  role: string
-  joinedAt: string
-}
-
-interface MembersTableProps {
-  rows: RowType[]
+interface MembersTableProps extends TableProps<MemberRow> {
   isOwner: boolean
-  sort: string
-  order: 'asc' | 'desc'
-  basePath: string
-  initialParams: Record<string, string>
-  searchQuery: string
 }
 
 /* -------------------------------------------------------------------------- */
@@ -52,8 +39,8 @@ interface MembersTableProps {
 
 const ROLES = ['member', 'owner'] as const
 
-function EditMemberForm({ row, onDone }: { row: RowType; onDone: () => void }) {
-  const [role, setRole] = React.useState<RowType['role']>(row.role)
+function EditMemberForm({ row, onDone }: { row: MemberRow; onDone: () => void }) {
+  const [role, setRole] = React.useState<MemberRow['role']>(row.role)
   const [pending, startTransition] = React.useTransition()
   const router = useRouter()
 
@@ -119,7 +106,7 @@ export default function MembersTable({
 
   /* ----------------------- Bulk-selection actions ------------------------ */
   const bulkActions = isOwner
-    ? useBulkActions<RowType>([
+    ? useBulkActions<MemberRow>([
         {
           label: 'Remove',
           icon: Trash2,
@@ -140,7 +127,7 @@ export default function MembersTable({
       ])
     : []
 
-  /* -------------------- Centralised navigation helpers -------------------- */
+  /* -------------------- Centralised navigation helpers ------------------- */
   const { search, handleSearchChange, sortableHeader } = useTableNavigation({
     basePath,
     initialParams,
@@ -149,13 +136,13 @@ export default function MembersTable({
     searchQuery,
   })
 
-  /* --------------------------- Edit-dialog state -------------------------- */
-  const [editRow, setEditRow] = React.useState<RowType | null>(null)
+  /* --------------------------- Edit-dialog state ------------------------- */
+  const [editRow, setEditRow] = React.useState<MemberRow | null>(null)
   const [isPending, startTransition] = React.useTransition()
 
-  /* ------------------------ Row-level action builder ---------------------- */
+  /* ------------------------ Row-level action builder --------------------- */
   const makeActions = React.useCallback(
-    (row: RowType): TableRowAction<RowType>[] => [
+    (row: MemberRow): TableRowAction<MemberRow>[] => [
       {
         label: 'Edit',
         icon: Pencil,
@@ -182,9 +169,9 @@ export default function MembersTable({
     [router, isPending, startTransition],
   )
 
-  /* --------------------------- Column definitions ------------------------- */
-  const columns = React.useMemo<Column<RowType>[]>(() => {
-    const base: Column<RowType>[] = [
+  /* --------------------------- Column definitions ------------------------ */
+  const columns = React.useMemo<Column<MemberRow>[]>(() => {
+    const base: Column<MemberRow>[] = [
       {
         key: 'name',
         header: sortableHeader('Name', 'name'),
@@ -233,7 +220,7 @@ export default function MembersTable({
     return base
   }, [sortableHeader, isOwner, makeActions])
 
-  /* -------------------------------- Render -------------------------------- */
+  /* -------------------------------- Render ------------------------------- */
   return (
     <>
       <DataTable

@@ -1,6 +1,6 @@
 /**
  * Shared table-row interfaces for DataTable-based UI components.
- * Keeping these in one place avoids duplication and drift between views.
+ * Centralising these definitions eliminates duplication and keeps schemas in sync.
  */
 
 /* --------------------------- Directory & public -------------------------- */
@@ -27,6 +27,14 @@ export interface PipelineRow {
   name: string
   description: string | null
   createdAt: string
+}
+
+/* ---------------- Recruiter – Pipeline Entries --------------------------- */
+export interface PipelineEntryRow {
+  id: number
+  pipelineId: number
+  pipelineName: string
+  stage: string
 }
 
 /* --------------------------- Admin – Issuers ----------------------------- */
@@ -94,7 +102,7 @@ export interface IssuerRequestRow {
   vcJson?: string | null
 }
 
-/* ------------------ Recruiter – Candidate Credentials -------------------- */
+/* ---------------- Recruiter – Candidate Credentials --------------------- */
 /** Row schema for recruiter credential view. */
 export interface RecruiterCredentialRow {
   id: number
@@ -103,4 +111,14 @@ export interface RecruiterCredentialRow {
   issuer: string | null
   status: string
   fileUrl: string | null
+}
+
+/* --------------------------- Team – Members ------------------------------ */
+export interface MemberRow {
+  id: number
+  name: string
+  email: string
+  walletAddress?: string | null
+  role: string
+  joinedAt: string
 }

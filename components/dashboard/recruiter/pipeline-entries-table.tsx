@@ -12,26 +12,8 @@ import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row
 import StatusBadge from '@/components/ui/status-badge'
 import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
-
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
-
-export interface RowType {
-  id: number
-  pipelineId: number
-  pipelineName: string
-  stage: string
-}
-
-interface PipelineEntriesTableProps {
-  rows: RowType[]
-  sort: string
-  order: 'asc' | 'desc'
-  basePath: string
-  initialParams: Record<string, string>
-  searchQuery: string
-}
+import type { PipelineEntryRow } from '@/lib/types/table-rows'
+import type { TableProps } from '@/lib/types/table-props'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Table                                    */
@@ -44,11 +26,11 @@ export default function PipelineEntriesTable({
   basePath,
   initialParams,
   searchQuery,
-}: PipelineEntriesTableProps) {
+}: TableProps<PipelineEntryRow>) {
   const router = useRouter()
 
   /* ----------------------- Bulk-selection actions ------------------------ */
-  const bulkActions = useBulkActions<RowType>([
+  const bulkActions = useBulkActions<PipelineEntryRow>([
     {
       label: 'Remove',
       icon: Trash2,
@@ -70,7 +52,7 @@ export default function PipelineEntriesTable({
 
   const [isPending, startTransition] = React.useTransition()
 
-  /* -------------------- Centralised navigation helpers -------------------- */
+  /* -------------------- Centralised navigation helpers ------------------- */
   const { search, handleSearchChange, sortableHeader } = useTableNavigation({
     basePath,
     initialParams,
@@ -85,9 +67,9 @@ export default function PipelineEntriesTable({
     },
   })
 
-  /* -------------------------- Row-action builder -------------------------- */
+  /* -------------------------- Row-action builder ------------------------- */
   const makeActions = React.useCallback(
-    (row: RowType): TableRowAction<RowType>[] => [
+    (row: PipelineEntryRow): TableRowAction<PipelineEntryRow>[] => [
       {
         label: 'View Pipeline',
         icon: FolderKanban,
@@ -114,7 +96,7 @@ export default function PipelineEntriesTable({
   )
 
   /* ----------------------------- Columns ---------------------------------- */
-  const columns = React.useMemo<Column<RowType>[]>(() => {
+  const columns = React.useMemo<Column<PipelineEntryRow>[]>(() => {
     return [
       {
         key: 'pipelineName',
