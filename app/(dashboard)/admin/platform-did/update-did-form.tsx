@@ -22,12 +22,10 @@ import { Input } from '@/components/ui/input'
 
 import { upsertPlatformDidAction } from './actions'
 
-type ActionState = { error?: string; success?: string; did?: string }
-
-interface Props {
-  /** Current DID pulled from the environment (may be null). */
-  defaultDid: string | null
-}
+import type {
+  DidActionState as ActionState,
+  UpdateDidFormProps as Props,
+} from '@/lib/types/forms'
 
 /**
  * Form for displaying, copying, editing or generating the platform DID.

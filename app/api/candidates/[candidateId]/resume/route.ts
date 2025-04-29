@@ -2,9 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { buildResumeData, generateResumePdf } from '@/lib/resume/resume-builder'
 
-interface Params {
-  params: { candidateId: string }
-}
+import type { ResumeRouteParams as Params } from '@/lib/types/forms'
 
 export async function GET(_req: Request, { params }: Params) {
   const candidateId = Number(params.candidateId)

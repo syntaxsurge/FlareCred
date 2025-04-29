@@ -8,15 +8,8 @@ import { ActionButton } from '@/components/ui/action-button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
-interface Props {
-  defaultName: string
-  defaultEmail: string
-}
+import type { GeneralFormProps as Props } from '@/lib/types/forms'
 
-/**
- * Account information form — wallet-only auth means users
- * can edit just their display name and email address.
- */
 export default function GeneralForm({ defaultName, defaultEmail }: Props) {
   const router = useRouter()
   const [name, setName] = useState(defaultName)

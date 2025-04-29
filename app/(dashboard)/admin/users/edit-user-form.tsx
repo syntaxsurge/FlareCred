@@ -13,17 +13,9 @@ import { Label } from '@/components/ui/label'
 
 import { updateUserAction } from './actions'
 
+import type { EditUserFormProps, ActionState } from '@/lib/types/forms'
+
 const ROLES = ['candidate', 'recruiter', 'issuer', 'admin'] as const
-
-export interface EditUserFormProps {
-  id: number
-  defaultName: string | null
-  defaultEmail: string
-  defaultRole: string
-  onDone: () => void
-}
-
-type ActionState = { error?: string; success?: string }
 
 export default function EditUserForm({
   id,
@@ -32,7 +24,7 @@ export default function EditUserForm({
   defaultRole,
   onDone,
 }: EditUserFormProps) {
-  const [state, action, pending] = useActionState<ActionState, FormData>(updateUserAction, {
+  const [state, action, pending] = React.useActionState<ActionState, FormData>(updateUserAction, {
     error: '',
     success: '',
   })

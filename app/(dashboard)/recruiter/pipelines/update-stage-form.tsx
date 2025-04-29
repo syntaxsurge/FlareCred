@@ -8,10 +8,7 @@ import { STAGES, type Stage } from '@/lib/constants/recruiter'
 
 import { updateCandidateStageAction } from './actions'
 
-interface Props {
-  pipelineCandidateId: number
-  initialStage: Stage
-}
+import type { UpdateStageFormProps as Props } from '@/lib/types/forms'
 
 export default function UpdateStageForm({ pipelineCandidateId, initialStage }: Props) {
   const [stage, setStage] = React.useState<Stage>(initialStage)

@@ -2,37 +2,16 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  useAccount,
-  useSwitchChain,
-  useWalletClient,
-  usePublicClient,
-} from 'wagmi'
+import { useAccount, useSwitchChain, useWalletClient, usePublicClient } from 'wagmi'
 import { toast } from 'sonner'
 import { ArrowRight, Loader2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { useFlareUsdPrice } from '@/lib/hooks/use-flare-usd-price'
-import {
-  SUBSCRIPTION_MANAGER_ADDRESS,
-  CHAIN_ID,
-} from '@/lib/config'
+import { SUBSCRIPTION_MANAGER_ADDRESS, CHAIN_ID } from '@/lib/config'
 import { SUBSCRIPTION_MANAGER_ABI } from '@/lib/contracts/abis'
 
-/* -------------------------------------------------------------------------- */
-/*                                   PROPS                                    */
-/* -------------------------------------------------------------------------- */
-
-interface Props {
-  /** 1 = Base, 2 = Plus */
-  planKey: 1 | 2
-  /** Plan price in wei (passed to the payable value) */
-  priceWei: bigint
-}
-
-/* -------------------------------------------------------------------------- */
-/*                               COMPONENT                                    */
-/* -------------------------------------------------------------------------- */
+import type { SubmitButtonProps as Props } from '@/lib/types/forms'
 
 export function SubmitButton({ planKey, priceWei }: Props) {
   const { address, chain, isConnected } = useAccount()
@@ -94,10 +73,7 @@ export function SubmitButton({ planKey, priceWei }: Props) {
       toast.success('Subscription activated ✅', { id: toastId })
       router.refresh()
     } catch (err: any) {
-      toast.error(
-        err?.shortMessage || err?.message || 'Transaction failed.',
-        { id: toastId },
-      )
+      toast.error(err?.shortMessage || err?.message || 'Transaction failed.', { id: toastId })
     } finally {
       setPending(false)
     }
@@ -123,9 +99,7 @@ export function SubmitButton({ planKey, priceWei }: Props) {
           </>
         )}
       </Button>
-      {usdLabel && (
-        <span className='text-muted-foreground text-xs'>{usdLabel}</span>
-      )}
+      {usdLabel && <span className='text-muted-foreground text-xs'>{usdLabel}</span>}
     </div>
   )
 }

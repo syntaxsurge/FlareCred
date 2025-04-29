@@ -3,8 +3,6 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
-import type { Pipeline } from '@/lib/types'
-
 import { ActionButton } from '@/components/ui/action-button'
 import {
   Select,
@@ -16,18 +14,7 @@ import {
 
 import { addCandidateToPipelineAction } from '../../pipelines/actions'
 
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
-
-interface Props {
-  candidateId: number
-  pipelines: Pipeline[]
-}
-
-/* -------------------------------------------------------------------------- */
-/*                                   View                                     */
-/* -------------------------------------------------------------------------- */
+import type { AddToPipelineFormProps as Props } from '@/lib/types/forms'
 
 export default function AddToPipelineForm({ candidateId, pipelines }: Props) {
   const router = useRouter()
