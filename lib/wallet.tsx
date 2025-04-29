@@ -1,8 +1,15 @@
+// SPDX-License-Identifier: MIT
 'use client'
-import { useRouter } from 'next/navigation'
+
+import { useRouter, usePathname } from 'next/navigation'
 import { ReactNode, useEffect, useRef } from 'react'
 
-import { getDefaultConfig, RainbowKitProvider, darkTheme, lightTheme } from '@rainbow-me/rainbowkit'
+import {
+  getDefaultConfig,
+  RainbowKitProvider,
+  darkTheme,
+  lightTheme,
+} from '@rainbow-me/rainbowkit'
 import '@rainbow-me/rainbowkit/styles.css'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useTheme } from 'next-themes'
@@ -65,56 +72,57 @@ const queryClient = new QueryClient()
 
 /**
  * Watches wallet state:
- * – On **disconnect**: calls <code>/api/auth/signout</code> to clear the HTTP-only session
- *   cookie, then redirects to <code>/connect-wallet</code>.
- * – On **connect**: refreshes/sets the session and reloads the app shell.
+ * – On **disconnect**: clears the HTTP-only session cookie and navigates to /connect-wallet.
+ * – On **connect**: sets/refreshes the session exactly once per mount; if the user is on
+ *   /connect-wallet it redirects to /dashboard.  It never calls router.refresh(), avoiding
+ *   the 404 re-render loop seen previously.
  */
 function WalletConnectionListener() {
   const { isConnected, address } = useAccount()
   const router = useRouter()
+  const pathname = usePathname()
+
   const prevConnected = useRef(isConnected)
+  const ensuredSession = useRef(false)
 
+  /* Handle disconnects */
   useEffect(() => {
-    if (prevConnected.current === isConnected) return
-
-    /* --------------------------- Disconnected ---------------------------- */
-    if (!isConnected) {
-      const signOut = async () => {
+    if (prevConnected.current && !isConnected) {
+      ;(async () => {
         try {
-          await fetch('/api/auth/signout', {
-            method: 'POST',
-            credentials: 'include',
-          })
+          await fetch('/api/auth/signout', { method: 'POST', credentials: 'include' })
         } catch {
-          /* best-effort – ignore network errors */
+          /* ignore network errors */
         } finally {
-          router.replace('/connect-wallet')
-          router.refresh()
+          if (pathname !== '/connect-wallet') router.replace('/connect-wallet')
         }
-      }
-      signOut()
+      })()
     }
-
-    /* ----------------------------- Connected ----------------------------- */
-    if (isConnected) {
-      const ensureSession = async () => {
-        try {
-          if (address) {
-            await fetch(`/api/auth/wallet-status?address=${address}`, {
-              method: 'GET',
-              cache: 'no-store',
-              credentials: 'include',
-            })
-          }
-        } finally {
-          router.refresh()
-        }
-      }
-      ensureSession()
-    }
-
     prevConnected.current = isConnected
-  }, [isConnected, address, router])
+  }, [isConnected, pathname, router])
+
+  /* Handle first connection (one-shot) */
+  useEffect(() => {
+    if (!isConnected || ensuredSession.current || !address) return
+    ensuredSession.current = true
+
+    ;(async () => {
+      try {
+        const res = await fetch(`/api/auth/wallet-status?address=${address}`, {
+          method: 'GET',
+          cache: 'no-store',
+          credentials: 'include',
+        })
+        const json = await res.json().catch(() => ({}))
+
+        if (res.ok && json?.exists && pathname === '/connect-wallet') {
+          router.replace('/dashboard')
+        }
+      } finally {
+        /* no global refresh */
+      }
+    })()
+  }, [isConnected, address, pathname, router])
 
   return null
 }
