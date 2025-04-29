@@ -1,14 +1,12 @@
 'use client'
 
 import * as React from 'react'
-import { useRouter } from 'next/navigation'
 
 import { Clipboard, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
-import { StatusBadge } from '@/components/ui/status-badge'
 import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { SkillPassRow, TableProps } from '@/lib/types/tables'
@@ -27,8 +25,6 @@ export default function SkillPassesTable({
   initialParams,
   searchQuery,
 }: TableProps<SkillPassRow>) {
-  const router = useRouter()
-
   /* ---------------------- Bulk-selection actions ------------------------ */
   const bulkActions = useBulkActions<SkillPassRow>([])
 
@@ -58,6 +54,14 @@ export default function SkillPassesTable({
         })
       }
 
+      if (row.txHash) {
+        actions.push({
+          label: 'View on Flare',
+          icon: ExternalLink,
+          href: txUrl(row.txHash),
+        })
+      }
+
       return actions
     },
     [],
@@ -78,24 +82,6 @@ export default function SkillPassesTable({
         sortable: false,
         render: (v, row) =>
           row.maxScore ? `${v ?? '—'} / ${row.maxScore}` : (v ?? '—').toString(),
-      },
-      {
-        key: 'txHash',
-        header: 'Tx',
-        sortable: false,
-        render: (v) =>
-          v ? (
-            <a
-              href={txUrl(v as string)}
-              target='_blank'
-              rel='noopener noreferrer'
-              className='text-primary underline'
-            >
-              View <ExternalLink className='inline-block h-4 w-4' />
-            </a>
-          ) : (
-            '—'
-          ),
       },
       {
         key: 'createdAt',
