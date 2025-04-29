@@ -14,8 +14,8 @@ import type {
   Socials,
   SnapshotMetrics,
 } from './candidate'
-import type { MemberRow } from './table-rows'
 import { Stage } from './recruiter'
+import type { MemberRow } from './table-rows'
 
 /** Button-style quick action used in dashboards. */
 export interface QuickAction {
