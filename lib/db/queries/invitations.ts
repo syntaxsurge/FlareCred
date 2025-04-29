@@ -1,7 +1,13 @@
-import { asc, desc, eq, ilike, or, and } from 'drizzle-orm'
+import { eq, and } from 'drizzle-orm'
 
 import { db } from '../drizzle'
 import { invitations, teams, users } from '../schema/core'
+
+import {
+  buildOrderExpr,
+  buildSearchCondition,
+  paginate,
+} from './query-helpers'
 import type { InvitationRow } from '@/lib/types/table-rows'
 
 /**
@@ -16,48 +22,31 @@ export async function getInvitationsPage(
   order: 'asc' | 'desc' = 'desc',
   searchTerm = '',
 ): Promise<{ invitations: InvitationRow[]; hasNext: boolean }> {
-  const offset = (page - 1) * pageSize
+  /* --------------------------- ORDER BY -------------------------------- */
+  const sortMap = {
+    team: teams.name,
+    role: invitations.role,
+    inviter: users.email,
+    status: invitations.status,
+    invitedAt: invitations.invitedAt,
+  } as const
 
-  /* ----------------------------- ORDER BY -------------------------------- */
-  const orderBy =
-    sortBy === 'team'
-      ? order === 'asc'
-        ? asc(teams.name)
-        : desc(teams.name)
-      : sortBy === 'role'
-        ? order === 'asc'
-          ? asc(invitations.role)
-          : desc(invitations.role)
-        : sortBy === 'inviter'
-          ? order === 'asc'
-            ? asc(users.email)
-            : desc(users.email)
-          : sortBy === 'status'
-            ? order === 'asc'
-              ? asc(invitations.status)
-              : desc(invitations.status)
-            : order === 'asc'
-              ? asc(invitations.invitedAt)
-              : desc(invitations.invitedAt)
+  const orderBy = buildOrderExpr(sortMap, sortBy, order)
 
-  /* ------------------------------ WHERE ---------------------------------- */
-  const baseWhere = eq(invitations.email, email)
+  /* ---------------------------- WHERE ---------------------------------- */
+  const searchCond = buildSearchCondition(searchTerm, [
+    teams.name,
+    invitations.role,
+    users.email,
+    invitations.status,
+  ])
 
-  const whereClause =
-    searchTerm.trim().length === 0
-      ? baseWhere
-      : and(
-          baseWhere,
-          or(
-            ilike(teams.name, `%${searchTerm}%`),
-            ilike(invitations.role, `%${searchTerm}%`),
-            ilike(users.email, `%${searchTerm}%`),
-            ilike(invitations.status, `%${searchTerm}%`),
-          ),
-        )
+  const whereClause = searchCond
+    ? and(eq(invitations.email, email), searchCond)
+    : eq(invitations.email, email)
 
-  /* ------------------------------ QUERY ---------------------------------- */
-  const rows = await db
+  /* ----------------------------- QUERY --------------------------------- */
+  const baseQuery = db
     .select({
       id: invitations.id,
       team: teams.name,
@@ -69,13 +58,14 @@ export async function getInvitationsPage(
     .from(invitations)
     .leftJoin(teams, eq(invitations.teamId, teams.id))
     .leftJoin(users, eq(invitations.invitedBy, users.id))
-    .where(whereClause)
+    .where(whereClause as any)
     .orderBy(orderBy)
-    .limit(pageSize + 1)
-    .offset(offset)
 
-  const hasNext = rows.length > pageSize
-  if (hasNext) rows.pop()
+  const { rows, hasNext } = await paginate<InvitationRow>(
+    baseQuery as any,
+    page,
+    pageSize,
+  )
 
   return { invitations: rows as InvitationRow[], hasNext }
 }

@@ -1,7 +1,13 @@
-import { eq, ilike, asc, desc, and } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 
 import { db } from '../drizzle'
 import { recruiterPipelines } from '../schema/recruiter'
+
+import {
+  buildOrderExpr,
+  buildSearchCondition,
+  paginate,
+} from './query-helpers'
 import type { PipelineRow } from '@/lib/types/table-rows'
 
 /**
@@ -15,29 +21,21 @@ export async function getRecruiterPipelinesPage(
   order: 'asc' | 'desc' = 'desc',
   searchTerm = '',
 ): Promise<{ pipelines: PipelineRow[]; hasNext: boolean }> {
-  const offset = (page - 1) * pageSize
-
   /* --------------------------- ORDER BY helper --------------------------- */
-  const orderBy =
-    sortBy === 'name'
-      ? order === 'asc'
-        ? asc(recruiterPipelines.name)
-        : desc(recruiterPipelines.name)
-      : order === 'asc'
-        ? asc(recruiterPipelines.createdAt)
-        : desc(recruiterPipelines.createdAt)
+  const sortMap = {
+    name: recruiterPipelines.name,
+    createdAt: recruiterPipelines.createdAt,
+  } as const
+
+  const orderBy = buildOrderExpr(sortMap, sortBy, order)
 
   /* ----------------------------- WHERE clause ---------------------------- */
-  const whereClause =
-    searchTerm.trim().length === 0
-      ? eq(recruiterPipelines.recruiterId, recruiterId)
-      : and(
-          eq(recruiterPipelines.recruiterId, recruiterId),
-          ilike(recruiterPipelines.name, `%${searchTerm}%`),
-        )
+  const base = eq(recruiterPipelines.recruiterId, recruiterId)
+  const searchCond = buildSearchCondition(searchTerm, [recruiterPipelines.name])
+  const whereClause = searchCond ? and(base, searchCond) : base
 
   /* ------------------------------ Query ---------------------------------- */
-  const rows = await db
+  const baseQuery = db
     .select({
       id: recruiterPipelines.id,
       name: recruiterPipelines.name,
@@ -47,11 +45,12 @@ export async function getRecruiterPipelinesPage(
     .from(recruiterPipelines)
     .where(whereClause as any)
     .orderBy(orderBy)
-    .limit(pageSize + 1)
-    .offset(offset)
 
-  const hasNext = rows.length > pageSize
-  if (hasNext) rows.pop()
+  const { rows, hasNext } = await paginate<PipelineRow>(
+    baseQuery as any,
+    page,
+    pageSize,
+  )
 
   return { pipelines: rows as PipelineRow[], hasNext }
 }

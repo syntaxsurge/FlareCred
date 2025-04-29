@@ -1,4 +1,4 @@
-import { asc, desc, eq, ilike, sql, and } from 'drizzle-orm'
+import { eq, ilike, and, sql } from 'drizzle-orm'
 
 import { db } from '@/lib/db/drizzle'
 import {
@@ -14,23 +14,7 @@ import type {
   CandidateCredentialRow,
 } from '@/lib/types/table-rows'
 
-/* -------------------------------------------------------------------------- */
-/*                               Helpers                                      */
-/* -------------------------------------------------------------------------- */
-
-function buildOrderExpr(
-  sort: 'title' | 'category' | 'status' | 'createdAt',
-  order: 'asc' | 'desc',
-) {
-  const sortMap = {
-    title: candidateCredentials.title,
-    category: candidateCredentials.category,
-    status: candidateCredentials.status,
-    createdAt: candidateCredentials.createdAt,
-  } as const
-  const col = sortMap[sort] ?? candidateCredentials.createdAt
-  return order === 'asc' ? asc(col) : desc(col)
-}
+import { buildOrderExpr, paginate } from './query-helpers'
 
 /* -------------------------------------------------------------------------- */
 /*                       Public Query Helpers                                 */
@@ -109,18 +93,26 @@ export async function getCandidateCredentialsSection(
     .from(candidateCredentials)
     .where(eq(candidateCredentials.candidateId, candidateId))
 
-  /* -------------------------- WHERE clause ---------------------------- */
-  let whereExpr: any = eq(candidateCredentials.candidateId, candidateId)
-  if (searchTerm) {
-    whereExpr = and(
-      whereExpr,
-      ilike(candidateCredentials.title, `%${searchTerm}%`),
-    )
-  }
+  /* --------------------------- ORDER BY ------------------------------- */
+  const sortMap = {
+    title: candidateCredentials.title,
+    category: candidateCredentials.category,
+    status: candidateCredentials.status,
+    createdAt: candidateCredentials.createdAt,
+  } as const
+  const orderBy = buildOrderExpr(sortMap, sort, order)
 
-  /* ------------------------------ Rows -------------------------------- */
-  const offset = (page - 1) * pageSize
-  const rowsRaw = await db
+  /* ---------------------------- WHERE --------------------------------- */
+  const whereExpr =
+    searchTerm.trim().length === 0
+      ? eq(candidateCredentials.candidateId, candidateId)
+      : and(
+          eq(candidateCredentials.candidateId, candidateId),
+          ilike(candidateCredentials.title, `%${searchTerm}%`),
+        )
+
+  /* ----------------------------- Query -------------------------------- */
+  const baseQuery = db
     .select({
       id: candidateCredentials.id,
       title: candidateCredentials.title,
@@ -135,13 +127,14 @@ export async function getCandidateCredentialsSection(
     })
     .from(candidateCredentials)
     .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
-    .where(whereExpr)
-    .orderBy(buildOrderExpr(sort, order))
-    .limit(pageSize + 1)
-    .offset(offset)
+    .where(whereExpr as any)
+    .orderBy(orderBy)
 
-  const hasNext = rowsRaw.length > pageSize
-  if (hasNext) rowsRaw.pop()
+  const { rows: rowsRaw, hasNext } = await paginate<CandidateCredentialRow>(
+    baseQuery as any,
+    page,
+    pageSize,
+  )
 
   const rows: CandidateCredentialRow[] = rowsRaw.map((r) => ({
     id: r.id,

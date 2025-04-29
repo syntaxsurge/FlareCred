@@ -4,6 +4,11 @@ import { db } from '../drizzle'
 import { candidateCredentials, CredentialStatus } from '../schema/candidate'
 import { issuers } from '../schema/issuer'
 
+import {
+  buildOrderExpr,
+  buildSearchCondition,
+  paginate,
+} from './query-helpers'
 import type { RecruiterCredentialRow } from '@/lib/types/table-rows'
 
 /* -------------------------------------------------------------------------- */
@@ -25,43 +30,32 @@ export async function getRecruiterCandidateCredentialsPage(
   searchTerm = '',
   verifiedFirst = false,
 ): Promise<{ credentials: RecruiterCredentialRow[]; hasNext: boolean }> {
-  const offset = (page - 1) * pageSize
-
   /* --------------------------- ORDER BY helper --------------------------- */
-  const secondary =
-    sortBy === 'title'
-      ? order === 'asc'
-        ? asc(candidateCredentials.title)
-        : desc(candidateCredentials.title)
-      : sortBy === 'issuer'
-        ? order === 'asc'
-          ? asc(issuers.name)
-          : desc(issuers.name)
-        : sortBy === 'status'
-          ? order === 'asc'
-            ? asc(candidateCredentials.status)
-            : desc(candidateCredentials.status)
-          : sortBy === 'createdAt'
-            ? order === 'asc'
-              ? asc(candidateCredentials.createdAt)
-              : desc(candidateCredentials.createdAt)
-            : order === 'asc'
-              ? asc(candidateCredentials.id)
-              : desc(candidateCredentials.id)
+  const sortMap = {
+    title: candidateCredentials.title,
+    issuer: issuers.name,
+    status: candidateCredentials.status,
+    createdAt: candidateCredentials.createdAt,
+    id: candidateCredentials.id,
+  } as const
 
-  const orderByParts = verifiedFirst ? [desc(candidateCredentials.verified), secondary] : [secondary]
+  const secondary = buildOrderExpr(sortMap, sortBy, order)
+  const orderByParts = verifiedFirst
+    ? [desc(candidateCredentials.verified), secondary]
+    : [secondary]
 
   /* ----------------------------- WHERE clause ---------------------------- */
+  const searchCond = buildSearchCondition(searchTerm, [
+    candidateCredentials.title,
+  ])
+
   const where =
-    searchTerm.trim().length === 0
-      ? eq(candidateCredentials.candidateId, candidateId)
-      : and(
-          eq(candidateCredentials.candidateId, candidateId),
-          ilike(candidateCredentials.title, `%${searchTerm}%`),
-        )
+    searchCond
+      ? and(eq(candidateCredentials.candidateId, candidateId), searchCond)
+      : eq(candidateCredentials.candidateId, candidateId)
 
   /* ------------------------------ Query ---------------------------------- */
-  const rows = await db
+  const baseQuery = db
     .select({
       id: candidateCredentials.id,
       title: candidateCredentials.title,
@@ -77,12 +71,13 @@ export async function getRecruiterCandidateCredentialsPage(
     .from(candidateCredentials)
     .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
     .where(where as any)
-    .orderBy(...orderByParts)
-    .limit(pageSize + 1)
-    .offset(offset)
+    .orderBy(...(orderByParts as any))
 
-  const hasNext = rows.length > pageSize
-  if (hasNext) rows.pop()
+  const { rows, hasNext } = await paginate<RecruiterCredentialRow>(
+    baseQuery as any,
+    page,
+    pageSize,
+  )
 
   return { credentials: rows as RecruiterCredentialRow[], hasNext }
 }

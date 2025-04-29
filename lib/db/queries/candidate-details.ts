@@ -1,11 +1,13 @@
-import { asc, desc, eq, ilike, sql } from 'drizzle-orm'
+import { eq, ilike, and, sql } from 'drizzle-orm'
 
 import { db } from '@/lib/db/drizzle'
-import { candidateCredentials, type CredentialStatus } from '@/lib/db/schema/candidate'
+import { candidateCredentials } from '@/lib/db/schema/candidate'
 import { issuers } from '@/lib/db/schema/issuer'
 
 import type { StatusCounts } from '@/lib/types/candidate'
 import type { CandidateCredentialRow, PageResult } from '@/lib/types/table-rows'
+
+import { buildOrderExpr, paginate } from './query-helpers'
 
 /* -------------------------------------------------------------------------- */
 /*                               Return Type                                  */
@@ -28,7 +30,6 @@ export async function getCandidateCredentialsSection(
   order: 'asc' | 'desc' = 'desc',
   searchTerm = '',
 ): Promise<CandidateCredentialsSection> {
-  const offset = (page - 1) * pageSize
   const term = searchTerm.trim().toLowerCase()
   const hasSearch = term.length > 0
 
@@ -39,16 +40,19 @@ export async function getCandidateCredentialsSection(
     status: candidateCredentials.status,
     createdAt: candidateCredentials.createdAt,
   } as const
-  const sortCol = sortCols[sort] ?? candidateCredentials.status
-  const orderExpr = order === 'asc' ? asc(sortCol) : desc(sortCol)
+  const orderBy = buildOrderExpr(sortCols, sort, order)
 
   /* -------------------------- WHERE clause ---------------------------- */
-  const whereExpr = hasSearch
-    ? ilike(candidateCredentials.title, `%${term}%`)
-    : sql`TRUE`
+  const whereExpr =
+    hasSearch
+      ? and(
+          eq(candidateCredentials.candidateId, candidateId),
+          ilike(candidateCredentials.title, `%${term}%`),
+        )
+      : eq(candidateCredentials.candidateId, candidateId)
 
   /* ------------------------------ Rows -------------------------------- */
-  const rowsRaw = await db
+  const baseQuery = db
     .select({
       id: candidateCredentials.id,
       title: candidateCredentials.title,
@@ -60,15 +64,14 @@ export async function getCandidateCredentialsSection(
     })
     .from(candidateCredentials)
     .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
-    .where(
-      sql`${eq(candidateCredentials.candidateId, candidateId)} AND ${whereExpr}`,
-    )
-    .orderBy(orderExpr)
-    .limit(pageSize + 1)
-    .offset(offset)
+    .where(whereExpr as any)
+    .orderBy(orderBy)
 
-  const hasNext = rowsRaw.length > pageSize
-  if (hasNext) rowsRaw.pop()
+  const { rows, hasNext } = await paginate<CandidateCredentialRow>(
+    baseQuery as any,
+    page,
+    pageSize,
+  )
 
   /* ------------------------- Status counts --------------------------- */
   const countsRaw = await db
@@ -91,7 +94,7 @@ export async function getCandidateCredentialsSection(
   )
 
   return {
-    rows: rowsRaw as CandidateCredentialRow[],
+    rows: rows as CandidateCredentialRow[],
     hasNext,
     statusCounts,
   }

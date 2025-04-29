@@ -1,7 +1,13 @@
-import { and, asc, desc, eq, ilike } from 'drizzle-orm'
+import { and, eq, ilike } from 'drizzle-orm'
 
 import { db } from '../drizzle'
 import { recruiterPipelines, pipelineCandidates } from '../schema/recruiter'
+
+import {
+  buildOrderExpr,
+  buildSearchCondition,
+  paginate,
+} from './query-helpers'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -16,7 +22,7 @@ export type PipelineEntryRow = {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                             Paginated fetch                                */
+/*                             Paginated fetch                                */
 /* -------------------------------------------------------------------------- */
 
 /**
@@ -32,38 +38,27 @@ export async function getCandidatePipelineEntriesPage(
   order: 'asc' | 'desc' = 'desc',
   searchTerm = '',
 ): Promise<{ entries: PipelineEntryRow[]; hasNext: boolean }> {
-  const offset = (page - 1) * pageSize
+  /* --------------------------- ORDER BY helper --------------------------- */
+  const sortMap = {
+    pipelineName: recruiterPipelines.name,
+    stage: pipelineCandidates.stage,
+    addedAt: pipelineCandidates.addedAt,
+    id: pipelineCandidates.id,
+  } as const
 
-  /* --------------------------- ORDER BY helper --------------------------- */
-  const orderBy =
-    sortBy === 'pipelineName'
-      ? order === 'asc'
-        ? asc(recruiterPipelines.name)
-        : desc(recruiterPipelines.name)
-      : sortBy === 'stage'
-        ? order === 'asc'
-          ? asc(pipelineCandidates.stage)
-          : desc(pipelineCandidates.stage)
-        : sortBy === 'addedAt'
-          ? order === 'asc'
-            ? asc(pipelineCandidates.addedAt)
-            : desc(pipelineCandidates.addedAt)
-          : order === 'asc'
-            ? asc(pipelineCandidates.id)
-            : desc(pipelineCandidates.id)
+  const orderBy = buildOrderExpr(sortMap, sortBy, order)
 
   /* ----------------------------- WHERE clause ---------------------------- */
-  const where =
-    searchTerm.trim().length === 0
-      ? and(eq(pipelineCandidates.candidateId, candidateId), eq(recruiterPipelines.recruiterId, recruiterId))
-      : and(
-          eq(pipelineCandidates.candidateId, candidateId),
-          eq(recruiterPipelines.recruiterId, recruiterId),
-          ilike(recruiterPipelines.name, `%${searchTerm}%`),
-        )
+  const base = and(
+    eq(pipelineCandidates.candidateId, candidateId),
+    eq(recruiterPipelines.recruiterId, recruiterId),
+  )
+
+  const searchCond = buildSearchCondition(searchTerm, [recruiterPipelines.name])
+  const whereClause = searchCond ? and(base, searchCond) : base
 
   /* ------------------------------ Query ---------------------------------- */
-  const rows = await db
+  const baseQuery = db
     .select({
       id: pipelineCandidates.id,
       pipelineId: recruiterPipelines.id,
@@ -73,13 +68,14 @@ export async function getCandidatePipelineEntriesPage(
     })
     .from(pipelineCandidates)
     .innerJoin(recruiterPipelines, eq(pipelineCandidates.pipelineId, recruiterPipelines.id))
-    .where(where as any)
+    .where(whereClause as any)
     .orderBy(orderBy)
-    .limit(pageSize + 1)
-    .offset(offset)
 
-  const hasNext = rows.length > pageSize
-  if (hasNext) rows.pop()
+  const { rows, hasNext } = await paginate<PipelineEntryRow>(
+    baseQuery as any,
+    page,
+    pageSize,
+  )
 
   return { entries: rows as PipelineEntryRow[], hasNext }
 }

@@ -1,7 +1,13 @@
-import { eq, asc, desc, and, or, ilike } from 'drizzle-orm'
+import { eq, and } from 'drizzle-orm'
 
 import { db } from '../drizzle'
 import { activityLogs, ActivityType } from '../schema/core'
+
+import {
+  buildOrderExpr,
+  buildSearchCondition,
+  paginate,
+} from './query-helpers'
 import type { ActivityLogRow } from '@/lib/types/table-rows'
 
 /**
@@ -15,46 +21,29 @@ export async function getActivityLogsPage(
   order: 'asc' | 'desc' = 'desc',
   searchTerm = '',
 ): Promise<{ logs: ActivityLogRow[]; hasNext: boolean }> {
-  const offset = (page - 1) * pageSize
+  /* --------------------------- ORDER BY -------------------------------- */
+  const sortMap = {
+    action: activityLogs.action,
+    timestamp: activityLogs.timestamp,
+  } as const
 
-  /* --------------------------- ORDER BY helper --------------------------- */
-  const orderBy =
-    sortBy === 'action'
-      ? order === 'asc'
-        ? asc(activityLogs.action)
-        : desc(activityLogs.action)
-      : order === 'asc'
-        ? asc(activityLogs.timestamp)
-        : desc(activityLogs.timestamp)
+  const orderBy = buildOrderExpr(sortMap, sortBy, order)
 
-  /* ----------------------------- WHERE clause ---------------------------- */
-  const baseWhere = eq(activityLogs.userId, userId)
+  /* ---------------------------- WHERE ---------------------------------- */
+  const searchCond = buildSearchCondition(searchTerm, [
+    activityLogs.action,
+    activityLogs.ipAddress,
+  ])
+  const whereClause = searchCond
+    ? and(eq(activityLogs.userId, userId), searchCond)
+    : eq(activityLogs.userId, userId)
 
-  const whereClause =
-    searchTerm.trim().length === 0
-      ? baseWhere
-      : and(
-          baseWhere,
-          or(
-            ilike(activityLogs.action, `%${searchTerm}%`),
-            ilike(activityLogs.ipAddress, `%${searchTerm}%`),
-          ),
-        )
+  /* ----------------------------- QUERY --------------------------------- */
+  const base = db.select().from(activityLogs).where(whereClause).orderBy(orderBy)
 
-  /* ------------------------------ Query ---------------------------------- */
-  const rows = await db
-    .select()
-    .from(activityLogs)
-    .where(whereClause)
-    .orderBy(orderBy)
-    .limit(pageSize + 1) // fetch one extra to detect "next"
-    .offset(offset)
+  const { rows, hasNext } = await paginate<any>(base as any, page, pageSize)
 
-  const hasNext = rows.length > pageSize
-  if (hasNext) rows.pop()
-
-  /* ------------------------- Shape conversion ---------------------------- */
-  const logs: ActivityLogRow[] = rows.map((r) => ({
+  const logs: ActivityLogRow[] = rows.map((r: any) => ({
     id: r.id,
     type: r.action as ActivityType,
     ipAddress: r.ipAddress,

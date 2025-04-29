@@ -1,7 +1,13 @@
-import { asc, desc, eq, ilike, or, and } from 'drizzle-orm'
+import { eq, and } from 'drizzle-orm'
 
 import { db } from '../drizzle'
 import { teamMembers, users } from '../schema/core'
+
+import {
+  buildOrderExpr,
+  buildSearchCondition,
+  paginate,
+} from './query-helpers'
 import type { MemberRow } from '@/lib/types/table-rows'
 
 /**
@@ -15,43 +21,27 @@ export async function getTeamMembersPage(
   order: 'asc' | 'desc' = 'asc',
   searchTerm = '',
 ): Promise<{ members: MemberRow[]; hasNext: boolean }> {
-  const offset = (page - 1) * pageSize
-
   /* ----------------------------- ORDER BY -------------------------------- */
-  const orderBy =
-    sortBy === 'name'
-      ? order === 'asc'
-        ? asc(users.name)
-        : desc(users.name)
-      : sortBy === 'email'
-        ? order === 'asc'
-          ? asc(users.email)
-          : desc(users.email)
-        : sortBy === 'role'
-          ? order === 'asc'
-            ? asc(teamMembers.role)
-            : desc(teamMembers.role)
-          : order === 'asc'
-            ? asc(teamMembers.joinedAt)
-            : desc(teamMembers.joinedAt)
+  const sortMap = {
+    name: users.name,
+    email: users.email,
+    role: teamMembers.role,
+    joinedAt: teamMembers.joinedAt,
+  } as const
+
+  const orderBy = buildOrderExpr(sortMap, sortBy, order)
 
   /* ------------------------------ WHERE ---------------------------------- */
-  const baseWhere = eq(teamMembers.teamId, teamId)
-
-  const whereClause =
-    searchTerm.trim().length === 0
-      ? baseWhere
-      : and(
-          baseWhere,
-          or(
-            ilike(users.name, `%${searchTerm}%`),
-            ilike(users.email, `%${searchTerm}%`),
-            ilike(teamMembers.role, `%${searchTerm}%`),
-          ),
-        )
+  const base = eq(teamMembers.teamId, teamId)
+  const searchCond = buildSearchCondition(searchTerm, [
+    users.name,
+    users.email,
+    teamMembers.role,
+  ])
+  const whereClause = searchCond ? and(base, searchCond) : base
 
   /* ------------------------------ QUERY ---------------------------------- */
-  const rows = await db
+  const baseQuery = db
     .select({
       id: teamMembers.id,
       name: users.name,
@@ -62,13 +52,14 @@ export async function getTeamMembersPage(
     })
     .from(teamMembers)
     .leftJoin(users, eq(teamMembers.userId, users.id))
-    .where(whereClause)
+    .where(whereClause as any)
     .orderBy(orderBy)
-    .limit(pageSize + 1) // one extra row for hasNext detection
-    .offset(offset)
 
-  const hasNext = rows.length > pageSize
-  if (hasNext) rows.pop()
+  const { rows, hasNext } = await paginate<MemberRow>(
+    baseQuery as any,
+    page,
+    pageSize,
+  )
 
   return { members: rows as MemberRow[], hasNext }
 }

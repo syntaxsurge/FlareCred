@@ -1,8 +1,14 @@
-import { and, asc, desc, ilike, or, sql } from 'drizzle-orm'
+import { and, sql } from 'drizzle-orm'
 
 import { db } from '../drizzle'
 import { candidates } from '../schema/candidate'
 import { users } from '../schema/core'
+
+import {
+  buildOrderExpr,
+  buildSearchCondition,
+  paginate,
+} from './query-helpers'
 import type { TalentRow } from '@/lib/types/table-rows'
 
 /**
@@ -18,35 +24,24 @@ export async function getTalentSearchPage(
   skillMin = 0,
   skillMax = 100,
 ): Promise<{ candidates: TalentRow[]; hasNext: boolean }> {
-  const offset = (page - 1) * pageSize
-
   /* --------------------------- ORDER BY helper --------------------------- */
-  const orderBy =
-    sortBy === 'email'
-      ? order === 'asc'
-        ? asc(users.email)
-        : desc(users.email)
-      : sortBy === 'id'
-        ? order === 'asc'
-          ? asc(candidates.id)
-          : desc(candidates.id)
-        : /* default — name */
-          order === 'asc'
-          ? asc(users.name)
-          : desc(users.name)
+  const sortMap = {
+    name: users.name,
+    email: users.email,
+    id: candidates.id,
+  } as const
+
+  const orderBy = buildOrderExpr(sortMap, sortBy, order)
 
   /* ----------------------------- WHERE clause ---------------------------- */
   const filters: any[] = []
 
-  if (searchTerm.trim().length > 0) {
-    filters.push(
-      or(
-        ilike(users.name, `%${searchTerm}%`),
-        ilike(users.email, `%${searchTerm}%`),
-        ilike(candidates.bio, `%${searchTerm}%`),
-      ),
-    )
-  }
+  const searchCond = buildSearchCondition(searchTerm, [
+    users.name,
+    users.email,
+    candidates.bio,
+  ])
+  if (searchCond) filters.push(searchCond)
 
   if (verifiedOnly) {
     filters.push(
@@ -84,7 +79,7 @@ export async function getTalentSearchPage(
   const whereClause = filters.length > 0 ? and(...filters) : undefined
 
   /* ------------------------------ Query ---------------------------------- */
-  const rows = await db
+  const baseQuery = db
     .select({
       id: candidates.id,
       name: users.name,
@@ -107,11 +102,12 @@ export async function getTalentSearchPage(
     .leftJoin(users, sql`${users.id} = ${candidates.userId}`)
     .where(whereClause as any)
     .orderBy(orderBy)
-    .limit(pageSize + 1)
-    .offset(offset)
 
-  const hasNext = rows.length > pageSize
-  if (hasNext) rows.pop()
+  const { rows, hasNext } = await paginate<TalentRow>(
+    baseQuery as any,
+    page,
+    pageSize,
+  )
 
   return { candidates: rows as TalentRow[], hasNext }
 }
