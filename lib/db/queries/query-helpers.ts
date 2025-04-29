@@ -1,7 +1,11 @@
 import { asc, desc, ilike, or, type SQL } from 'drizzle-orm'
 
+/* -------------------------------------------------------------------------- */
+/*                               ORDER HELPERS                                */
+/* -------------------------------------------------------------------------- */
+
 /**
- * Build an ORDER BY expression from a keyed map of columns.
+ * Build an ORDER BY expression from a map of sortable columns.
  */
 export function buildOrderExpr<T extends Record<string, any>>(
   sortMap: T,
@@ -12,38 +16,44 @@ export function buildOrderExpr<T extends Record<string, any>>(
   return direction === 'asc' ? asc(col) : desc(col)
 }
 
+/* -------------------------------------------------------------------------- */
+/*                            SEARCH HELPERS                                  */
+/* -------------------------------------------------------------------------- */
+
 /**
  * Build a full-text ILIKE search condition across multiple columns.
- * Returns `null` when the search term is blank or when no valid columns are provided.
  *
- * By asserting the first condition we guarantee the accumulator is always a
- * defined SQL object, preventing the `SQL | undefined` union that triggered
- * TS2322.
+ * Returns `null` when the term is blank or when no valid columns are provided.
+ * An explicit loop is used so the accumulator is always a defined `SQL`
+ * instance, and the `or()` result is cast to `SQL<unknown>` to satisfy TS.
  */
 export function buildSearchCondition(
   term: string,
-  columns: any[],
+  columns: (SQL<unknown> | undefined | null)[],
 ): SQL<unknown> | null {
   const t = term.trim()
   if (!t) return null
 
+  /* Filter out falsy columns and generate `ILIKE` conditions */
   const conditions: SQL<unknown>[] = columns
     .filter(Boolean)
-    .map((c) => ilike(c, `%${t}%`))
+    .map((c) => ilike(c as SQL<unknown>, `%${t}%`))
 
   if (conditions.length === 0) return null
 
-  let combined: SQL<unknown> = conditions[0]!
+  /* Combine using OR while keeping the accumulator strongly typed */
+  let combined: SQL<unknown> = conditions[0]
   for (let i = 1; i < conditions.length; i++) {
-    combined = or(combined, conditions[i])
+    combined = or(combined, conditions[i]) as SQL<unknown>
   }
+
   return combined
 }
 
-/**
- * Apply LIMIT/OFFSET pagination and return rows with a hasNext flag.
- * The query builder type is intentionally broad to stay compatible with Drizzle’s builders.
- */
+/* -------------------------------------------------------------------------- */
+/*                              PAGINATION                                    */
+/* -------------------------------------------------------------------------- */
+
 export async function paginate<T>(
   q: any,
   page: number,
