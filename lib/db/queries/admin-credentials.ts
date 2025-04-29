@@ -1,14 +1,17 @@
-import { asc, desc, eq, ilike, or } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 
 import { db } from '../drizzle'
 import { candidateCredentials, candidates } from '../schema/candidate'
 import { users } from '../schema/core'
 import { issuers } from '../schema/issuer'
+
+import {
+  buildOrderExpr,
+  buildSearchCondition,
+  paginate,
+} from './query-helpers'
 import type { AdminCredentialRow } from '@/lib/types/table-rows'
 
-/**
- * Return a page of credentials with full-text search, sorting and pagination.
- */
 export async function getAdminCredentialsPage(
   page: number,
   pageSize = 10,
@@ -16,42 +19,24 @@ export async function getAdminCredentialsPage(
   order: 'asc' | 'desc' = 'desc',
   searchTerm = '',
 ): Promise<{ credentials: AdminCredentialRow[]; hasNext: boolean }> {
-  const offset = (page - 1) * pageSize
+  /* ------------------- Column maps -------------------- */
+  const sortMap = {
+    title: candidateCredentials.title,
+    candidate: users.email,
+    issuer: issuers.name,
+    status: candidateCredentials.status,
+    id: candidateCredentials.id,
+  } as const
 
-  /* ---------------------------- ORDER BY ---------------------------- */
-  const orderBy =
-    sortBy === 'title'
-      ? order === 'asc'
-        ? asc(candidateCredentials.title)
-        : desc(candidateCredentials.title)
-      : sortBy === 'candidate'
-        ? order === 'asc'
-          ? asc(users.email)
-          : desc(users.email)
-        : sortBy === 'issuer'
-          ? order === 'asc'
-            ? asc(issuers.name)
-            : desc(issuers.name)
-          : sortBy === 'status'
-            ? order === 'asc'
-              ? asc(candidateCredentials.status)
-              : desc(candidateCredentials.status)
-            : /* id fallback */ order === 'asc'
-              ? asc(candidateCredentials.id)
-              : desc(candidateCredentials.id)
+  const orderBy = buildOrderExpr(sortMap, sortBy, order)
+  const searchCond = buildSearchCondition(searchTerm, [
+    candidateCredentials.title,
+    users.email,
+    issuers.name,
+  ])
 
-  /* ----------------------------- WHERE ----------------------------- */
-  const whereExpr =
-    searchTerm.trim().length === 0
-      ? undefined
-      : or(
-          ilike(candidateCredentials.title, `%${searchTerm}%`),
-          ilike(users.email, `%${searchTerm}%`),
-          ilike(issuers.name, `%${searchTerm}%`),
-        )
-
-  /* --------------------------- BASE QUERY --------------------------- */
-  const baseQuery = db
+  /* ------------------- Base SELECT -------------------- */
+  let query = db
     .select({
       id: candidateCredentials.id,
       title: candidateCredentials.title,
@@ -66,14 +51,11 @@ export async function getAdminCredentialsPage(
     .leftJoin(candidates, eq(candidateCredentials.candidateId, candidates.id))
     .leftJoin(users, eq(candidates.userId, users.id))
     .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
+    .orderBy(orderBy)
 
-  const query = whereExpr ? baseQuery.where(whereExpr) : baseQuery
+  if (searchCond) query = query.where(searchCond)
 
-  /* ------------------------------ RUN ------------------------------ */
-  const rows = await query.orderBy(orderBy).limit(pageSize + 1).offset(offset)
-
-  const hasNext = rows.length > pageSize
-  if (hasNext) rows.pop()
-
-  return { credentials: rows as AdminCredentialRow[], hasNext }
+  /* ------------------ Pagination ---------------------- */
+  const { rows, hasNext } = await paginate<AdminCredentialRow>(query as any, page, pageSize)
+  return { credentials: rows, hasNext }
 }

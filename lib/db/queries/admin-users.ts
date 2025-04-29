@@ -1,12 +1,13 @@
-import { asc, desc, ilike, or } from 'drizzle-orm'
-
 import { db } from '../drizzle'
 import { users } from '../schema/core'
+
+import {
+  buildOrderExpr,
+  buildSearchCondition,
+  paginate,
+} from './query-helpers'
 import type { AdminUserRow } from '@/lib/types/table-rows'
 
-/**
- * Return a page of users with optional full-text search, sorting and pagination.
- */
 export async function getAdminUsersPage(
   page: number,
   pageSize = 10,
@@ -14,34 +15,19 @@ export async function getAdminUsersPage(
   order: 'asc' | 'desc' = 'desc',
   searchTerm = '',
 ): Promise<{ users: AdminUserRow[]; hasNext: boolean }> {
-  const offset = (page - 1) * pageSize
+  /* ------------------- Column maps -------------------- */
+  const sortMap = {
+    name: users.name,
+    email: users.email,
+    role: users.role,
+    createdAt: users.createdAt,
+  } as const
 
-  /* --------------------------- ORDER BY helper --------------------------- */
-  const orderBy =
-    sortBy === 'name'
-      ? order === 'asc'
-        ? asc(users.name)
-        : desc(users.name)
-      : sortBy === 'email'
-        ? order === 'asc'
-          ? asc(users.email)
-          : desc(users.email)
-        : sortBy === 'role'
-          ? order === 'asc'
-            ? asc(users.role)
-            : desc(users.role)
-          : order === 'asc'
-            ? asc(users.createdAt)
-            : desc(users.createdAt)
+  const orderBy = buildOrderExpr(sortMap, sortBy, order)
+  const searchCond = buildSearchCondition(searchTerm, [users.name, users.email])
 
-  /* ----------------------------- WHERE clause ---------------------------- */
-  const whereClause =
-    searchTerm.trim().length === 0
-      ? null
-      : or(ilike(users.name, `%${searchTerm}%`), ilike(users.email, `%${searchTerm}%`))
-
-  /* ------------------------------ Query ---------------------------------- */
-  let q = db
+  /* ------------------- Base SELECT -------------------- */
+  let query = db
     .select({
       id: users.id,
       name: users.name,
@@ -50,16 +36,11 @@ export async function getAdminUsersPage(
       createdAt: users.createdAt,
     })
     .from(users)
-
-  if (whereClause) q = q.where(whereClause)
-
-  const rows = await q
     .orderBy(orderBy)
-    .limit(pageSize + 1)
-    .offset(offset)
 
-  const hasNext = rows.length > pageSize
-  if (hasNext) rows.pop()
+  if (searchCond) query = query.where(searchCond)
 
-  return { users: rows as AdminUserRow[], hasNext }
+  /* ------------------ Pagination ---------------------- */
+  const { rows, hasNext } = await paginate<AdminUserRow>(query as any, page, pageSize)
+  return { users: rows, hasNext }
 }

@@ -1,13 +1,16 @@
-import { asc, desc, eq, ilike, or } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 
 import { db } from '../drizzle'
 import { users } from '../schema/core'
 import { issuers } from '../schema/issuer'
+
+import {
+  buildOrderExpr,
+  buildSearchCondition,
+  paginate,
+} from './query-helpers'
 import type { AdminIssuerRow } from '@/lib/types/table-rows'
 
-/**
- * Return a page of issuers with full-text search, sorting and pagination.
- */
 export async function getAdminIssuersPage(
   page: number,
   pageSize = 10,
@@ -15,50 +18,26 @@ export async function getAdminIssuersPage(
   order: 'asc' | 'desc' = 'desc',
   searchTerm = '',
 ): Promise<{ issuers: AdminIssuerRow[]; hasNext: boolean }> {
-  const offset = (page - 1) * pageSize
+  /* ------------------- Column maps -------------------- */
+  const sortMap = {
+    name: issuers.name,
+    domain: issuers.domain,
+    owner: users.email,
+    category: issuers.category,
+    industry: issuers.industry,
+    status: issuers.status,
+    id: issuers.id,
+  } as const
 
-  /* --------------------------- ORDER BY helper --------------------------- */
-  const orderBy =
-    sortBy === 'name'
-      ? order === 'asc'
-        ? asc(issuers.name)
-        : desc(issuers.name)
-      : sortBy === 'domain'
-        ? order === 'asc'
-          ? asc(issuers.domain)
-          : desc(issuers.domain)
-        : sortBy === 'owner'
-          ? order === 'asc'
-            ? asc(users.email)
-            : desc(users.email)
-          : sortBy === 'category'
-            ? order === 'asc'
-              ? asc(issuers.category)
-              : desc(issuers.category)
-            : sortBy === 'industry'
-              ? order === 'asc'
-                ? asc(issuers.industry)
-                : desc(issuers.industry)
-              : sortBy === 'status'
-                ? order === 'asc'
-                  ? asc(issuers.status)
-                  : desc(issuers.status)
-                : /* id fallback */ order === 'asc'
-                  ? asc(issuers.id)
-                  : desc(issuers.id)
+  const orderBy = buildOrderExpr(sortMap, sortBy, order)
+  const searchCond = buildSearchCondition(searchTerm, [
+    issuers.name,
+    issuers.domain,
+    users.email,
+  ])
 
-  /* ----------------------------- WHERE clause ---------------------------- */
-  const whereClause =
-    searchTerm.trim().length === 0
-      ? undefined
-      : or(
-          ilike(issuers.name, `%${searchTerm}%`),
-          ilike(issuers.domain, `%${searchTerm}%`),
-          ilike(users.email, `%${searchTerm}%`),
-        )
-
-  /* --------------------------- BASE SELECT ------------------------------- */
-  const baseQuery = db
+  /* ------------------- Base SELECT -------------------- */
+  let query = db
     .select({
       id: issuers.id,
       name: issuers.name,
@@ -70,15 +49,11 @@ export async function getAdminIssuersPage(
     })
     .from(issuers)
     .leftJoin(users, eq(issuers.ownerUserId, users.id))
+    .orderBy(orderBy)
 
-  /* Apply WHERE only when necessary */
-  const query = whereClause ? baseQuery.where(whereClause) : baseQuery
+  if (searchCond) query = query.where(searchCond)
 
-  /* ------------------------------ Query ---------------------------------- */
-  const rows = await query.orderBy(orderBy).limit(pageSize + 1).offset(offset)
-
-  const hasNext = rows.length > pageSize
-  if (hasNext) rows.pop()
-
-  return { issuers: rows as AdminIssuerRow[], hasNext }
+  /* ------------------ Pagination ---------------------- */
+  const { rows, hasNext } = await paginate<AdminIssuerRow>(query as any, page, pageSize)
+  return { issuers: rows, hasNext }
 }
