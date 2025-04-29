@@ -13,30 +13,8 @@ import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import { getProofTx } from '@/lib/utils'
-
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
-
-export interface RowType {
-  id: number
-  title: string
-  candidate: string
-  issuer: string | null
-  status: string
-  proofType: string | null
-  vcJson?: string | null
-}
-
-interface CredentialsTableProps {
-  rows: RowType[]
-  sort: string
-  order: 'asc' | 'desc'
-  basePath: string
-  initialParams: Record<string, string>
-  /** Current search term (from URL). */
-  searchQuery: string
-}
+import type { AdminCredentialRow } from '@/lib/types/table-rows'
+import type { TableProps } from '@/lib/types/table-props'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Table                                    */
@@ -49,11 +27,11 @@ export default function AdminCredentialsTable({
   basePath,
   initialParams,
   searchQuery,
-}: CredentialsTableProps) {
+}: TableProps<AdminCredentialRow>) {
   const router = useRouter()
 
   /* ------------------------ Bulk-selection actions ----------------------- */
-  const bulkActions = useBulkActions<RowType>([
+  const bulkActions = useBulkActions<AdminCredentialRow>([
     {
       label: 'Delete',
       icon: Trash2,
@@ -84,7 +62,7 @@ export default function AdminCredentialsTable({
 
   /* ----------------------- Re-usable row actions -------------------------- */
   const makeActions = React.useCallback(
-    (row: RowType): TableRowAction<RowType>[] => [
+    (row: AdminCredentialRow): TableRowAction<AdminCredentialRow>[] => [
       {
         label: 'Delete',
         icon: Trash2,
@@ -104,7 +82,7 @@ export default function AdminCredentialsTable({
   )
 
   /* ----------------------------- Columns ---------------------------------- */
-  const columns = React.useMemo<Column<RowType>[]>(() => {
+  const columns = React.useMemo<Column<AdminCredentialRow>[]>(() => {
     return [
       {
         key: 'title',
@@ -140,7 +118,7 @@ export default function AdminCredentialsTable({
         render: (v) => <StatusBadge status={String(v)} />,
       },
       {
-        key: 'vcJson', // Proof column
+        key: 'vcJson',
         header: 'Proof',
         sortable: false,
         render: (v) => {

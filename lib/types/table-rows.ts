@@ -3,6 +3,7 @@
  * Keeping these in one place avoids duplication and drift between views.
  */
 
+/* --------------------------- Directory & public -------------------------- */
 export interface CandidateDirectoryRow {
   id: number
   name: string | null
@@ -10,6 +11,7 @@ export interface CandidateDirectoryRow {
   verified: number
 }
 
+/* ------------------------------ Invitations ------------------------------ */
 export interface InvitationRow {
   id: number
   team: string
@@ -19,6 +21,7 @@ export interface InvitationRow {
   invitedAt: Date
 }
 
+/* ------------------------------- Pipelines ------------------------------- */
 export interface PipelineRow {
   id: number
   name: string
@@ -26,6 +29,7 @@ export interface PipelineRow {
   createdAt: string
 }
 
+/* --------------------------- Admin – Issuers ----------------------------- */
 export interface AdminIssuerRow {
   id: number
   name: string
@@ -36,6 +40,7 @@ export interface AdminIssuerRow {
   status: string
 }
 
+/* ------------------------ Candidate – Credentials ------------------------ */
 export interface CandidateCredentialRow {
   id: number
   title: string
@@ -47,6 +52,7 @@ export interface CandidateCredentialRow {
   vcJson: string | null
 }
 
+/* ------------------------------ Recruiter -------------------------------- */
 export interface TalentRow {
   id: number
   name: string | null
@@ -54,4 +60,25 @@ export interface TalentRow {
   bio: string | null
   verified: number
   topScore: number | null
+}
+
+/* ---------------------------- Admin – NEW -------------------------------- */
+/** Row schema for /admin/credentials table. */
+export interface AdminCredentialRow {
+  id: number
+  title: string
+  candidate: string
+  issuer: string | null
+  status: string
+  proofType: string | null
+  vcJson: string | null
+}
+
+/** Row schema for /admin/users table. */
+export interface AdminUserRow {
+  id: number
+  name: string | null
+  email: string
+  role: string
+  createdAt: string
 }

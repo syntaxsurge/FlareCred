@@ -2,11 +2,12 @@ import { redirect } from 'next/navigation'
 
 import { Users } from 'lucide-react'
 
-import AdminUsersTable, { type RowType } from '@/components/dashboard/admin/users-table'
+import AdminUsersTable from '@/components/dashboard/admin/users-table'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getAdminUsersPage } from '@/lib/db/queries/admin-users'
 import { getUser } from '@/lib/db/queries/queries'
+import type { AdminUserRow } from '@/lib/types/table-rows'
 
 export const revalidate = 0
 
@@ -56,7 +57,7 @@ export default async function AdminUsersPage({
     searchTerm,
   )
 
-  const rows: RowType[] = users.map((u) => ({
+  const rows: AdminUserRow[] = users.map((u) => ({
     id: u.id,
     name: u.name,
     email: u.email,

@@ -15,35 +15,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import {
-  DataTable,
-  type Column,
-} from '@/components/ui/tables/data-table'
+import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import { formatDateTime } from '@/lib/utils/time'
-
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
-
-export interface RowType {
-  id: number
-  name: string | null
-  email: string
-  role: string
-  createdAt: string
-}
-
-interface UsersTableProps {
-  rows: RowType[]
-  sort: string
-  order: 'asc' | 'desc'
-  basePath: string
-  initialParams: Record<string, string>
-  searchQuery: string
-}
+import type { AdminUserRow } from '@/lib/types/table-rows'
+import type { TableProps } from '@/lib/types/table-props'
 
 /* -------------------------------------------------------------------------- */
 /*                                   Table                                    */
@@ -56,11 +34,11 @@ export default function AdminUsersTable({
   basePath,
   initialParams,
   searchQuery,
-}: UsersTableProps) {
+}: TableProps<AdminUserRow>) {
   const router = useRouter()
 
   /* ------------------------ Bulk-selection actions ----------------------- */
-  const bulkActions = useBulkActions<RowType>([
+  const bulkActions = useBulkActions<AdminUserRow>([
     {
       label: 'Delete',
       icon: Trash2,
@@ -90,12 +68,12 @@ export default function AdminUsersTable({
   })
 
   /* --------------------------- Edit-dialog state -------------------------- */
-  const [editRow, setEditRow] = React.useState<RowType | null>(null)
+  const [editRow, setEditRow] = React.useState<AdminUserRow | null>(null)
   const [isPending, startTransition] = React.useTransition()
 
   /* ------------------------ Row-level action builder ---------------------- */
   const makeActions = React.useCallback(
-    (row: RowType): TableRowAction<RowType>[] => [
+    (row: AdminUserRow): TableRowAction<AdminUserRow>[] => [
       {
         label: 'Edit',
         icon: Pencil,
@@ -123,7 +101,7 @@ export default function AdminUsersTable({
   )
 
   /* --------------------------- Column definitions ------------------------- */
-  const columns = React.useMemo<Column<RowType>[]>(() => {
+  const columns = React.useMemo<Column<AdminUserRow>[]>(() => {
     return [
       {
         key: 'name',

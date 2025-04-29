@@ -2,11 +2,12 @@ import { redirect } from 'next/navigation'
 
 import { FileText } from 'lucide-react'
 
-import AdminCredentialsTable, { type RowType } from '@/components/dashboard/admin/credentials-table'
+import AdminCredentialsTable from '@/components/dashboard/admin/credentials-table'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getAdminCredentialsPage } from '@/lib/db/queries/admin-credentials'
 import { getUser } from '@/lib/db/queries/queries'
+import type { AdminCredentialRow } from '@/lib/types/table-rows'
 
 export const revalidate = 0
 
@@ -51,14 +52,14 @@ export default async function AdminCredentialsPage({
     searchTerm,
   )
 
-  const rows: RowType[] = credentials.map((c) => ({
+  const rows: AdminCredentialRow[] = credentials.map((c) => ({
     id: c.id,
     title: c.title,
     candidate: c.candidate,
     issuer: c.issuer,
     status: c.status as any,
     proofType: c.proofType,
-    vcJson: c.proofData, // keep existing prop for proofTx column
+    vcJson: c.proofData,
   }))
 
   /* ------------------------ Build initialParams -------------------------- */
