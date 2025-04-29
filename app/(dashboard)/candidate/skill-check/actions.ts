@@ -117,5 +117,5 @@ export async function startQuizAction(formData: FormData) {
     pass: passed ? 1 : 0,
   })
 
-  return { score: aiScore, message, passed, vcHash, signature }
+  return { score: aiScore, message, passed, vcHash, signature, vcJson }
 }

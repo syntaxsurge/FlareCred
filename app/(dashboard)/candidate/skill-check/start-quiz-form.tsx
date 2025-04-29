@@ -3,7 +3,7 @@
 import * as React from 'react'
 import { useState, useEffect, useTransition } from 'react'
 
-import { Copy, Loader2 } from 'lucide-react'
+import { Copy, Loader2, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAccount, useSwitchChain, useWalletClient, usePublicClient } from 'wagmi'
 
@@ -63,7 +63,8 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
   const [score, setScore] = useState<number | null>(null)
   const [message, setMessage] = useState('')
   const [vcHash, setVcHash] = useState<string>('')
-  const [signature, setSignature] = useState<string>('')
+  const [vcJson, setVcJson] = useState<string>('')
+  const [txHash, setTxHash] = useState<string>('')
 
   /* -------------------------------------------------------------------- */
   /*         Fetch RNG seed + derive deterministic question order         */
@@ -76,7 +77,8 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
     setScore(null)
     setMessage('')
     setVcHash('')
-    setSignature('')
+    setVcJson('')
+    setTxHash('')
 
     const abort = new AbortController()
     const max = Math.max(quiz.questions.length, 1) // modulus must be ≥ 1
@@ -114,14 +116,15 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
 
     const toastId = toast.loading('Requesting signature…')
     try {
-      const txHash = await walletClient.writeContract({
+      const tx = await walletClient.writeContract({
         address: CREDENTIAL_NFT_ADDRESS,
         abi: CREDENTIAL_NFT_ABI,
         functionName: 'mintCredential',
         args: [address, hash, '', sig],
       })
-      toast.loading(`Tx sent: ${txHash.slice(0, 10)}…`, { id: toastId })
-      await publicClient?.waitForTransactionReceipt({ hash: txHash })
+      toast.loading(`Tx sent: ${tx.slice(0, 10)}…`, { id: toastId })
+      await publicClient?.waitForTransactionReceipt({ hash: tx })
+      setTxHash(tx)
       toast.success('Skill Pass credential minted!', { id: toastId })
     } catch (err: any) {
       toast.error(err?.message ?? 'Minting failed.', { id: toastId })
@@ -147,7 +150,7 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
 
         if (res.passed && res.vcHash && res.signature) {
           setVcHash(res.vcHash)
-          setSignature(res.signature)
+          if (res.vcJson) setVcJson(res.vcJson)
           await mintCredential(res.vcHash, res.signature)
         }
       } catch (err: any) {
@@ -221,17 +224,45 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
             <p className='text-primary text-4xl font-extrabold'>{score}</p>
             <p className='text-center'>{message}</p>
 
-            <div className='flex items-center gap-2'>
-              <span className='bg-muted rounded-md px-2 py-1 font-mono text-xs'>{seed}</span>
+            {/* Transaction link once minted */}
+            {txHash && (
+              <a
+                href={`https://flarescan.com/tx/${txHash}`}
+                target='_blank'
+                rel='noopener noreferrer'
+                className='inline-flex items-center gap-1 text-primary underline'
+              >
+                View on Flarescan <ExternalLink className='h-4 w-4' />
+              </a>
+            )}
+
+            {/* VC JSON copy button */}
+            {vcJson && (
               <Button
                 variant='ghost'
-                size='icon'
-                onClick={() => copyToClipboard(seed)}
+                size='sm'
+                onClick={() => copyToClipboard(vcJson)}
+                className='inline-flex items-center gap-2'
               >
                 <Copy className='h-4 w-4' />
-                <span className='sr-only'>Copy seed</span>
+                Copy VC JSON
               </Button>
-            </div>
+            )}
+
+            {/* Show seed only before minting (e.g. failed attempt) */}
+            {!txHash && (
+              <div className='flex items-center gap-2'>
+                <span className='bg-muted rounded-md px-2 py-1 font-mono text-xs'>{seed}</span>
+                <Button
+                  variant='ghost'
+                  size='icon'
+                  onClick={() => copyToClipboard(seed)}
+                >
+                  <Copy className='h-4 w-4' />
+                  <span className='sr-only'>Copy seed</span>
+                </Button>
+              </div>
+            )}
 
             <Button variant='outline' onClick={() => setScore(null)}>
               Try Again
