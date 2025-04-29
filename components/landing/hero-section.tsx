@@ -24,7 +24,7 @@ const HERO_FEATURES = [
 export default function HeroSection() {
   return (
     <section className='relative isolate -mx-4 overflow-hidden md:-mx-6'>
-      {/* Decorative gradient backdrop */}
+      {/* Background */}
       <GradientBackdrop />
 
       <div className='relative z-10 mx-auto flex max-w-7xl flex-col items-center px-4 py-32 text-center sm:py-44'>
@@ -55,10 +55,12 @@ export default function HeroSection() {
           ))}
         </ul>
 
-        {/* Call-to-actions */}
+        {/* CTAs */}
         <div className='mt-12 flex flex-wrap justify-center gap-4'>
           <GradientButton href='/connect-wallet'>Launch App</GradientButton>
-          <GradientButton href='/#pricing' tone='outline'>See Pricing</GradientButton>
+          <GradientButton href='/#pricing' tone='outline'>
+            See Pricing
+          </GradientButton>
         </div>
       </div>
     </section>
@@ -71,10 +73,18 @@ export default function HeroSection() {
 
 function GradientBackdrop() {
   return (
-    <div className='pointer-events-none absolute inset-0 -z-10'>
-      <div className='absolute inset-0 bg-[conic-gradient(at_top_left,var(--flare-gradient))] opacity-20 blur-3xl dark:opacity-30' />
-      <div className='absolute top-1/4 -right-80 h-[38rem] w-[38rem] rounded-full bg-flare-gradient opacity-30 blur-3xl' />
-      <div className='absolute bottom-0 -left-72 h-[30rem] w-[30rem] rounded-full bg-flare-gradient opacity-30 blur-2xl' />
+    <div className='pointer-events-none absolute inset-0 -z-10 overflow-hidden'>
+      {/* Radial glow */}
+      <div className='absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.12)_0%,transparent_70%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.06)_0%,transparent_70%)]' />
+
+      {/* Angled flare wave (top-left → bottom-right) */}
+      <div className='absolute -top-[35rem] -left-[28rem] h-[95rem] w-[95rem] -rotate-45 bg-flare-gradient opacity-10 blur-3xl dark:opacity-20' />
+
+      {/* Angled flare wave (bottom-right → top-left) */}
+      <div className='absolute -bottom-[35rem] -right-[28rem] h-[95rem] w-[95rem] rotate-45 bg-flare-gradient opacity-10 blur-3xl dark:opacity-20' />
+
+      {/* Subtle grid overlay */}
+      <div className='absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:60px_60px] opacity-20 dark:opacity-10' />
     </div>
   )
 }
