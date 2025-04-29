@@ -53,6 +53,7 @@ function roleNav(role?: string, counts?: PendingCounts): SidebarNavItem[] {
       return [
         { href: '/recruiter/talent', icon: Users, label: 'Talent' },
         { href: '/recruiter/pipelines', icon: FolderKanban, label: 'Pipelines' },
+        { href: '/recruiter/create-did', icon: Key, label: 'Create DID' },
       ]
     case 'issuer':
       return [
@@ -63,6 +64,7 @@ function roleNav(role?: string, counts?: PendingCounts): SidebarNavItem[] {
           badgeCount: counts?.issuerRequests,
         },
         { href: '/issuer/onboard', icon: ShieldCheck, label: 'Organisation' },
+        { href: '/issuer/create-did', icon: Key, label: 'Create DID' },
       ]
     case 'admin':
       return [
