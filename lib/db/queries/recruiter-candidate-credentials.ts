@@ -4,21 +4,7 @@ import { db } from '../drizzle'
 import { candidateCredentials, CredentialStatus } from '../schema/candidate'
 import { issuers } from '../schema/issuer'
 
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
-
-export type RecruiterCredentialRow = {
-  id: number
-  title: string
-  issuer: string | null
-  status: CredentialStatus
-  verified: boolean
-  fileUrl: string | null
-  proofType: string | null
-  proofData: string | null
-  createdAt: Date
-}
+import type { RecruiterCredentialRow } from '@/lib/types/table-rows'
 
 /* -------------------------------------------------------------------------- */
 /*                             Paginated fetch                                */
@@ -69,13 +55,17 @@ export async function getRecruiterCandidateCredentialsPage(
   const where =
     searchTerm.trim().length === 0
       ? eq(candidateCredentials.candidateId, candidateId)
-      : and(eq(candidateCredentials.candidateId, candidateId), ilike(candidateCredentials.title, `%${searchTerm}%`))
+      : and(
+          eq(candidateCredentials.candidateId, candidateId),
+          ilike(candidateCredentials.title, `%${searchTerm}%`),
+        )
 
   /* ------------------------------ Query ---------------------------------- */
   const rows = await db
     .select({
       id: candidateCredentials.id,
       title: candidateCredentials.title,
+      category: candidateCredentials.category,
       issuer: issuers.name,
       status: candidateCredentials.status,
       verified: candidateCredentials.verified,

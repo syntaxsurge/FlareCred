@@ -4,6 +4,8 @@ import { db } from '@/lib/db/drizzle'
 import { candidateCredentials, CredentialStatus, candidates } from '@/lib/db/schema/candidate'
 import { issuers } from '@/lib/db/schema/issuer'
 
+import type { StatusCounts } from '@/lib/types/candidate'
+
 /* -------------------------------------------------------------------------- */
 /*                                   TYPES                                    */
 /* -------------------------------------------------------------------------- */
@@ -28,14 +30,6 @@ export interface CredentialRow {
 export interface PageResult<T> {
   rows: T[]
   hasNext: boolean
-}
-
-/* Status counter object expected by profile views */
-export interface StatusCounts {
-  verified: number
-  pending: number
-  rejected: number
-  unverified: number
 }
 
 /* -------------------------------------------------------------------------- */
@@ -161,5 +155,5 @@ export async function getCandidateCredentialsSection(
     vcJson: r.vcJson ?? null,
   }))
 
-  return { rows, hasNext, statusCounts: counts }
+  return { rows, hasNext, statusCounts: counts as StatusCounts }
 }

@@ -4,6 +4,8 @@ import { db } from '@/lib/db/drizzle'
 import { candidateCredentials, type CredentialStatus } from '@/lib/db/schema/candidate'
 import { issuers } from '@/lib/db/schema/issuer'
 
+import type { StatusCounts } from '@/lib/types/candidate'
+
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
 /* -------------------------------------------------------------------------- */
@@ -16,13 +18,6 @@ export interface CandidateCredentialRow {
   fileUrl: string | null
   proofType: string | null
   proofData: string | null
-}
-
-export interface StatusCounts {
-  verified: number
-  pending: number
-  rejected: number
-  unverified: number
 }
 
 export interface CandidateCredentialsSection {
