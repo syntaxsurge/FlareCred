@@ -1,12 +1,12 @@
 import { redirect } from 'next/navigation'
-
 import { Building } from 'lucide-react'
 
-import AdminIssuersTable, { type RowType } from '@/components/dashboard/admin/issuers-table'
+import AdminIssuersTable from '@/components/dashboard/admin/issuers-table'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getAdminIssuersPage } from '@/lib/db/queries/admin-issuers'
 import { getUser } from '@/lib/db/queries/queries'
+import type { AdminIssuerRow } from '@/lib/types/table-rows'
 
 export const revalidate = 0
 
@@ -51,7 +51,7 @@ export default async function AdminIssuersPage({
     searchTerm,
   )
 
-  const rows: RowType[] = issuers.map((i) => ({
+  const rows: AdminIssuerRow[] = issuers.map((i) => ({
     id: i.id,
     name: i.name,
     domain: i.domain,
