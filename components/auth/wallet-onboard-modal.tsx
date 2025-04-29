@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import type { WalletOnboardModalProps as Props } from '@/lib/types/components'
+import type { WalletOnboardModalProps } from '@/lib/types/components'
 
 const ROLES = [
   { value: 'candidate', label: 'Candidate' },
@@ -19,7 +19,7 @@ const ROLES = [
   { value: 'issuer', label: 'Issuer' },
 ] as const
 
-export default function WalletOnboardModal({ isConnected, user }: Props) {
+export default function WalletOnboardModal({ isConnected, user }: WalletOnboardModalProps) {
   const { address } = useAccount()
   const router = useRouter()
 

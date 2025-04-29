@@ -8,9 +8,9 @@ import { STAGES, type Stage } from '@/lib/constants/recruiter'
 
 import { updateCandidateStageAction } from './actions'
 
-import type { UpdateStageFormProps as Props } from '@/lib/types/forms'
+import type { UpdateStageFormProps } from '@/lib/types/forms'
 
-export default function UpdateStageForm({ pipelineCandidateId, initialStage }: Props) {
+export default function UpdateStageForm({ pipelineCandidateId, initialStage }: UpdateStageFormProps) {
   const [stage, setStage] = React.useState<Stage>(initialStage)
   const router = useRouter()
 

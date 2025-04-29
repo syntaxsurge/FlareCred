@@ -14,9 +14,9 @@ import {
 
 import { addCandidateToPipelineAction } from '../../pipelines/actions'
 
-import type { AddToPipelineFormProps as Props } from '@/lib/types/forms'
+import type { AddToPipelineFormProps } from '@/lib/types/forms'
 
-export default function AddToPipelineForm({ candidateId, pipelines }: Props) {
+export default function AddToPipelineForm({ candidateId, pipelines }: AddToPipelineFormProps) {
   const router = useRouter()
   const [pipelineId, setPipelineId] = useState<string>('')
 

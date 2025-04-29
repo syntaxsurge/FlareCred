@@ -8,9 +8,9 @@ import { ActionButton } from '@/components/ui/action-button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
-import type { GeneralFormProps as Props } from '@/lib/types/forms'
+import type { GeneralFormProps } from '@/lib/types/forms'
 
-export default function GeneralForm({ defaultName, defaultEmail }: Props) {
+export default function GeneralForm({ defaultName, defaultEmail }: GeneralFormProps) {
   const router = useRouter()
   const [name, setName] = useState(defaultName)
   const [email, setEmail] = useState(defaultEmail)
