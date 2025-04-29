@@ -2,7 +2,6 @@
 
 import Image from 'next/image'
 import * as React from 'react'
-
 import { Eye, Copy as CopyIcon } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -13,41 +12,17 @@ import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
-
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
-
-export interface RowType {
-  id: number
-  name: string
-  domain: string
-  category: string
-  industry: string
-  status: string
-  logoUrl?: string | null
-  did?: string | null
-  createdAt: string
-}
-
-interface Props {
-  rows: RowType[]
-  sort: string
-  order: 'asc' | 'desc'
-  basePath: string
-  initialParams: Record<string, string>
-  searchQuery: string
-}
+import type { IssuerDirectoryRow } from '@/lib/types/table-rows'
+import type { TableProps } from '@/lib/types/table-props'
 
 /* -------------------------------------------------------------------------- */
 /*                        Per-row actions + dialog UI                         */
 /* -------------------------------------------------------------------------- */
 
-function ActionsCell({ row }: { row: RowType }) {
+function ActionsCell({ row }: { row: IssuerDirectoryRow }) {
   const [dialogOpen, setDialogOpen] = React.useState(false)
 
-  /* Build action list once per row */
-  const actions = React.useMemo<TableRowAction<RowType>[]>(() => {
+  const actions = React.useMemo<TableRowAction<IssuerDirectoryRow>[]>(() => {
     return [
       {
         label: 'View DID',
@@ -58,8 +33,7 @@ function ActionsCell({ row }: { row: RowType }) {
     ]
   }, [row.did])
 
-  /* Copy helper */
-  function copyDid() {
+  const copyDid = () => {
     if (!row.did) return
     navigator.clipboard.writeText(row.did).then(() => toast.success('DID copied to clipboard'))
   }
@@ -68,7 +42,6 @@ function ActionsCell({ row }: { row: RowType }) {
     <>
       <TableRowActions row={row} actions={actions} />
 
-      {/* DID dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -102,8 +75,7 @@ export default function IssuersTable({
   basePath,
   initialParams,
   searchQuery,
-}: Props) {
-  /* -------------------- Centralised navigation helpers -------------------- */
+}: TableProps<IssuerDirectoryRow>) {
   const { search, handleSearchChange, sortableHeader } = useTableNavigation({
     basePath,
     initialParams,
@@ -112,13 +84,12 @@ export default function IssuersTable({
     searchQuery,
   })
 
-  /* ----------------------- Bulk-selection actions ------------------------- */
-  const bulkActions = useBulkActions<RowType>([
+  const bulkActions = useBulkActions<IssuerDirectoryRow>([
     {
       label: 'Copy DIDs',
       icon: CopyIcon,
       handler: async (selected) => {
-        const dids = selected.map((r) => r.did).filter(Boolean).join('\\n')
+        const dids = selected.map((r) => r.did).filter(Boolean).join('\n')
         if (!dids) {
           toast.error('No DIDs available in the selection.')
           return
@@ -126,14 +97,12 @@ export default function IssuersTable({
         await navigator.clipboard.writeText(dids)
         toast.success('DIDs copied to clipboard')
       },
-      /* Show when at least one row has a DID */
       isAvailable: (rows) => rows.some((r) => !!r.did),
       isDisabled: (rows) => rows.every((r) => !r.did),
     },
   ])
 
-  /* ----------------------- Column definitions ----------------------------- */
-  const columns = React.useMemo<Column<RowType>[]>(() => {
+  const columns = React.useMemo<Column<IssuerDirectoryRow>[]>(() => {
     return [
       {
         key: 'logoUrl',
@@ -207,7 +176,6 @@ export default function IssuersTable({
     ]
   }, [sortableHeader])
 
-  /* ----------------------------- Render ---------------------------------- */
   return (
     <DataTable
       columns={columns}

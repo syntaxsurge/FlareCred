@@ -1,3 +1,5 @@
+import type { ActivityType } from '@/lib/db/schema'
+
 /**
  * Shared table-row interfaces for DataTable-based UI components.
  * Centralising these definitions eliminates duplication and keeps schemas in sync.
@@ -71,7 +73,6 @@ export interface TalentRow {
 }
 
 /* ---------------------------- Admin – Misc ------------------------------- */
-/** Row schema for /admin/credentials table. */
 export interface AdminCredentialRow {
   id: number
   title: string
@@ -82,7 +83,6 @@ export interface AdminCredentialRow {
   vcJson: string | null
 }
 
-/** Row schema for /admin/users table. */
 export interface AdminUserRow {
   id: number
   name: string | null
@@ -92,7 +92,6 @@ export interface AdminUserRow {
 }
 
 /* ------------------------ Issuer – Requests ------------------------------ */
-/** Row schema for /issuer/requests table. */
 export interface IssuerRequestRow {
   id: number
   title: string
@@ -103,7 +102,6 @@ export interface IssuerRequestRow {
 }
 
 /* ---------------- Recruiter – Candidate Credentials --------------------- */
-/** Row schema for recruiter credential view. */
 export interface RecruiterCredentialRow {
   id: number
   title: string
@@ -121,4 +119,25 @@ export interface MemberRow {
   walletAddress?: string | null
   role: string
   joinedAt: string
+}
+
+/* -------------------- Settings – Activity Logs --------------------------- */
+export interface ActivityLogRow {
+  id: number
+  type: ActivityType
+  ipAddress?: string | null
+  timestamp: string
+}
+
+/* ------------------- Issuer Directory – Issuers -------------------------- */
+export interface IssuerDirectoryRow {
+  id: number
+  name: string
+  domain: string
+  category: string
+  industry: string
+  status: string
+  logoUrl?: string | null
+  did?: string | null
+  createdAt: string
 }

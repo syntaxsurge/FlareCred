@@ -1,7 +1,6 @@
 'use client'
 
 import * as React from 'react'
-
 import {
   Settings,
   LogOut,
@@ -18,28 +17,9 @@ import {
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import { ActivityType } from '@/lib/db/schema'
+import type { ActivityLogRow } from '@/lib/types/table-rows'
+import type { TableProps } from '@/lib/types/table-props'
 import { relativeTime } from '@/lib/utils/time'
-
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
-
-export interface RowType {
-  id: number
-  type: ActivityType
-  ipAddress?: string | null
-  timestamp: string
-}
-
-interface Props {
-  rows: RowType[]
-  sort: string
-  order: 'asc' | 'desc'
-  basePath: string
-  initialParams: Record<string, string>
-  /** Current search term (from URL). */
-  searchQuery: string
-}
 
 /* -------------------------------------------------------------------------- */
 /*                                Icons Map                                   */
@@ -99,8 +79,8 @@ export default function ActivityLogsTable({
   basePath,
   initialParams,
   searchQuery,
-}: Props) {
-  /* -------------------- Centralised navigation helpers -------------------- */
+}: TableProps<ActivityLogRow>) {
+  /* -------------------- Navigation helpers -------------------- */
   const { search, handleSearchChange, sortableHeader } = useTableNavigation({
     basePath,
     initialParams,
@@ -109,8 +89,8 @@ export default function ActivityLogsTable({
     searchQuery,
   })
 
-  /* --------------------------- Column definitions ------------------------- */
-  const columns = React.useMemo<Column<RowType>[]>(() => {
+  /* --------------------------- Columns ------------------------- */
+  const columns = React.useMemo<Column<ActivityLogRow>[]>(() => {
     return [
       {
         key: 'id',
