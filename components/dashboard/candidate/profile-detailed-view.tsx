@@ -389,27 +389,21 @@ export default function CandidateDetailedProfileView({
               </CardTitle>
             </CardHeader>
             <CardContent className='space-y-4'>
-              {passes.rows.length === 0 ? (
-                <p className='text-muted-foreground text-sm'>No passes yet.</p>
-              ) : (
-                <>
-                  <SkillPassesTable
-                    rows={passes.rows}
-                    sort={passes.sort}
-                    order={passes.order}
-                    basePath={passes.pagination.basePath}
-                    initialParams={passes.pagination.initialParams}
-                    searchQuery={passes.pagination.initialParams['passQ'] ?? ''}
-                  />
-                  <TablePagination
-                    page={passes.pagination.page}
-                    hasNext={passes.pagination.hasNext}
-                    basePath={passes.pagination.basePath}
-                    initialParams={passes.pagination.initialParams}
-                    pageSize={passes.pagination.pageSize}
-                  />
-                </>
-              )}
+              <SkillPassesTable
+                rows={passes.rows}
+                sort={passes.sort}
+                order={passes.order}
+                basePath={passes.pagination.basePath}
+                initialParams={passes.pagination.initialParams}
+                searchQuery={passes.pagination.initialParams['passQ'] ?? ''}
+              />
+              <TablePagination
+                page={passes.pagination.page}
+                hasNext={passes.pagination.hasNext}
+                basePath={passes.pagination.basePath}
+                initialParams={passes.pagination.initialParams}
+                pageSize={passes.pagination.pageSize}
+              />
             </CardContent>
           </Card>
         </main>
