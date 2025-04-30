@@ -13,8 +13,9 @@ import { users } from '../schema/core'
 
 /**
  * Shared helper that returns a paginated, searchable and sortable list of
- * recruiter pipelines. When `recruiterId` is supplied the result is filtered
- * to pipelines owned by that recruiter; otherwise all pipelines are returned.
+ * recruiter pipelines. When <code>recruiterId</code> is supplied the result
+ * is filtered to pipelines owned by that recruiter; otherwise all pipelines
+ * are returned.
  */
 export async function getPipelinesPage(
   page: number,
@@ -24,15 +25,14 @@ export async function getPipelinesPage(
   searchTerm = '',
   recruiterId?: number,
 ): Promise<{ pipelines: PipelineListingRow[]; hasNext: boolean }> {
-  /* --------------------------- ORDER BY helper --------------------------- */
+  /* --------------------------- ORDER BY ---------------------------------- */
   const sortMap = {
     name: recruiterPipelines.name,
     createdAt: recruiterPipelines.createdAt,
   } as const
-
   const orderBy = buildOrderExpr(sortMap, sortBy, order)
 
-  /* ----------------------------- WHERE clause ---------------------------- */
+  /* ---------------------------- WHERE ----------------------------------- */
   const searchCond = buildSearchCondition(searchTerm, [recruiterPipelines.name, users.name])
   const filters: any[] = []
   if (recruiterId !== undefined) filters.push(eq(recruiterPipelines.recruiterId, recruiterId))
@@ -40,7 +40,7 @@ export async function getPipelinesPage(
 
   const whereExpr = filters.length > 0 ? and(...filters) : sql`TRUE`
 
-  /* ------------------------------ Query ---------------------------------- */
+  /* ----------------------------- QUERY ---------------------------------- */
   const baseQuery = db
     .select({
       id: recruiterPipelines.id,
@@ -56,9 +56,13 @@ export async function getPipelinesPage(
 
   const { rows, hasNext } = await paginate<PipelineListingRow>(baseQuery as any, page, pageSize)
 
+  /* ---------------------- Normalise createdAt --------------------------- */
   const pipelines = rows.map((r) => ({
     ...r,
-    createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : r.createdAt,
+    createdAt:
+      typeof r.createdAt === 'string'
+        ? r.createdAt
+        : (r.createdAt as Date).toISOString(),
   })) as PipelineListingRow[]
 
   return { pipelines, hasNext }
