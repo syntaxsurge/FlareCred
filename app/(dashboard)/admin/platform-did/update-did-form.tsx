@@ -47,7 +47,9 @@ export default function UpdateDidForm({ defaultDid }: UpdateDidFormProps) {
   /*                              E F F E C T S                         */
   /* ------------------------------------------------------------------ */
   useEffect(() => {
-    if (state?.error) toast.error(state.error)
+    if (state?.error) {
+      toast.error(state.error)
+    }
     if (state?.success) {
       toast.success(state.success)
       if (state.did) {
@@ -56,7 +58,15 @@ export default function UpdateDidForm({ defaultDid }: UpdateDidFormProps) {
       }
       setEditing(false)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state])
+
+  /* Clear "generating” flag as soon as the ActionState finishes */
+  useEffect(() => {
+    if (!saving && generating) {
+      setGenerating(false)
+    }
+  }, [saving, generating])
 
   /* ------------------------------------------------------------------ */
   /*                              H E L P E R S                         */
@@ -67,15 +77,12 @@ export default function UpdateDidForm({ defaultDid }: UpdateDidFormProps) {
     startTransition(() => action(fd))
   }
 
-  async function generateDid() {
-    if (generating) return
+  function generateDid() {
+    if (saving || generating) return
     setGenerating(true)
-    try {
-      const fd = new FormData() // empty → server generates via platform signer
-      await action(fd)
-    } finally {
-      setGenerating(false)
-    }
+    /* Empty FormData → server generates new DID via platform signer */
+    const fd = new FormData()
+    startTransition(() => action(fd))
   }
 
   /* ------------------------------------------------------------------ */
@@ -186,7 +193,7 @@ export default function UpdateDidForm({ defaultDid }: UpdateDidFormProps) {
       {/* Generate button --------------------------------------------------- */}
       <AlertDialog>
         <AlertDialogTrigger asChild>
-          <Button variant='outline' className='w-full sm:w-auto' disabled={generating}>
+          <Button variant='outline' className='w-full sm:w-auto' disabled={generating || saving}>
             {generating ? (
               <>
                 <Loader2 className='mr-2 h-4 w-4 animate-spin' />
@@ -210,7 +217,7 @@ export default function UpdateDidForm({ defaultDid }: UpdateDidFormProps) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={generateDid} disabled={generating}>
+            <AlertDialogAction onClick={generateDid} disabled={generating || saving}>
               {generating ? <Loader2 className='mr-2 h-4 w-4 animate-spin' /> : 'Generate'}
             </AlertDialogAction>
           </AlertDialogFooter>
