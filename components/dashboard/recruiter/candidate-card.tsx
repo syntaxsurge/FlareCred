@@ -72,7 +72,11 @@ export default function CandidateCard({ candidate }: { candidate: Candidate }) {
 
       <CardContent className='pt-0'>
         <Button asChild variant='link' size='sm' className='text-primary h-6 px-0 text-xs'>
-          <Link href={`/recruiter/talent/${candidate.candidateId}`} scroll={false}>
+          <Link
+            href={`/candidates/${candidate.candidateId}`}
+            target='_blank'
+            rel='noopener noreferrer'
+          >
             <Info className='mr-1 h-3 w-3' />
             View Details
           </Link>
