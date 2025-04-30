@@ -1,5 +1,7 @@
 import { and, eq, sql } from 'drizzle-orm'
 
+import type { PipelineListingRow } from '@/lib/types/tables'
+
 import { db } from '../drizzle'
 import { buildOrderExpr, buildSearchCondition, paginate } from './query-helpers'
 import { recruiterPipelines } from '../schema/recruiter'
@@ -8,14 +10,6 @@ import { users } from '../schema/core'
 /* -------------------------------------------------------------------------- */
 /*                         Generic Pipelines Listing                          */
 /* -------------------------------------------------------------------------- */
-
-export interface PipelineListingRow {
-  id: number
-  name: string
-  description: string | null
-  createdAt: Date | string
-  recruiterName: string
-}
 
 /**
  * Shared helper that returns a paginated, searchable and sortable list of

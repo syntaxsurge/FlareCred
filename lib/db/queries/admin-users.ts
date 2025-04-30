@@ -1,7 +1,7 @@
 import type { AdminUserRow } from '@/lib/types/tables'
 
 import { db } from '../drizzle'
-import { buildOrderExpr, buildSearchCondition, paginate } from './query-helpers'
+import { getPaginatedList } from './query-helpers'
 import { users } from '../schema/core'
 
 /* -------------------------------------------------------------------------- */
@@ -15,7 +15,6 @@ export async function getAdminUsersPage(
   order: 'asc' | 'desc' = 'desc',
   searchTerm = '',
 ): Promise<{ users: AdminUserRow[]; hasNext: boolean }> {
-  /* --------------------------- ORDER BY -------------------------------- */
   const sortMap = {
     name: users.name,
     email: users.email,
@@ -23,12 +22,6 @@ export async function getAdminUsersPage(
     createdAt: users.createdAt,
   } as const
 
-  const orderBy = buildOrderExpr(sortMap, sortBy, order)
-
-  /* ---------------------------- WHERE ---------------------------------- */
-  const searchCond = buildSearchCondition(searchTerm, [users.name, users.email])
-
-  /* ----------------------------- QUERY --------------------------------- */
   const baseQuery = db
     .select({
       id: users.id,
@@ -39,11 +32,16 @@ export async function getAdminUsersPage(
     })
     .from(users)
 
-  const filteredQuery = searchCond ? baseQuery.where(searchCond) : baseQuery
-  const orderedQuery = filteredQuery.orderBy(orderBy)
-
-  /* --------------------------- PAGINATE ------------------------------- */
-  const { rows, hasNext } = await paginate<AdminUserRow>(orderedQuery as any, page, pageSize)
+  const { rows, hasNext } = await getPaginatedList<AdminUserRow>(
+    baseQuery,
+    page,
+    pageSize,
+    sortBy,
+    sortMap,
+    order,
+    searchTerm,
+    [users.name, users.email, users.role],
+  )
 
   return { users: rows, hasNext }
 }

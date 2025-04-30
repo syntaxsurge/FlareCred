@@ -64,3 +64,39 @@ export async function paginate<T>(
   if (hasNext) rows.pop()
   return { rows, hasNext }
 }
+
+/* -------------------------------------------------------------------------- */
+/*                        GENERIC PAGINATED LIST HELPER                       */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Execute a paginated, optionally searchable and sortable query.
+ *
+ * @param baseQuery     Drizzle-select query to extend.
+ * @param page          1-based page number.
+ * @param pageSize      Rows per page (max-limit handled upstream).
+ * @param sortBy        Requested sort key.
+ * @param sortMap       Map of valid sort keys → Drizzle columns/SQL.
+ * @param order         'asc' | 'desc' (default 'asc').
+ * @param searchTerm    Raw search string (trimmed internally).
+ * @param searchColumns Columns included in full-text search.
+ */
+export async function getPaginatedList<T>(
+  baseQuery: any,
+  page: number,
+  pageSize: number,
+  sortBy: string,
+  sortMap: Record<string, any>,
+  order: 'asc' | 'desc' = 'asc',
+  searchTerm = '',
+  searchColumns: (SQL<unknown> | unknown | undefined | null)[] = [],
+): Promise<{ rows: T[]; hasNext: boolean }> {
+  const orderBy = buildOrderExpr(sortMap, sortBy, order)
+  const searchCond = buildSearchCondition(searchTerm, searchColumns)
+
+  let q = baseQuery
+  if (searchCond) q = q.where(searchCond)
+  q = q.orderBy(orderBy)
+
+  return paginate<T>(q as any, page, pageSize)
+}

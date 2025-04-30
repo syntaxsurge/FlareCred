@@ -39,6 +39,15 @@ export interface CandidateDirectoryRow {
   verified: number
 }
 
+/** Internal pipeline listing row used by shared pipelines helper */
+export interface PipelineListingRow {
+  id: number
+  name: string
+  description: string | null
+  createdAt: string
+  recruiterName: string
+}
+
 /** Public job listing row */
 export interface JobRow {
   id: number
