@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
-import { Trash2, FileText, Clipboard } from 'lucide-react'
+import { Trash2, FileText, Clipboard, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { deleteCredentialAction } from '@/app/(dashboard)/admin/credentials/actions'
@@ -13,9 +13,12 @@ import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row
 import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { TableProps, CandidateCredentialRow } from '@/lib/types/tables'
-import { getProofTx } from '@/lib/utils'
 import { txUrl } from '@/lib/utils/explorer'
 import { copyToClipboard } from '@/lib/utils'
+
+/* -------------------------------------------------------------------------- */
+/*                        Candidate Credentials Table                         */
+/* -------------------------------------------------------------------------- */
 
 export default function CandidateCredentialsTable({
   rows,
@@ -48,7 +51,7 @@ export default function CandidateCredentialsTable({
     },
   ])
 
-  /* -------------------- Centralised navigation helpers -------------------- */
+  /* -------------------- Centralised navigation helpers ------------------ */
   const { search, handleSearchChange, sortableHeader } = useTableNavigation({
     basePath,
     initialParams,
@@ -57,12 +60,12 @@ export default function CandidateCredentialsTable({
     searchQuery,
   })
 
-  /* ----------------------------- Row actions ------------------------------ */
+  /* --------------------------- Row actions ------------------------------ */
   const makeActions = React.useCallback(
     (row: CandidateCredentialRow): TableRowAction<CandidateCredentialRow>[] => {
       const actions: TableRowAction<CandidateCredentialRow>[] = []
 
-      /* View-file link ----------------------------------------------------- */
+      /* View original file ------------------------------------------------ */
       if (row.fileUrl) {
         actions.push({
           label: 'View file',
@@ -71,7 +74,7 @@ export default function CandidateCredentialsTable({
         })
       }
 
-      /* Copy VC JSON ------------------------------------------------------- */
+      /* Copy raw VC JSON -------------------------------------------------- */
       if (row.vcJson) {
         actions.push({
           label: 'Copy VC JSON',
@@ -80,12 +83,27 @@ export default function CandidateCredentialsTable({
         })
       }
 
-      /* Delete ------------------------------------------------------------- */
+      /* View on-chain transaction ---------------------------------------- */
+      if (row.txHash) {
+        actions.push({
+          label: 'View transaction',
+          icon: ExternalLink,
+          href: txUrl(row.txHash),
+        })
+      } else {
+        actions.push({
+          label: 'No transaction',
+          icon: ExternalLink,
+          disabled: () => true,
+        })
+      }
+
+      /* Delete (single) --------------------------------------------------- */
       actions.push({
         label: 'Delete',
         icon: Trash2,
         variant: 'destructive',
-        onClick: async (_row) => {
+        onClick: async () => {
           const fd = new FormData()
           fd.append('credentialId', row.id.toString())
           const res = await deleteCredentialAction({}, fd)
@@ -99,7 +117,7 @@ export default function CandidateCredentialsTable({
     [router],
   )
 
-  /* ----------------------------- Columns ---------------------------------- */
+  /* ------------------------------- Columns ------------------------------ */
   const columns = React.useMemo<Column<CandidateCredentialRow>[]>(() => {
     return [
       {
@@ -135,26 +153,6 @@ export default function CandidateCredentialsTable({
         render: (v) => <StatusBadge status={String(v)} />,
       },
       {
-        key: 'vcJson',
-        header: 'Proof',
-        sortable: false,
-        render: (_v, row) => {
-          const proofTx = getProofTx(row.vcJson)
-          return proofTx && proofTx !== '0x0' ? (
-            <a
-              href={txUrl(proofTx)}
-              target='_blank'
-              rel='noopener noreferrer'
-              className='text-primary underline'
-            >
-              Verify on Flare
-            </a>
-          ) : (
-            '—'
-          )
-        },
-      },
-      {
         key: 'id',
         header: '',
         enableHiding: false,
@@ -164,7 +162,7 @@ export default function CandidateCredentialsTable({
     ]
   }, [sortableHeader, makeActions])
 
-  /* ------------------------------- View ---------------------------------- */
+  /* ------------------------------ Render ------------------------------- */
   return (
     <DataTable
       columns={columns}
@@ -173,6 +171,7 @@ export default function CandidateCredentialsTable({
       filterValue={search}
       onFilterChange={handleSearchChange}
       bulkActions={bulkActions}
+      /* Disable client-side pagination – handled by server TablePagination */
       pageSize={rows.length}
       pageSizeOptions={[rows.length]}
       hidePagination
