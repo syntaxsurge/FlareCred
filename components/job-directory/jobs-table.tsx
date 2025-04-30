@@ -12,7 +12,7 @@ import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { TableProps, JobRow } from '@/lib/types/tables'
 
 /* -------------------------------------------------------------------------- */
-/*                                C O M P O N E N T                           */
+/*                              J O B S   T A B L E                           */
 /* -------------------------------------------------------------------------- */
 
 export default function JobsTable({
@@ -25,9 +25,7 @@ export default function JobsTable({
 }: TableProps<JobRow>) {
   const router = useRouter()
 
-  /* ---------------------------------------------------------------------- */
-  /* Centralised navigation helpers                                         */
-  /* ---------------------------------------------------------------------- */
+  /* Centralised table-navigation helpers */
   const { search, handleSearchChange, sortableHeader } = useTableNavigation({
     basePath,
     initialParams,
@@ -36,20 +34,20 @@ export default function JobsTable({
     searchQuery,
   })
 
-  /* ---------------------------------------------------------------------- */
-  /* Column definitions                                                     */
-  /* ---------------------------------------------------------------------- */
+  /* Column configuration */
   const columns = React.useMemo<Column<JobRow>[]>(() => {
     return [
       {
         key: 'name',
         header: sortableHeader('Job Title', 'name'),
         sortable: false,
+        render: (v) => <span className='font-medium'>{v as string}</span>,
       },
       {
         key: 'recruiter',
         header: sortableHeader('Recruiter', 'recruiter'),
         sortable: false,
+        render: (v) => (v ? (v as string) : '—'),
       },
       {
         key: 'createdAt',
@@ -62,14 +60,13 @@ export default function JobsTable({
         header: 'Description',
         enableHiding: true,
         sortable: false,
-        render: (v) => (
-          <span className='line-clamp-2 max-w-xs text-muted-foreground'>{v as string}</span>
-        ),
+        /* Show full description – no truncation */
+        render: (v) => <span className='text-muted-foreground'>{v as string}</span>,
       },
       {
         key: 'id',
         header: 'Apply',
-        enableHiding: false, // prevent blank entry in columns dropdown
+        enableHiding: false,
         sortable: false,
         render: (_v, row) => (
           <ApplyButton pipelineId={row.id} onDone={() => router.refresh()} />
@@ -78,9 +75,6 @@ export default function JobsTable({
     ]
   }, [sortableHeader, router])
 
-  /* ---------------------------------------------------------------------- */
-  /* Render                                                                 */
-  /* ---------------------------------------------------------------------- */
   return (
     <DataTable
       columns={columns}
@@ -96,7 +90,7 @@ export default function JobsTable({
 }
 
 /* -------------------------------------------------------------------------- */
-/*                             A P P L Y  B U T T O N                         */
+/*                                 A P P L Y                                  */
 /* -------------------------------------------------------------------------- */
 
 function ApplyButton({ pipelineId, onDone }: { pipelineId: number; onDone: () => void }) {

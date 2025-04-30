@@ -17,7 +17,7 @@ export async function getJobOpeningsPage(
   order: 'asc' | 'desc' = 'desc',
   searchTerm = '',
 ): Promise<{ jobs: JobRow[]; hasNext: boolean }> {
-  /* --------------------------- Query execution --------------------------- */
+  /* Internally map "recruiter” sort to recruiter name (string) */
   const mappedSort: 'name' | 'createdAt' = sortBy === 'recruiter' ? 'name' : sortBy
 
   const { pipelines, hasNext } = await getPipelinesPage(
@@ -29,14 +29,16 @@ export async function getJobOpeningsPage(
     undefined, // no recruiterId filter – public listing
   )
 
-  /* ---------------------------- Normalisation ---------------------------- */
+  /* Normalise rows with safe fall-backs */
   const jobs: JobRow[] = pipelines.map((p) => ({
     id: p.id,
-    name: p.name,
-    recruiter: p.recruiterName,
-    description: p.description,
-    // createdAt is already serialised to an ISO string by getPipelinesPage
-    createdAt: p.createdAt,
+    name: p.name ?? '(Untitled)',
+    recruiter: p.recruiterName ?? 'Unknown',
+    description: p.description ?? '',
+    createdAt:
+      typeof p.createdAt === 'string'
+        ? p.createdAt
+        : (p.createdAt as Date).toISOString(),
   }))
 
   return { jobs, hasNext }
