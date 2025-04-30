@@ -11,6 +11,10 @@ import { useAccount } from 'wagmi'
  * Connect Wallet — prompts visitors to connect a wallet before using the app.
  * After the wallet connects, we verify that the backend has established a
  * session (`/api/auth/wallet-status`) before redirecting to the dashboard.
+ *
+ * To guarantee fresh role-specific data, we append a timestamp to the target
+ * URL so that the App Router performs a new server render instead of reusing
+ * cached RSC output from a previous session.
  */
 export default function ConnectWalletPage() {
   const router = useRouter()
@@ -34,7 +38,10 @@ export default function ConnectWalletPage() {
         const json = await res.json().catch(() => ({}))
 
         if (!cancelled && res.ok && json?.exists) {
-          router.replace('/dashboard')
+          /* Cache-bust by appending a timestamp so the dashboard layout
+             always re-renders with the correct role-specific sidebar. */
+          router.replace(`/dashboard?t=${Date.now()}`)
+          return
         }
       } finally {
         if (!cancelled) setChecking(false)
