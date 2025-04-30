@@ -4,12 +4,7 @@
 import { useRouter, usePathname } from 'next/navigation'
 import { ReactNode, useEffect, useRef } from 'react'
 
-import {
-  getDefaultConfig,
-  RainbowKitProvider,
-  darkTheme,
-  lightTheme,
-} from '@rainbow-me/rainbowkit'
+import { getDefaultConfig, RainbowKitProvider, darkTheme, lightTheme } from '@rainbow-me/rainbowkit'
 import '@rainbow-me/rainbowkit/styles.css'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useTheme } from 'next-themes'
@@ -26,7 +21,9 @@ export const flare = {
   name: 'Flare',
   nativeCurrency: { name: 'Flare', symbol: 'FLR', decimals: 18 },
   rpcUrls: { default: { http: ['https://flare-api.flare.network/ext/C/rpc'] } },
-  blockExplorers: { default: { name: 'Flare Explorer', url: 'https://flare-explorer.flare.network' } },
+  blockExplorers: {
+    default: { name: 'Flare Explorer', url: 'https://flare-explorer.flare.network' },
+  },
   testnet: false,
 } as const
 
@@ -35,7 +32,9 @@ export const coston2 = {
   name: 'Coston2',
   nativeCurrency: { name: 'Coston Flare', symbol: 'CFLR', decimals: 18 },
   rpcUrls: { default: { http: ['https://coston2-api.flare.network/ext/C/rpc'] } },
-  blockExplorers: { default: { name: 'Coston2 Explorer', url: 'https://coston2-explorer.flare.network' } },
+  blockExplorers: {
+    default: { name: 'Coston2 Explorer', url: 'https://coston2-explorer.flare.network' },
+  },
   testnet: true,
 } as const
 
@@ -105,7 +104,6 @@ function WalletConnectionListener() {
   /* -------- First connect: establish/refresh session then redirect/refresh --- */
   useEffect(() => {
     if (!isConnected || !address || sessionAlreadyEnsured()) return
-
     ;(async () => {
       try {
         const res = await fetch(`/api/auth/wallet-status?address=${address}`, {

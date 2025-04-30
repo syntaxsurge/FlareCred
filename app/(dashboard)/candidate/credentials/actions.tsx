@@ -36,13 +36,10 @@ const AddCredentialSchema = z
     proofData: z.string().optional().default(''),
     issuerId: z.coerce.number().optional(),
   })
-  .refine(
-    (data) => data.proofType === 'NONE' || data.proofData.trim().length > 0,
-    {
-      message: 'Proof is required for the selected proof type.',
-      path: ['proofData'],
-    },
-  )
+  .refine((data) => data.proofType === 'NONE' || data.proofData.trim().length > 0, {
+    message: 'Proof is required for the selected proof type.',
+    path: ['proofData'],
+  })
 
 /* -------------------------------------------------------------------------- */
 /*                           S E R V E R   A C T I O N                         */
@@ -50,11 +47,7 @@ const AddCredentialSchema = z
 
 export const addCredential = validatedActionWithUser(
   AddCredentialSchema,
-  async (
-    { title, category, type, fileUrl, proofType, proofData, issuerId },
-    _formData,
-    user,
-  ) => {
+  async ({ title, category, type, fileUrl, proofType, proofData, issuerId }, _formData, user) => {
     /* --------------------------- issuer lookup -------------------------- */
     let linkedIssuerId: number | undefined
     let status: CredentialStatus = CredentialStatus.UNVERIFIED
@@ -93,10 +86,7 @@ export const addCredential = validatedActionWithUser(
       .limit(1)
 
     if (!candidate) {
-      const [newCand] = await db
-        .insert(candidates)
-        .values({ userId: user.id, bio: '' })
-        .returning()
+      const [newCand] = await db.insert(candidates).values({ userId: user.id, bio: '' }).returning()
       candidate = newCand
     }
 

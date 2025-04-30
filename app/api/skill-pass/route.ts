@@ -1,13 +1,11 @@
 import { NextResponse } from 'next/server'
-import { z } from 'zod'
+
 import { eq } from 'drizzle-orm'
+import { z } from 'zod'
 
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
-import {
-  quizAttempts,
-  candidates,
-} from '@/lib/db/schema/candidate'
+import { quizAttempts, candidates } from '@/lib/db/schema/candidate'
 
 /* -------------------------------------------------------------------------- */
 /*                  P A Y L O A D   &   V A L I D A T I O N                   */
@@ -39,10 +37,7 @@ export async function POST(req: Request) {
       .limit(1)
 
     if (!candidateRow) {
-      const [created] = await db
-        .insert(candidates)
-        .values({ userId: user.id, bio: '' })
-        .returning()
+      const [created] = await db.insert(candidates).values({ userId: user.id, bio: '' }).returning()
       candidateRow = created
     }
 
@@ -63,9 +58,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true })
   } catch (err: any) {
     console.error(err)
-    return NextResponse.json(
-      { error: err?.message ?? 'Internal Server Error' },
-      { status: 500 },
-    )
+    return NextResponse.json({ error: err?.message ?? 'Internal Server Error' }, { status: 500 })
   }
 }

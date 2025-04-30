@@ -17,8 +17,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { PROOF_TYPES } from '@/lib/constants/credential'
-import type { AddCredentialFormProps } from '@/lib/types/forms'
 import { ProofType } from '@/lib/types/credential'
+import type { AddCredentialFormProps } from '@/lib/types/forms'
 
 /* -------------------------------------------------------------------------- */
 /*                                 CONSTANTS                                  */

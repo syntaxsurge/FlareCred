@@ -64,10 +64,10 @@ export default function DeepDiveSection() {
               className='group/card'
             >
               {/* gradient halo wrapper */}
-              <div className='rounded-3xl bg-flare-gradient p-[2px]'>
+              <div className='bg-flare-gradient rounded-3xl p-[2px]'>
                 <Card className='border-border/60 bg-background/70 h-full rounded-[inherit] border backdrop-blur'>
                   <CardHeader className='flex flex-col items-center gap-4 py-10 text-center'>
-                    <div className='inline-flex size-16 items-center justify-center rounded-full bg-flare-gradient text-white shadow-lg'>
+                    <div className='bg-flare-gradient inline-flex size-16 items-center justify-center rounded-full text-white shadow-lg'>
                       <Icon className='h-8 w-8' />
                     </div>
                     <CardTitle className='text-foreground text-2xl'>{title}</CardTitle>

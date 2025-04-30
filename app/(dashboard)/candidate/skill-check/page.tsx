@@ -1,15 +1,12 @@
-import { Bot } from 'lucide-react'
 import { inArray } from 'drizzle-orm'
+import { Bot } from 'lucide-react'
 
 import RequireDidGate from '@/components/dashboard/require-did-gate'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import PageCard from '@/components/ui/page-card'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
-import {
-  skillQuizzes,
-  skillQuizQuestions,
-} from '@/lib/db/schema/candidate'
+import { skillQuizzes, skillQuizQuestions } from '@/lib/db/schema/candidate'
 
 import StartQuizForm from './start-quiz-form'
 
@@ -26,10 +23,7 @@ export default async function SkillCheckPage() {
   const questionsRows =
     ids.length === 0
       ? []
-      : await db
-          .select()
-          .from(skillQuizQuestions)
-          .where(inArray(skillQuizQuestions.quizId, ids))
+      : await db.select().from(skillQuizQuestions).where(inArray(skillQuizQuestions.quizId, ids))
 
   const questionsByQuiz = new Map<number, { id: number; prompt: string }[]>()
   for (const q of questionsRows) {

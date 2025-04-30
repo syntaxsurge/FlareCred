@@ -5,10 +5,7 @@ import { eq } from 'drizzle-orm'
 import { PLATFORM_ISSUER_DID } from '@/lib/config'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
-import {
-  candidates,
-  skillQuizzes,
-} from '@/lib/db/schema/candidate'
+import { candidates, skillQuizzes } from '@/lib/db/schema/candidate'
 import { teams, teamMembers } from '@/lib/db/schema/core'
 import { extractAddressFromDid, toBytes32 } from '@/lib/utils/address'
 import { signCredentialMint } from '@/lib/utils/signature'
@@ -32,8 +29,7 @@ export async function startQuizAction(formData: FormData) {
   const seed = formData.get('seed') as string | null
 
   if (!quizId || !answer) return { score: 0, message: 'Invalid request.' }
-  if (!seed || !/^0x[0-9a-fA-F]{1,64}$/.test(seed))
-    return { score: 0, message: 'Invalid seed.' }
+  if (!seed || !/^0x[0-9a-fA-F]{1,64}$/.test(seed)) return { score: 0, message: 'Invalid seed.' }
 
   /* ------------------------------------------------------------------ */
   /*                     Candidate profile ensure                       */
@@ -45,10 +41,7 @@ export async function startQuizAction(formData: FormData) {
     .limit(1)
 
   if (!candidateRow) {
-    const [created] = await db
-      .insert(candidates)
-      .values({ userId: user.id, bio: '' })
-      .returning()
+    const [created] = await db.insert(candidates).values({ userId: user.id, bio: '' }).returning()
     candidateRow = created
   }
 
@@ -63,8 +56,7 @@ export async function startQuizAction(formData: FormData) {
     .limit(1)
 
   const subjectDid = teamRow?.did ?? null
-  if (!subjectDid)
-    return { score: 0, message: 'Please create your team DID before taking a quiz.' }
+  if (!subjectDid) return { score: 0, message: 'Please create your team DID before taking a quiz.' }
 
   /* ------------------------------------------------------------------ */
   /*                           Quiz lookup                              */
@@ -111,8 +103,7 @@ export async function startQuizAction(formData: FormData) {
       }
     }
     signature = await signCredentialMint(toAddr, vcHash, '')
-    message +=
-      ' Sign the next transaction to anchor your Skill Pass credential on-chain.'
+    message += ' Sign the next transaction to anchor your Skill Pass credential on-chain.'
   }
 
   /* No DB writes here – the attempt will be saved after mint success */

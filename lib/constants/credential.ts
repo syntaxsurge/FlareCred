@@ -2,7 +2,7 @@
 /*                    Credential-related runtime constants                    */
 /* -------------------------------------------------------------------------- */
 
-import type { ProofType, CredentialType } from '@/lib/types/credential'
+import type { CredentialType } from '@/lib/types/credential'
 
 /**
  * Ordered list of supported proof mechanisms.
@@ -28,8 +28,6 @@ export const GITHUB_REPO_CREDENTIAL_TYPE: CredentialType = 'github_repo'
  *
  * @param type – Credential "type” field (may be null / undefined).
  */
-export function isGithubRepoCredential(
-  type: string | null | undefined,
-): type is 'github_repo' {
+export function isGithubRepoCredential(type: string | null | undefined): type is 'github_repo' {
   return type === GITHUB_REPO_CREDENTIAL_TYPE
 }

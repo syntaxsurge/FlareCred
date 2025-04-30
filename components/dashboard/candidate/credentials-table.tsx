@@ -13,8 +13,8 @@ import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row
 import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { TableProps, CandidateCredentialRow } from '@/lib/types/tables'
-import { txUrl } from '@/lib/utils/explorer'
 import { copyToClipboard } from '@/lib/utils'
+import { txUrl } from '@/lib/utils/explorer'
 
 /* -------------------------------------------------------------------------- */
 /*                        Candidate Credentials Table                         */

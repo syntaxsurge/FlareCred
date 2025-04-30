@@ -3,7 +3,6 @@
 import * as React from 'react'
 
 import { ExternalLink } from 'lucide-react'
-import { toast } from 'sonner'
 
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
@@ -38,29 +37,26 @@ export default function SkillPassesTable({
   })
 
   /* --------------------------- Row actions ------------------------------ */
-  const makeActions = React.useCallback(
-    (row: SkillPassRow): TableRowAction<SkillPassRow>[] => {
-      const actions: TableRowAction<SkillPassRow>[] = []
+  const makeActions = React.useCallback((row: SkillPassRow): TableRowAction<SkillPassRow>[] => {
+    const actions: TableRowAction<SkillPassRow>[] = []
 
-      if (row.txHash) {
-        actions.push({
-          label: 'View Transaction',
-          icon: ExternalLink,
-          href: txUrl(row.txHash),
-        })
-      } else {
-        /* Inform user when no on-chain link is available */
-        actions.push({
-          label: 'No transaction',
-          icon: ExternalLink,
-          disabled: () => true,
-        })
-      }
+    if (row.txHash) {
+      actions.push({
+        label: 'View Transaction',
+        icon: ExternalLink,
+        href: txUrl(row.txHash),
+      })
+    } else {
+      /* Inform user when no on-chain link is available */
+      actions.push({
+        label: 'No transaction',
+        icon: ExternalLink,
+        disabled: () => true,
+      })
+    }
 
-      return actions
-    },
-    [],
-  )
+    return actions
+  }, [])
 
   /* ------------------------------ Columns ------------------------------- */
   const columns = React.useMemo<Column<SkillPassRow>[]>(() => {

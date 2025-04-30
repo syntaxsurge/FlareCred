@@ -1,18 +1,12 @@
 import { redirect } from 'next/navigation'
+import type { ElementType } from 'react'
 
 import { eq, and } from 'drizzle-orm'
 import { BadgeCheck, Clock, XCircle, FileText, Github } from 'lucide-react'
-import type { ElementType } from 'react'
 
 import { CredentialActions } from '@/components/dashboard/issuer/credential-actions'
 import RequireDidGate from '@/components/dashboard/require-did-gate'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import {
   Dialog,
   DialogTrigger,
@@ -24,11 +18,7 @@ import PageCard from '@/components/ui/page-card'
 import { isGithubRepoCredential } from '@/lib/constants/credential'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
-import {
-  candidateCredentials,
-  CredentialStatus,
-  candidates,
-} from '@/lib/db/schema/candidate'
+import { candidateCredentials, CredentialStatus, candidates } from '@/lib/db/schema/candidate'
 import { users } from '@/lib/db/schema/core'
 import { issuers } from '@/lib/db/schema/issuer'
 import { cn } from '@/lib/utils'
@@ -52,15 +42,13 @@ function statusIcon(status: CredentialStatus): ElementType {
 }
 
 function StatusBadge({ status }: { status: CredentialStatus }) {
-  const cls =
-    'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize'
+  const cls = 'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize'
   const map: Record<CredentialStatus, string> = {
     [CredentialStatus.VERIFIED]:
       'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
     [CredentialStatus.PENDING]:
       'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-    [CredentialStatus.REJECTED]:
-      'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
+    [CredentialStatus.REJECTED]: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
     [CredentialStatus.UNVERIFIED]: 'bg-muted text-foreground/80',
   }
   return <span className={cn(cls, map[status])}>{status.toLowerCase()}</span>
@@ -110,11 +98,7 @@ export default async function CredentialDetailPage({
   const user = await getUser()
   if (!user) redirect('/connect-wallet')
 
-  const [issuer] = await db
-    .select()
-    .from(issuers)
-    .where(eq(issuers.ownerUserId, user.id))
-    .limit(1)
+  const [issuer] = await db.select().from(issuers).where(eq(issuers.ownerUserId, user.id)).limit(1)
   if (!issuer) redirect('/issuer/onboard')
 
   /* Credential lookup ------------------------------------------------------ */
@@ -155,12 +139,10 @@ export default async function CredentialDetailPage({
       >
         <div className='space-y-6'>
           {/* Meta row ------------------------------------------------------- */}
-          <div className='flex flex-wrap gap-4 items-center'>
+          <div className='flex flex-wrap items-center gap-4'>
             <p className='text-muted-foreground text-sm'>
               Submitted by{' '}
-              <span className='font-medium'>
-                {candUser?.name || candUser?.email || 'Unknown'}
-              </span>
+              <span className='font-medium'>{candUser?.name || candUser?.email || 'Unknown'}</span>
             </p>
             <StatusBadge status={status} />
           </div>

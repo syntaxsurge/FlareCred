@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+
 import { motion } from 'framer-motion'
 
 import { Button } from '@/components/ui/button'
@@ -20,7 +21,7 @@ export default function CTASection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
-          className='text-balance text-4xl font-extrabold tracking-tight text-white sm:text-5xl md:text-6xl'
+          className='text-4xl font-extrabold tracking-tight text-balance text-white sm:text-5xl md:text-6xl'
         >
           <span className='text-flare-gradient animate-flare-gradient'>
             Flare-Native&nbsp;Trust&nbsp;
@@ -67,7 +68,7 @@ function GradientBackdrop() {
   return (
     <div className='pointer-events-none absolute inset-0 -z-10 overflow-hidden'>
       {/* Animated flare gradient */}
-      <div className='absolute inset-0 bg-flare-gradient animate-flare-gradient opacity-70' />
+      <div className='bg-flare-gradient animate-flare-gradient absolute inset-0 opacity-70' />
 
       {/* Radial glow for depth */}
       <div className='absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.25)_0%,transparent_70%)]' />

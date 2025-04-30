@@ -53,10 +53,7 @@ export async function randomMod(bound: number | bigint): Promise<bigint> {
  * the current ABI encoder cannot map deeply nested tuples (observed error:
  * "invalid tuple value").
  */
-export async function verifyFdcProof(
-  proofType: string,
-  proofData: unknown,
-): Promise<boolean> {
+export async function verifyFdcProof(proofType: string, proofData: unknown): Promise<boolean> {
   /* Fast-path: credentials with no structured proof are automatically valid. */
   const type = proofType.trim().toUpperCase()
   if (type === 'NONE' || type === '') {
@@ -135,9 +132,7 @@ export async function createFlareDID(args?: SignerArgs & { docHash?: string }) {
     DID_REGISTRY_ABI as InterfaceAbi,
     signer,
   )
-  const receipt = await (
-    await registryWrite.createDID(args?.docHash ?? ethers.ZeroHash)
-  ).wait()
+  const receipt = await (await registryWrite.createDID(args?.docHash ?? ethers.ZeroHash)).wait()
 
   return {
     did: await didRegistry.didOf(await signer.getAddress()),
@@ -179,10 +174,7 @@ export async function issueFlareCredential(
         return null
       }
     })
-    .find(
-      (d: LogDescription | null): d is LogDescription =>
-        !!d && d.name === 'CredentialMinted',
-    )
+    .find((d: LogDescription | null): d is LogDescription => !!d && d.name === 'CredentialMinted')
 
   if (!parsedLog) throw new Error('CredentialMinted event not found')
 

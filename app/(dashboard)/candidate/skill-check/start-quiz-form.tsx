@@ -186,9 +186,7 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
         <DialogHeader>
           <DialogTitle>{quiz.title}</DialogTitle>
           {quiz.description && (
-            <DialogDescription className='line-clamp-3'>
-              {quiz.description}
-            </DialogDescription>
+            <DialogDescription className='line-clamp-3'>{quiz.description}</DialogDescription>
           )}
         </DialogHeader>
 
@@ -206,10 +204,7 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
             )}
 
             <div>
-              <label
-                htmlFor={`answer-${quiz.id}`}
-                className='mb-1 block text-sm font-medium'
-              >
+              <label htmlFor={`answer-${quiz.id}`} className='mb-1 block text-sm font-medium'>
                 Your Answer
               </label>
               <textarea
@@ -244,7 +239,7 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
                 href={txUrl(txHash)}
                 target='_blank'
                 rel='noopener noreferrer'
-                className='inline-flex items-center gap-1 text-primary underline'
+                className='text-primary inline-flex items-center gap-1 underline'
               >
                 View Transaction <ExternalLink className='h-4 w-4' />
               </a>

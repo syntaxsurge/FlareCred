@@ -1,4 +1,4 @@
-import { and, eq, inArray } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 
 import { db } from '../drizzle'
 import { skillQuizzes, skillQuizQuestions } from '../schema/candidate'
@@ -166,13 +166,10 @@ export async function seedQuizzes() {
     /* Top-up with placeholders if promised < MIN_QUESTIONS */
     const updatedCount = present.size + inserts.length
     if (updatedCount < MIN_QUESTIONS) {
-      const placeholders = Array.from(
-        { length: MIN_QUESTIONS - updatedCount },
-        (_, i) => ({
-          quizId: quiz.id,
-          prompt: `${quiz.title} – Extra Question ${i + 1}`,
-        }),
-      )
+      const placeholders = Array.from({ length: MIN_QUESTIONS - updatedCount }, (_, i) => ({
+        quizId: quiz.id,
+        prompt: `${quiz.title} – Extra Question ${i + 1}`,
+      }))
       await db.insert(skillQuizQuestions).values(placeholders)
       console.log(
         `📄  Added ${placeholders.length} placeholder question${

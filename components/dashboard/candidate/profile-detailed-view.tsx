@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 
 import {
   Award,
@@ -10,15 +10,14 @@ import {
   Briefcase,
   ChevronDown,
   ChevronUp,
-  Copy,
   Download,
   ExternalLink,
   Globe2,
 } from 'lucide-react'
 import { FaTwitter } from 'react-icons/fa'
 import { SiGithub, SiLinkedin } from 'react-icons/si'
-import { toast } from 'sonner'
 
+import SkillPassesTable from '@/components/dashboard/candidate/skill-passes-table'
 import CredentialsTable from '@/components/dashboard/recruiter/credentials-table'
 import PipelineEntriesTable from '@/components/dashboard/recruiter/pipeline-entries-table'
 import { Button } from '@/components/ui/button'
@@ -26,13 +25,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import StatusBadge from '@/components/ui/status-badge'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
-import SkillPassesTable from '@/components/dashboard/candidate/skill-passes-table'
-import { copyToClipboard } from '@/lib/utils'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { SnapshotMetrics } from '@/lib/types/candidate'
 import type { CandidateDetailedProfileViewProps as Props } from '@/lib/types/components'
-import { prettyDate } from '@/lib/utils/time'
-import { txUrl } from '@/lib/utils/explorer'
 
 import ProfileHeader from './profile-header'
 

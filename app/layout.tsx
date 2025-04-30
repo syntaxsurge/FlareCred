@@ -35,12 +35,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   /* --------------------------- Downtime screen --------------------------- */
   if (!dbOk) {
     return (
-      <html lang="en" className={`bg-background text-foreground ${inter.className}`}>
-        <body className="flex min-h-screen flex-col items-center justify-center px-4 text-center">
-          <h1 className="text-4xl font-extrabold tracking-tight">
+      <html lang='en' className={`bg-background text-foreground ${inter.className}`}>
+        <body className='flex min-h-screen flex-col items-center justify-center px-4 text-center'>
+          <h1 className='text-4xl font-extrabold tracking-tight'>
             Our database is having a nap 😴
           </h1>
-          <p className="text-muted-foreground mt-4 max-w-md">
+          <p className='text-muted-foreground mt-4 max-w-md'>
             We’re unable to reach the FlareCred database right now. Please try again in a few
             minutes while we reconnect everything behind the scenes.
           </p>
@@ -54,22 +54,22 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html
-      lang="en"
+      lang='en'
       className={`bg-background text-foreground ${inter.className}`}
       suppressHydrationWarning
     >
-      <body className="min-h-[100dvh]">
+      <body className='min-h-[100dvh]'>
         <PublicEnvScript />
 
         <Web3Provider>
           <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
+            attribute='class'
+            defaultTheme='system'
             enableSystem
             disableTransitionOnChange
           >
             <Toaster
-              position="bottom-right"
+              position='bottom-right'
               toastOptions={{
                 classNames: {
                   toast:
@@ -88,7 +88,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
             <UserProvider userPromise={userPromise}>
               <SiteHeader />
-              <main className="mx-auto max-w-7xl px-4 py-4 md:px-6">{children}</main>
+              <main className='mx-auto max-w-7xl px-4 py-4 md:px-6'>{children}</main>
             </UserProvider>
           </ThemeProvider>
         </Web3Provider>

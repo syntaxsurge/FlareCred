@@ -1,10 +1,10 @@
-import { asc, desc, eq, and } from 'drizzle-orm'
+import { asc, eq, and } from 'drizzle-orm'
 
 import CandidateDetailedProfileView from '@/components/dashboard/candidate/profile-detailed-view'
 import { db } from '@/lib/db/drizzle'
 import { getCandidateCredentialsSection } from '@/lib/db/queries/candidate-details'
 import { getCandidateSkillPassesSection } from '@/lib/db/queries/candidate-skill-passes'
-import { candidates, users, quizAttempts, issuers } from '@/lib/db/schema'
+import { candidates, users, issuers } from '@/lib/db/schema'
 import {
   candidateCredentials,
   candidateHighlights,
@@ -213,10 +213,7 @@ export default async function PublicCandidateProfile({
   const passOrder = first(q, 'passOrder') === 'asc' ? 'asc' : 'desc'
   const passSearch = (first(q, 'passQ') ?? '').trim()
 
-  const {
-    rows: passRows,
-    hasNext: passHasNext,
-  } = await getCandidateSkillPassesSection(
+  const { rows: passRows, hasNext: passHasNext } = await getCandidateSkillPassesSection(
     candidateId,
     passPage,
     passPageSize,

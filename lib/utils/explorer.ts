@@ -7,9 +7,9 @@ import { CHAIN_ID } from '@/lib/config'
  * Extend this map if you add support for more networks.
  */
 const EXPLORER_BASE: Record<number, string> = {
-  14: 'https://mainnet.flarescan.com',          // Flare main-net
-  19: 'https://songbird.flarescan.com',         // Songbird canary-net
-  16: 'https://coston.testnet.flarescan.com',   // Coston test-net
+  14: 'https://mainnet.flarescan.com', // Flare main-net
+  19: 'https://songbird.flarescan.com', // Songbird canary-net
+  16: 'https://coston.testnet.flarescan.com', // Coston test-net
   114: 'https://coston2.testnet.flarescan.com', // Coston 2 test-net
 }
 

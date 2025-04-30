@@ -14,8 +14,8 @@ import {
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import type { ProfileHeaderProps } from '@/lib/types/components'
-import { truncateAddress } from '@/lib/utils/address'
 import { copyToClipboard } from '@/lib/utils'
+import { truncateAddress } from '@/lib/utils/address'
 
 /* -------------------------------------------------------------------------- */
 /*                                   View                                     */

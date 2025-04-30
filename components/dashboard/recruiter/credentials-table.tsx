@@ -1,8 +1,8 @@
 'use client'
 
 import * as React from 'react'
+
 import { Clipboard, ExternalLink, FileText } from 'lucide-react'
-import { toast } from 'sonner'
 
 import { StatusBadge } from '@/components/ui/status-badge'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'

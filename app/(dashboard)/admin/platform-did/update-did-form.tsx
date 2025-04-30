@@ -19,8 +19,8 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { copyToClipboard } from '@/lib/utils'
 import type { DidActionState, UpdateDidFormProps } from '@/lib/types/forms'
+import { copyToClipboard } from '@/lib/utils'
 
 import { upsertPlatformDidAction } from './actions'
 

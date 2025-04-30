@@ -35,7 +35,7 @@ export default function WorkflowSection() {
         <div className='mt-16 grid gap-12 md:grid-cols-5'>
           {steps.map((step, idx) => (
             <div key={step.title} className='relative flex flex-col items-center text-center'>
-              <div className='flex size-12 items-center justify-center rounded-full bg-flare-gradient text-lg font-bold text-white shadow-lg'>
+              <div className='bg-flare-gradient flex size-12 items-center justify-center rounded-full text-lg font-bold text-white shadow-lg'>
                 {idx + 1}
               </div>
               <h3 className='text-foreground mt-4 text-lg font-semibold'>{step.title}</h3>

@@ -4,11 +4,11 @@ import type { LucideIcon } from 'lucide-react'
 
 import type { CredentialStatus } from '@/lib/db/schema/candidate'
 
+import { Pagination } from '.'
 import type {
   StatusCounts,
   CredentialsSection,
   PipelineSection,
-  QuizAttempt,
   Experience,
   Project,
   Socials,
@@ -16,7 +16,6 @@ import type {
 } from './candidate'
 import { Stage } from './recruiter'
 import type { MemberRow, SkillPassRow } from './tables'
-import { Pagination } from '.'
 
 /** Button-style quick action used in dashboards. */
 export interface QuickAction {
