@@ -5,7 +5,7 @@
 /**
  * Enumeration of proof mechanisms supported by the credential verifier.
  */
-export type ProofType = 'EVM' | 'JSON' | 'PAYMENT' | 'ADDRESS'
+export type ProofType = 'NONE' | 'EVM' | 'JSON' | 'PAYMENT' | 'ADDRESS'
 
 /**
  * Fine-grained credential sub-type identifiers.

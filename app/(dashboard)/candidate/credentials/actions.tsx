@@ -21,20 +21,40 @@ import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
 /*                               A D D  C R E D                               */
 /* -------------------------------------------------------------------------- */
 
+/** Enum wrappers keep the schema strongly typed. */
 const CategoryEnum = z.nativeEnum(CredentialCategory)
 const ProofTypeEnum = z.enum([...PROOF_TYPES] as [string, ...string[]])
 
-export const addCredential = validatedActionWithUser(
-  z.object({
+/** Core payload schema with custom cross-field validation. */
+const AddCredentialSchema = z
+  .object({
     title: z.string().min(2).max(200),
     category: CategoryEnum,
     type: z.string().min(1).max(50),
     fileUrl: z.string().url('Invalid URL'),
     proofType: ProofTypeEnum,
-    proofData: z.string().min(1, 'Proof is required'),
+    proofData: z.string().optional().default(''),
     issuerId: z.coerce.number().optional(),
-  }),
-  async ({ title, category, type, fileUrl, proofType, proofData, issuerId }, _formData, user) => {
+  })
+  .refine(
+    (data) => data.proofType === 'NONE' || data.proofData.trim().length > 0,
+    {
+      message: 'Proof is required for the selected proof type.',
+      path: ['proofData'],
+    },
+  )
+
+/* -------------------------------------------------------------------------- */
+/*                           S E R V E R   A C T I O N                         */
+/* -------------------------------------------------------------------------- */
+
+export const addCredential = validatedActionWithUser(
+  AddCredentialSchema,
+  async (
+    { title, category, type, fileUrl, proofType, proofData, issuerId },
+    _formData,
+    user,
+  ) => {
     /* --------------------------- issuer lookup -------------------------- */
     let linkedIssuerId: number | undefined
     let status: CredentialStatus = CredentialStatus.UNVERIFIED
@@ -73,7 +93,10 @@ export const addCredential = validatedActionWithUser(
       .limit(1)
 
     if (!candidate) {
-      const [newCand] = await db.insert(candidates).values({ userId: user.id, bio: '' }).returning()
+      const [newCand] = await db
+        .insert(candidates)
+        .values({ userId: user.id, bio: '' })
+        .returning()
       candidate = newCand
     }
 
@@ -85,7 +108,7 @@ export const addCredential = validatedActionWithUser(
       type,
       fileUrl,
       proofType,
-      proofData,
+      ...(proofType !== 'NONE' && proofData.trim() ? { proofData } : {}),
       issuerId: linkedIssuerId,
       status,
     })

@@ -41,7 +41,7 @@ const GITHUB_REPO_REGEX = /^https?:\/\/github\.com\/([\w.-]+)\/([\w.-]+)(?:\/?|\
 export default function AddCredentialForm({ addCredentialAction }: AddCredentialFormProps) {
   const [isPending, startTransition] = useTransition()
 
-  const [proofType, setProofType] = useState<ProofType>('EVM')
+  const [proofType, setProofType] = useState<ProofType>('NONE')
   const [subType, setSubType] = useState<string>('')
   const [fileUrl, setFileUrl] = useState<string>('')
 
@@ -52,6 +52,10 @@ export default function AddCredentialForm({ addCredentialAction }: AddCredential
 
   const repoUrlRef = useRef<string>('')
 
+  /* Derived flag – do we need an explicit proofData field? */
+  const requiresProofData = !repoDetected && proofType !== 'NONE'
+  const isJson = proofType === 'JSON'
+
   /* ---------------------------------------------------------------------- */
   /*                       R E P O   D E T E C T I O N                       */
   /* ---------------------------------------------------------------------- */
@@ -61,7 +65,7 @@ export default function AddCredentialForm({ addCredentialAction }: AddCredential
     if (!m) {
       if (repoDetected) {
         setRepoDetected(false)
-        setProofType('EVM')
+        setProofType('NONE')
         setProofJson('')
         setProofAttached(false)
         setSubType('')
@@ -92,7 +96,7 @@ export default function AddCredentialForm({ addCredentialAction }: AddCredential
       } catch (err: any) {
         toast.error(err?.message || 'Failed to attach GitHub proof – try again later.')
         setRepoDetected(false)
-        setProofType('EVM')
+        setProofType('NONE')
         setSubType('')
       } finally {
         setAttachPending(false)
@@ -127,8 +131,6 @@ export default function AddCredentialForm({ addCredentialAction }: AddCredential
     })
   }
 
-  const isJson = proofType === 'JSON'
-
   /* ---------------------------------------------------------------------- */
   /*                                   UI                                   */
   /* ---------------------------------------------------------------------- */
@@ -144,7 +146,7 @@ export default function AddCredentialForm({ addCredentialAction }: AddCredential
             id='title'
             name='title'
             required
-            placeholder='e.g. Repository Maintainer'
+            placeholder='e.g. BS Computer Science'
             autoComplete='off'
           />
         </div>
@@ -152,7 +154,7 @@ export default function AddCredentialForm({ addCredentialAction }: AddCredential
         {/* Category */}
         <div className='space-y-2'>
           <Label htmlFor='category'>Category</Label>
-          <Select name='category' required defaultValue='PROJECT'>
+          <Select name='category' required defaultValue='EDUCATION'>
             <SelectTrigger id='category'>
               <SelectValue placeholder='Select category' />
             </SelectTrigger>
@@ -202,7 +204,7 @@ export default function AddCredentialForm({ addCredentialAction }: AddCredential
               name='fileUrl'
               type='url'
               required
-              placeholder='https://example.com/credential.pdf or https://github.com/user/repo'
+              placeholder='https://university.edu/diploma.pdf or https://github.com/user/repo'
               value={fileUrl}
               onChange={(e) => setFileUrl(e.target.value)}
             />
@@ -242,7 +244,7 @@ export default function AddCredentialForm({ addCredentialAction }: AddCredential
             <SelectContent>
               {PROOF_TYPES.map((pt) => (
                 <SelectItem key={pt} value={pt}>
-                  {pt}
+                  {pt === 'NONE' ? 'None' : pt}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -253,7 +255,7 @@ export default function AddCredentialForm({ addCredentialAction }: AddCredential
         {/* Proof data */}
         {repoDetected ? (
           <textarea name='proofData' value={proofJson} readOnly hidden aria-hidden='true' />
-        ) : (
+        ) : requiresProofData ? (
           <div className='space-y-2 sm:col-span-2'>
             <Label htmlFor='proofData'>Proof Data / URL / Tx-hash</Label>
             {isJson ? (
@@ -282,6 +284,9 @@ export default function AddCredentialForm({ addCredentialAction }: AddCredential
               />
             )}
           </div>
+        ) : (
+          /* Hidden empty input so server receives the field */
+          <input type='hidden' name='proofData' value='' />
         )}
       </div>
 
