@@ -53,8 +53,11 @@ export async function getCandidateSkillPassesSection(
 
   const { rows, hasNext } = await paginate<SkillPassRow>(baseQuery as any, page, pageSize)
 
-  return {
-    rows: rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() })),
-    hasNext,
-  }
+  /* ------------------ Normalise Date → ISO string safely ----------------- */
+  const normalisedRows: SkillPassRow[] = rows.map((r: any) => ({
+    ...r,
+    createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : String(r.createdAt),
+  }))
+
+  return { rows: normalisedRows, hasNext }
 }
