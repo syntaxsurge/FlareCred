@@ -11,26 +11,31 @@ const DEMO_USERS = [
     name: 'Alice Johnson',
     email: 'alice@example.com',
     walletAddress: '0x0000000000000000000000000000000000000001',
+    bio: 'Full-stack developer passionate about scalable web applications and open-source communities.',
   },
   {
     name: 'Bob Smith',
     email: 'bob@example.com',
     walletAddress: '0x0000000000000000000000000000000000000002',
+    bio: 'Cloud architect specialising in decentralised solutions, blockchain integration and DevSecOps best practices.',
   },
   {
     name: 'Charlie Lee',
     email: 'charlie@example.com',
     walletAddress: '0x0000000000000000000000000000000000000003',
+    bio: 'Front-end engineer focused on crafting accessible UI/UX with React, TypeScript and design systems.',
   },
   {
     name: 'Dana Carter',
     email: 'dana@example.com',
     walletAddress: '0x0000000000000000000000000000000000000004',
+    bio: 'Back-end engineer with expertise in microservices, Node.js and high-throughput database optimisation.',
   },
   {
     name: 'Evan Martinez',
     email: 'evan@example.com',
     walletAddress: '0x0000000000000000000000000000000000000005',
+    bio: 'DevOps & SRE automating CI/CD pipelines, Kubernetes infrastructure and observability tooling.',
   },
 ] as const
 
@@ -106,8 +111,9 @@ const SAMPLE_CREDENTIALS = [
 /* -------------------------------------------------------------------------- */
 
 /**
- * Insert five demo candidate users and attach twelve varied credentials
- * (education, certifications, experience, projects and awards) to each.
+ * Insert five demo candidate users, attach unique bios, and seed
+ * twelve varied credentials (education, certifications, experience,
+ * projects and awards) to each profile.
  */
 export async function seedDemoUsers() {
   console.log('Seeding demo users and credentials…')
@@ -133,7 +139,7 @@ export async function seedDemoUsers() {
     /* --------------------------- Candidate row -------------------------- */
     const [cand] = await db
       .insert(candidates)
-      .values({ userId: user.id })
+      .values({ userId: user.id, bio: demo.bio })
       .onConflictDoNothing()
       .returning({ id: candidates.id })
 
@@ -153,7 +159,7 @@ export async function seedDemoUsers() {
     await db.insert(candidateCredentials).values(credRows)
 
     console.log(
-      `➕  Seeded "${demo.email}" with ${credRows.length} credentials (candidateId=${cand.id})`,
+      `➕  Seeded "${demo.email}” with bio and ${credRows.length} credentials (candidateId=${cand.id})`,
     )
   }
 
