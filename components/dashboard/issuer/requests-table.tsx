@@ -14,7 +14,6 @@ import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row
 import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { TableProps, IssuerRequestRow } from '@/lib/types/tables'
-import { getProofTx } from '@/lib/utils'
 
 /* -------------------------------------------------------------------------- */
 /*                         Bulk-selection actions                             */
@@ -121,26 +120,6 @@ export default function IssuerRequestsTable({
         header: sortableHeader('Status', 'status'),
         sortable: false,
         render: (v) => <StatusBadge status={String(v)} />,
-      },
-      {
-        key: 'vcJson',
-        header: 'Proof',
-        sortable: false,
-        render: (_v, row) => {
-          const proofTx = getProofTx(row.vcJson)
-          return proofTx ? (
-            <a
-              href={`https://flarescan.com/tx/${proofTx}`}
-              target='_blank'
-              rel='noopener noreferrer'
-              className='text-primary underline'
-            >
-              Verify on Flare
-            </a>
-          ) : (
-            '—'
-          )
-        },
       },
       {
         key: 'id',
