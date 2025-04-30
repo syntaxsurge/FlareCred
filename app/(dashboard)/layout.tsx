@@ -21,9 +21,10 @@ import {
   Star,
 } from 'lucide-react'
 
-import { SidebarNav, type SidebarNavItem } from '@/components/dashboard/sidebar-nav'
+import { SidebarNav } from '@/components/dashboard/sidebar-nav'
 import { Button } from '@/components/ui/button'
 import { useUser } from '@/lib/auth'
+import { SidebarNavItem } from '@/lib/types/components'
 
 /* -------------------------------------------------------------------------- */
 /*                         P E N D I N G   C O U N T S                        */
@@ -77,7 +78,7 @@ function roleNav(role?: string, counts?: PendingCounts): SidebarNavItem[] {
           badgeCount: counts?.adminPendingIssuers,
         },
         { href: '/admin/platform-did', icon: Key, label: 'Platform DID' },
-        { href: '/admin/plan-prices', icon: Tag, label: 'Plan Prices' },
+        { href: '/admin/plan-prices', icon: Tag, label: 'Subscription Plans' },
       ]
     default:
       return []
