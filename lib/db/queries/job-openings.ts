@@ -2,6 +2,10 @@ import type { JobRow } from '@/lib/types/tables'
 
 import { getPipelinesPage } from './pipelines'
 
+/* -------------------------------------------------------------------------- */
+/*                     P U B L I C   J O B   O P E N I N G S                  */
+/* -------------------------------------------------------------------------- */
+
 /**
  * Fetch a paginated, searchable, sortable list of public job openings
  * backed by recruiter pipelines.
@@ -13,7 +17,7 @@ export async function getJobOpeningsPage(
   order: 'asc' | 'desc' = 'desc',
   searchTerm = '',
 ): Promise<{ jobs: JobRow[]; hasNext: boolean }> {
-  /* Map UI sort key to underlying sort column */
+  /* --------------------------- Query execution --------------------------- */
   const mappedSort: 'name' | 'createdAt' = sortBy === 'recruiter' ? 'name' : sortBy
 
   const { pipelines, hasNext } = await getPipelinesPage(
@@ -25,13 +29,14 @@ export async function getJobOpeningsPage(
     undefined, // no recruiterId filter – public listing
   )
 
-  /* Convert to JobRow shape expected by the tools/jobs page */
+  /* ---------------------------- Normalisation ---------------------------- */
   const jobs: JobRow[] = pipelines.map((p) => ({
     id: p.id,
     name: p.name,
     recruiter: p.recruiterName,
     description: p.description,
-    createdAt: typeof p.createdAt === 'string' ? p.createdAt : p.createdAt.toISOString(),
+    // createdAt is already serialised to an ISO string by getPipelinesPage
+    createdAt: p.createdAt,
   }))
 
   return { jobs, hasNext }
