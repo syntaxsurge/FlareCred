@@ -87,51 +87,47 @@ export default async function TalentSearchPage({
 
   /* ------------------------------- View ---------------------------------- */
   return (
-    <section className='mx-auto max-w-6xl py-10'>
-      <PageCard
-        icon={Users}
-        title='Talent Search'
-        description='Discover and shortlist qualified candidates.'
-      >
-        <div className='space-y-6'>
-          {/* Filters */}
-          <TalentFilters
-            basePath='/recruiter/talent'
-            initialParams={initialParams}
-            skillMin={skillMin}
-            skillMax={skillMax}
-            verifiedOnly={verifiedOnly}
-          />
+    <PageCard
+      icon={Users}
+      title='Talent Search'
+      description='Discover and shortlist qualified candidates.'
+    >
+      {/* Filters */}
+      <TalentFilters
+        basePath='/recruiter/talent'
+        initialParams={initialParams}
+        skillMin={skillMin}
+        skillMax={skillMax}
+        verifiedOnly={verifiedOnly}
+      />
 
-          {/* Results table */}
-          <TalentTable
-            rows={rows}
-            sort={sort}
-            order={order as 'asc' | 'desc'}
-            basePath='/recruiter/talent'
-            initialParams={{
-              ...initialParams,
-              skillMin: String(skillMin),
-              skillMax: String(skillMax),
-              verifiedOnly: verifiedOnly ? '1' : '',
-            }}
-            searchQuery={searchTerm}
-          />
+      {/* Results table */}
+      <TalentTable
+        rows={rows}
+        sort={sort}
+        order={order as 'asc' | 'desc'}
+        basePath='/recruiter/talent'
+        initialParams={{
+          ...initialParams,
+          skillMin: String(skillMin),
+          skillMax: String(skillMax),
+          verifiedOnly: verifiedOnly ? '1' : '',
+        }}
+        searchQuery={searchTerm}
+      />
 
-          <TablePagination
-            page={page}
-            hasNext={hasNext}
-            basePath='/recruiter/talent'
-            initialParams={{
-              ...initialParams,
-              skillMin: String(skillMin),
-              skillMax: String(skillMax),
-              verifiedOnly: verifiedOnly ? '1' : '',
-            }}
-            pageSize={pageSize}
-          />
-        </div>
-      </PageCard>
-    </section>
+      <TablePagination
+        page={page}
+        hasNext={hasNext}
+        basePath='/recruiter/talent'
+        initialParams={{
+          ...initialParams,
+          skillMin: String(skillMin),
+          skillMax: String(skillMax),
+          verifiedOnly: verifiedOnly ? '1' : '',
+        }}
+        pageSize={pageSize}
+      />
+    </PageCard>
   )
 }

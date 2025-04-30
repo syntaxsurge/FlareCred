@@ -86,24 +86,22 @@ export default async function PipelinesPage({
       description='Manage and track your hiring pipelines.'
       actions={<NewPipelineDialog />}
     >
-      <div className='space-y-4 overflow-x-auto'>
-        <PipelinesTable
-          rows={rows}
-          sort={sort}
-          order={order as 'asc' | 'desc'}
-          basePath='/recruiter/pipelines'
-          initialParams={initialParams}
-          searchQuery={searchTerm}
-        />
+      <PipelinesTable
+        rows={rows}
+        sort={sort}
+        order={order as 'asc' | 'desc'}
+        basePath='/recruiter/pipelines'
+        initialParams={initialParams}
+        searchQuery={searchTerm}
+      />
 
-        <TablePagination
-          page={page}
-          hasNext={hasNext}
-          basePath='/recruiter/pipelines'
-          initialParams={initialParams}
-          pageSize={pageSize}
-        />
-      </div>
+      <TablePagination
+        page={page}
+        hasNext={hasNext}
+        basePath='/recruiter/pipelines'
+        initialParams={initialParams}
+        pageSize={pageSize}
+      />
     </PageCard>
   )
 }

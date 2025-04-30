@@ -79,28 +79,26 @@ export default async function PipelineBoardPage({ params }: { params: Promise<{ 
 
   /* ------------------------------ UI ------------------------------- */
   return (
-    <section className='mx-auto max-w-6xl py-10'>
-      <PageCard
-        icon={KanbanSquare}
-        title={pipeline.name}
-        description={pipeline.description || undefined}
-      >
-        <div className='space-y-6'>
-          {/* Meta */}
-          <div className='flex flex-wrap items-center gap-2 text-sm'>
-            <span className='bg-muted rounded-full px-2 py-0.5 text-xs'>
-              {totalCandidates} {totalCandidates === 1 ? 'Candidate' : 'Candidates'}
-            </span>
-            <span className='text-muted-foreground'>
-              Created {format(pipeline.createdAt, 'PPP')} • Updated{' '}
-              {format(pipeline.updatedAt, 'PPP')}
-            </span>
-          </div>
-
-          {/* Kanban board */}
-          <PipelineBoard pipelineId={pipelineId} initialData={initialData} />
+    <PageCard
+      icon={KanbanSquare}
+      title={pipeline.name}
+      description={pipeline.description || undefined}
+    >
+      <div className='space-y-6'>
+        {/* Meta */}
+        <div className='flex flex-wrap items-center gap-2 text-sm'>
+          <span className='bg-muted rounded-full px-2 py-0.5 text-xs'>
+            {totalCandidates} {totalCandidates === 1 ? 'Candidate' : 'Candidates'}
+          </span>
+          <span className='text-muted-foreground'>
+            Created {format(pipeline.createdAt, 'PPP')} • Updated{' '}
+            {format(pipeline.updatedAt, 'PPP')}
+          </span>
         </div>
-      </PageCard>
-    </section>
+
+        {/* Kanban board */}
+        <PipelineBoard pipelineId={pipelineId} initialData={initialData} />
+      </div>
+    </PageCard>
   )
 }
