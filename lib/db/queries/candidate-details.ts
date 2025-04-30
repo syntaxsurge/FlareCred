@@ -45,11 +45,14 @@ export async function getCandidateCredentialsSection(
     .select({
       id: candidateCredentials.id,
       title: candidateCredentials.title,
+      category: candidateCredentials.category,
       issuer: issuers.name,
       status: candidateCredentials.status,
       fileUrl: candidateCredentials.fileUrl,
       proofType: candidateCredentials.proofType,
       proofData: candidateCredentials.proofData,
+      txHash: candidateCredentials.txHash,
+      vcJson: candidateCredentials.vcJson,
     })
     .from(candidateCredentials)
     .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
@@ -74,7 +77,9 @@ export async function getCandidateCredentialsSection(
     rejected: 0,
     unverified: 0,
   }
-  countsRaw.forEach((r) => (statusCounts[r.status as keyof StatusCounts] = Number(r.count)))
+  countsRaw.forEach((r) => {
+    statusCounts[r.status as keyof StatusCounts] = Number(r.count)
+  })
 
   return {
     rows: rows as CandidateCredentialRow[],

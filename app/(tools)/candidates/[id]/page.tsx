@@ -185,6 +185,8 @@ export default async function PublicCandidateProfile({
       issuer: (c as any).issuer ?? null,
       status: (c as any).status as CredentialStatus,
       fileUrl: (c as any).fileUrl ?? null,
+      txHash: (c as any).txHash ?? null,
+      vcJson: (c as any).vcJson ?? null,
     }),
   )
 

@@ -44,7 +44,7 @@ export default function SkillPassesTable({
 
       if (row.txHash) {
         actions.push({
-          label: 'View on Flare',
+          label: 'View Transaction',
           icon: ExternalLink,
           href: txUrl(row.txHash),
         })

@@ -246,7 +246,7 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
                 rel='noopener noreferrer'
                 className='inline-flex items-center gap-1 text-primary underline'
               >
-                View on Flare <ExternalLink className='h-4 w-4' />
+                View Transaction <ExternalLink className='h-4 w-4' />
               </a>
             )}
 
