@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 
-import { eq } from 'drizzle-orm'
+import { eq, asc } from 'drizzle-orm'
 
 import CandidateDetailedProfileView from '@/components/dashboard/candidate/profile-detailed-view'
 import { db } from '@/lib/db/drizzle'
@@ -16,10 +16,11 @@ import {
   CredentialStatus,
 } from '@/lib/db/schema/candidate'
 import { issuers } from '@/lib/db/schema/issuer'
+import { recruiterPipelines } from '@/lib/db/schema/recruiter'
+import AddToPipelineForm from '@/app/(dashboard)/recruiter/talent/[id]/add-to-pipeline-form'
 import type {
   PipelineEntryRow,
   RecruiterCredentialRow,
-  TalentRow,
   SkillPassRow,
 } from '@/lib/types/tables'
 import type { StatusCounts } from '@/lib/types/candidate'
@@ -202,10 +203,19 @@ export default async function PublicCandidateProfile({
           basePath: string
           initialParams: Record<string, string>
         }
+        addToPipelineForm?: React.ReactNode
       }
     | undefined
 
   if (isRecruiter) {
+    /* ------------------ Recruiter pipelines for dropdown ------------------ */
+    const pipelines = await db
+      .select({ id: recruiterPipelines.id, name: recruiterPipelines.name })
+      .from(recruiterPipelines)
+      .where(eq(recruiterPipelines.recruiterId, user!.id))
+      .orderBy(asc(recruiterPipelines.name))
+
+    /* --------------------- Pipeline entries listing ---------------------- */
     const pipePage = Math.max(1, Number(first(q, 'pipePage') ?? '1'))
     const pipeSizeRaw = Number(first(q, 'pipeSize') ?? '10')
     const pipePageSize = [10, 20, 50].includes(pipeSizeRaw) ? pipeSizeRaw : 10
@@ -258,6 +268,9 @@ export default async function PublicCandidateProfile({
         basePath: `/candidates/${candidateId}`,
         initialParams: pipeInitialParams,
       },
+      addToPipelineForm: (
+        <AddToPipelineForm candidateId={candidateId} pipelines={pipelines} />
+      ),
     }
   }
 
