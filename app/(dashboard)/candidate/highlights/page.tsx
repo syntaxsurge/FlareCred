@@ -110,6 +110,8 @@ export default async function CandidateHighlightsSettings() {
         name={user.name ?? null}
         email={user.email ?? ''}
         avatarSrc={(user as any)?.image ?? undefined}
+        profilePath={`/candidates/${candRow.id}`}
+        showPublicProfile
       />
 
       <PageCard

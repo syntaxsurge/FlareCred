@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 
-import { Share2, Clipboard } from 'lucide-react'
+import { Share2, Clipboard, ExternalLink } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -28,6 +28,7 @@ export default function ProfileHeader({
   avatarSrc,
   profilePath,
   showShare = false,
+  showPublicProfile = false,
   stats = [],
   socials = [],
   children,
@@ -75,23 +76,34 @@ export default function ProfileHeader({
             </div>
           </div>
 
-          {/* Share */}
-          {showShare && profilePath && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant='outline' size='sm' className='gap-2'>
-                  <Share2 className='h-4 w-4' />
-                  Share
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align='end' className='rounded-lg p-1 shadow-lg'>
-                <DropdownMenuItem onClick={copyLink} className='cursor-pointer'>
-                  <Clipboard className='mr-2 h-4 w-4' />
-                  Copy URL
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+          {/* Actions */}
+          <div className='flex flex-wrap gap-2'>
+            {showShare && profilePath && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant='outline' size='sm' className='gap-2'>
+                    <Share2 className='h-4 w-4' />
+                    Share
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align='end' className='rounded-lg p-1 shadow-lg'>
+                  <DropdownMenuItem onClick={copyLink} className='cursor-pointer'>
+                    <Clipboard className='mr-2 h-4 w-4' />
+                    Copy URL
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
+            {showPublicProfile && profilePath && (
+              <Button asChild variant='default' size='sm' className='gap-2'>
+                <Link href={profilePath} target='_blank' rel='noopener noreferrer'>
+                  <ExternalLink className='h-4 w-4' />
+                  View Profile
+                </Link>
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Stats */}

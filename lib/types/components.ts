@@ -265,6 +265,8 @@ export interface ProfileHeaderProps {
   avatarSrc?: string | null
   profilePath?: string
   showShare?: boolean
+  /** Show "View Profile” button linking to the public profile. */
+  showPublicProfile?: boolean
   stats?: ProfileStat[]
   socials?: SocialLink[]
   children?: ReactNode

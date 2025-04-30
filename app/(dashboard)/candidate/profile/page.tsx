@@ -23,12 +23,17 @@ export default async function ProfilePage() {
     .where(eq(candidates.userId, user.id))
     .limit(1)
 
+  const profilePath = candidate ? `/candidates/${candidate.id}` : undefined
+  const showPublicProfile = !!candidate
+
   return (
     <section className='mx-auto max-w-5xl space-y-10'>
       <ProfileHeader
         name={user.name ?? null}
         email={user.email ?? ''}
         avatarSrc={(user as any)?.image ?? undefined}
+        profilePath={profilePath}
+        showPublicProfile={showPublicProfile}
       />
 
       <PageCard
