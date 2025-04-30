@@ -48,7 +48,7 @@ export function CreateIssuerForm() {
       </div>
 
       <div>
-        <Label htmlFor='domain'>Email Domain</Label>
+        <Label htmlFor='domain'>Domain</Label>
         <Input id='domain' name='domain' required placeholder='acme.edu' />
       </div>
 

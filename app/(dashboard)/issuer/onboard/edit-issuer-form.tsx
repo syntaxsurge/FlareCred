@@ -48,7 +48,7 @@ export function EditIssuerForm({ issuer }: { issuer: any }) {
       </div>
 
       <div>
-        <Label htmlFor='domain'>Email Domain</Label>
+        <Label htmlFor='domain'>Domain</Label>
         <Input id='domain' name='domain' defaultValue={issuer.domain} required />
       </div>
 
