@@ -1,29 +1,66 @@
 import { subscriptionManager } from '@/lib/contracts'
-import { PLAN_META } from '@/lib/constants/pricing'
-import type { PlanMeta } from '@/lib/types/pricing'
+import { PLAN_META }           from '@/lib/constants/pricing'
+import { db }                  from '@/lib/db/drizzle'
+import { planFeatures }        from '@/lib/db/schema/pricing'
+import { eq, asc }             from 'drizzle-orm'
+import type { PlanMeta }       from '@/lib/types/pricing'
 
-/** Runtime-safe serialisable variant (priceWei as decimal string). */
+/* -------------------------------------------------------------------------- */
+/*                         Runtime plan-metadata helper                       */
+/* -------------------------------------------------------------------------- */
+
+/** Serialisable variant for client components (priceWei as string). */
 export type PlanMetaSerialised = Omit<PlanMeta, 'priceWei'> & { priceWei: string }
 
 /**
- * Reads the current Base (planKey 1) and Plus (planKey 2) prices from the
- * SubscriptionManager contract and merges them into the compile-time
- * PLAN_META feature table.
- *
- * The result only contains plain JSON values so it can be handed straight
- * from React Server Components to the client without `BigInt` serialisation
- * errors.
+ * Fetch ordered feature strings for a given plan key; falls back to compile-time
+ * PLAN_META when the database table is empty (first-run safety).
+ */
+async function getFeatures(planKey: 'free' | 'base' | 'plus'): Promise<string[]> {
+  const rows = await db
+    .select({ feature: planFeatures.feature })
+    .from(planFeatures)
+    .where(eq(planFeatures.planKey, planKey))
+    .orderBy(asc(planFeatures.sortOrder))
+
+  if (rows.length) return rows.map(r => r.feature)
+
+  /* Fallback – bootstrap with PLAN_META definitions */
+  const constant = PLAN_META.find(p => p.key === planKey)
+  return constant ? [...constant.features] : []
+}
+
+/**
+ * Combine on-chain FLR prices with database-driven feature lists.
  */
 export async function fetchPlanMeta(): Promise<PlanMetaSerialised[]> {
-  const [baseWei, plusWei] = await Promise.all([
+  const [baseWei, plusWei, freeFeat, baseFeat, plusFeat] = await Promise.all([
     subscriptionManager.planPriceWei(1),
     subscriptionManager.planPriceWei(2),
+    getFeatures('free'),
+    getFeatures('base'),
+    getFeatures('plus'),
   ])
 
-  return PLAN_META.map<PlanMetaSerialised>((p) => {
-    if (p.key === 'base') return { ...p, priceWei: baseWei.toString() }
-    if (p.key === 'plus') return { ...p, priceWei: plusWei.toString() }
-    /* free tier never changes */
-    return { ...p, priceWei: p.priceWei.toString() }
-  })
+  return [
+    {
+      key: 'free',
+      name: 'Free',
+      highlight: true,
+      priceWei: '0',
+      features: freeFeat,
+    },
+    {
+      key: 'base',
+      name: 'Base',
+      priceWei: baseWei.toString(),
+      features: baseFeat,
+    },
+    {
+      key: 'plus',
+      name: 'Plus',
+      priceWei: plusWei.toString(),
+      features: plusFeat,
+    },
+  ]
 }

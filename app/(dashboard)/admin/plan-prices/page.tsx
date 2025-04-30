@@ -1,42 +1,71 @@
 import { redirect } from 'next/navigation'
-
+import { asc, eq } from 'drizzle-orm'
 import { Tag } from 'lucide-react'
 
-import PageCard from '@/components/ui/page-card'
+import PageCard          from '@/components/ui/page-card'
 import { subscriptionManager } from '@/lib/contracts'
-import { getUser } from '@/lib/db/queries/queries'
+import { getUser }       from '@/lib/db/queries/queries'
+import { db }            from '@/lib/db/drizzle'
+import { planFeatures }  from '@/lib/db/schema/pricing'
 
-import UpdatePlanPricesForm from './update-plan-prices-form'
+import UpdatePlanPricesForm   from './update-plan-prices-form'
+import UpdatePlanFeaturesForm from './update-plan-features-form'
 
 export const revalidate = 0
 
 /**
- * Admin → Plan Prices page
- * Displays the current Base & Plus plan prices and lets an admin update them
- * via SubscriptionManager.setPlanPrice.
+ * Admin → Subscription Plans page
+ * Lets an admin edit on-chain prices and database-driven feature lists.
  */
 export default async function AdminPlanPricesPage() {
   const user = await getUser()
   if (!user) redirect('/connect-wallet')
   if (user.role !== 'admin') redirect('/dashboard')
 
-  /* ---------------------------------------------------------------------- */
-  /*                   Fetch current on-chain plan prices                   */
-  /* ---------------------------------------------------------------------- */
+  /* -------------------------- Prices (on-chain) ------------------------- */
   const baseWei: bigint = await subscriptionManager.planPriceWei(1)
   const plusWei: bigint = await subscriptionManager.planPriceWei(2)
 
+  /* -------------------------- Feature lists ----------------------------- */
+  const [freeRows, baseRows, plusRows] = await Promise.all([
+    db
+      .select({ feature: planFeatures.feature })
+      .from(planFeatures)
+      .where(eq(planFeatures.planKey, 'free'))
+      .orderBy(asc(planFeatures.sortOrder)),
+    db
+      .select({ feature: planFeatures.feature })
+      .from(planFeatures)
+      .where(eq(planFeatures.planKey, 'base'))
+      .orderBy(asc(planFeatures.sortOrder)),
+    db
+      .select({ feature: planFeatures.feature })
+      .from(planFeatures)
+      .where(eq(planFeatures.planKey, 'plus'))
+      .orderBy(asc(planFeatures.sortOrder)),
+  ])
+
+  const defaultFeatures = {
+    free: freeRows.map(r => r.feature),
+    base: baseRows.map(r => r.feature),
+    plus: plusRows.map(r => r.feature),
+  }
+
+  /* ------------------------------- View --------------------------------- */
   return (
     <PageCard
       icon={Tag}
-      title='Subscription Plan Prices'
-      description='Update the on-chain FLR cost for each subscription tier.'
+      title='Subscription Plans'
+      description='Update on-chain FLR prices and marketing features for every tier.'
     >
       <UpdatePlanPricesForm
-        /* bigint → string to avoid loss of precision across the wire */
         defaultBaseWei={baseWei.toString()}
         defaultPlusWei={plusWei.toString()}
       />
+
+      <hr className='my-8' />
+
+      <UpdatePlanFeaturesForm defaultFeatures={defaultFeatures} />
     </PageCard>
   )
 }

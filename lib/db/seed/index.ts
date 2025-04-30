@@ -1,23 +1,17 @@
-import { seedQuizzes } from './quiz'
-import { seedUserTeam } from './userTeam'
+import { seedQuizzes }      from './quiz'
+import { seedUserTeam }     from './userTeam'
+import { seedPlanFeatures } from './planFeatures'
 
 /**
- * Seeds wallet-centric demo data.
- *
- * 1. Create base users and their personal teams (requires walletAddress).
- * 2. Populate auxiliary data sets in parallel once the core entities exist.
+ * Seeds wallet-centric demo data plus plan features.
  */
 async function main() {
   try {
-    /* ------------------------------------------------------------------ */
-    /*                    Core users and personal teams                    */
-    /* ------------------------------------------------------------------ */
+    /* Core users + teams -------------------------------------------------- */
     await seedUserTeam()
 
-    /* ------------------------------------------------------------------ */
-    /*                        Independent demo seeds                       */
-    /* ------------------------------------------------------------------ */
-    await Promise.all([seedQuizzes()])
+    /* Auxiliary demo data ------------------------------------------------- */
+    await Promise.all([seedQuizzes(), seedPlanFeatures()])
 
     console.log('All seeds completed successfully.')
   } catch (error) {
