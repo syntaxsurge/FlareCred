@@ -4,11 +4,16 @@ import * as React from 'react'
 import { ethers } from 'ethers'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
+import { useAccount, useWalletClient } from 'wagmi'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { SUBSCRIPTION_MANAGER_ADDRESS } from '@/lib/config'
 import { SUBSCRIPTION_MANAGER_ABI } from '@/lib/contracts/abis'
+
+/* -------------------------------------------------------------------------- */
+/*                                   Props                                    */
+/* -------------------------------------------------------------------------- */
 
 interface Props {
   /** Current Base-plan price (wei as string) */
@@ -18,69 +23,71 @@ interface Props {
 }
 
 /**
- * Interactive form that lets admins enter new FLR prices and sends
- * SubscriptionManager.setPlanPrice(1|2, newPriceWei) transactions.
+ * Admin-side form that lets an administrator update the on-chain FLR prices for
+ * the Base and Plus subscription tiers.  Transactions are now signed through
+ * the active RainbowKit wallet (wagmi walletClient) so a wallet prompt appears
+ * immediately instead of the button hanging.
  */
-export default function UpdatePlanPricesForm({
-  defaultBaseWei,
-  defaultPlusWei,
-}: Props) {
+export default function UpdatePlanPricesForm({ defaultBaseWei, defaultPlusWei }: Props) {
   /* ---------------------------------------------------------------------- */
-  /*                              State                                     */
+  /*                                State                                   */
   /* ---------------------------------------------------------------------- */
-  const [base, setBase] = React.useState<string>(
-    ethers.formatUnits(defaultBaseWei, 18),
-  )
-  const [plus, setPlus] = React.useState<string>(
-    ethers.formatUnits(defaultPlusWei, 18),
-  )
-  const [pending, setPending] = React.useState(false)
+  const [base, setBase] = React.useState<string>(ethers.formatUnits(BigInt(defaultBaseWei), 18))
+  const [plus, setPlus] = React.useState<string>(ethers.formatUnits(BigInt(defaultPlusWei), 18))
+  const [pending, setPending] = React.useState<boolean>(false)
 
   /* ---------------------------------------------------------------------- */
-  /*                             Helpers                                    */
+  /*                        Wallet / wagmi context                           */
   /* ---------------------------------------------------------------------- */
+  const { address, isConnected } = useAccount()
+  const { data: walletClient } = useWalletClient()
+
+  /* ---------------------------------------------------------------------- */
+  /*                               Helpers                                  */
+  /* ---------------------------------------------------------------------- */
+  async function updatePlanPrice(planKey: 1 | 2, amountFlr: string) {
+    if (!walletClient || !address) throw new Error('Wallet not connected')
+    const wei = ethers.parseUnits(amountFlr, 18)
+
+    await walletClient.writeContract({
+      address: SUBSCRIPTION_MANAGER_ADDRESS as `0x${string}`,
+      abi: SUBSCRIPTION_MANAGER_ABI,
+      functionName: 'setPlanPrice',
+      args: [planKey, wei],
+      account: address,
+    })
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (!(window as any).ethereum) {
-      toast.error('Web3 wallet not detected.')
+    if (!isConnected) {
+      toast.error('Connect a wallet first.')
       return
     }
 
     try {
       setPending(true)
 
-      const provider = new ethers.BrowserProvider((window as any).ethereum)
-      const signer = await provider.getSigner()
-      const mgr = new ethers.Contract(
-        SUBSCRIPTION_MANAGER_ADDRESS,
-        SUBSCRIPTION_MANAGER_ABI as ethers.InterfaceAbi,
-        signer,
-      )
-
       /* ----------------------------- Base ------------------------------ */
-      const baseWei = ethers.parseUnits(base, 18)
-      const txBase = await mgr.setPlanPrice(1, baseWei)
-      await txBase.wait()
-      toast.success('Base plan price updated.')
+      await updatePlanPrice(1, base)
+      toast.success('Base plan price transaction sent.')
 
       /* ----------------------------- Plus ------------------------------ */
-      const plusWei = ethers.parseUnits(plus, 18)
-      const txPlus = await mgr.setPlanPrice(2, plusWei)
-      await txPlus.wait()
-      toast.success('Plus plan price updated.')
+      await updatePlanPrice(2, plus)
+      toast.success('Plus plan price transaction sent.')
     } catch (err: any) {
-      toast.error(err?.shortMessage || err?.message || 'Transaction failed.')
+      toast.error(err?.shortMessage ?? err?.message ?? 'Transaction failed.')
     } finally {
       setPending(false)
     }
   }
 
   /* ---------------------------------------------------------------------- */
-  /*                                UI                                      */
+  /*                                   UI                                   */
   /* ---------------------------------------------------------------------- */
   return (
-    <form onSubmit={handleSubmit} className='space-y-6 max-w-md'>
-      {/* Base plan */}
+    <form onSubmit={handleSubmit} className='max-w-md space-y-6'>
+      {/* Base plan field */}
       <div>
         <label htmlFor='base' className='mb-1 block text-sm font-medium'>
           Base Plan Price&nbsp;(FLR)
@@ -96,7 +103,7 @@ export default function UpdatePlanPricesForm({
         />
       </div>
 
-      {/* Plus plan */}
+      {/* Plus plan field */}
       <div>
         <label htmlFor='plus' className='mb-1 block text-sm font-medium'>
           Plus Plan Price&nbsp;(FLR)
@@ -112,7 +119,7 @@ export default function UpdatePlanPricesForm({
         />
       </div>
 
-      {/* Submit */}
+      {/* Submit button */}
       <Button type='submit' className='w-full' disabled={pending}>
         {pending ? (
           <>
