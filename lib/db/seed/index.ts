@@ -1,7 +1,7 @@
 import { seedQuizzes }      from './quiz'
-import { seedUserTeam }     from './userTeam'
-import { seedPlanFeatures } from './planFeatures'
-import { seedDemoUsers }    from './demoUsers'
+import { seedUserTeam }     from './user-team'
+import { seedPlanFeatures } from './plan-features'
+import { seedDemoUsers }    from './demo-users'
 
 /**
  * Seeds wallet-centric demo data plus plan features.
