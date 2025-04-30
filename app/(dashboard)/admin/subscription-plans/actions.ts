@@ -56,7 +56,7 @@ const _updatePlanFeatures = validatedActionWithUser(
 
     /* Invalidate pricing pages */
     revalidatePath('/pricing')
-    revalidatePath('/admin/plan-prices')
+    revalidatePath('/admin/subscription-plans')
 
     return { success: 'Plan features updated.' }
   },
