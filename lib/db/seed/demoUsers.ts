@@ -3,7 +3,7 @@ import { users, candidates, candidateCredentials } from '../schema'
 import { CredentialCategory } from '../schema/candidate'
 
 /* -------------------------------------------------------------------------- */
-/*                            S A M P L E   D A T A                           */
+/*                              D E M O   U S E R S                           */
 /* -------------------------------------------------------------------------- */
 
 const DEMO_USERS = [
@@ -35,56 +35,125 @@ const DEMO_USERS = [
 ] as const
 
 /* -------------------------------------------------------------------------- */
+/*                  S A M P L E   C R E D E N T I A L S                       */
+/* -------------------------------------------------------------------------- */
+
+const SAMPLE_CREDENTIALS = [
+  {
+    title: 'B.Sc. in Computer Science',
+    category: CredentialCategory.EDUCATION,
+    type: 'degree',
+  },
+  {
+    title: 'M.Sc. in Software Engineering',
+    category: CredentialCategory.EDUCATION,
+    type: 'degree',
+  },
+  {
+    title: 'AWS Certified Solutions Architect',
+    category: CredentialCategory.CERTIFICATION,
+    type: 'certification',
+  },
+  {
+    title: 'Google Professional Cloud Architect',
+    category: CredentialCategory.CERTIFICATION,
+    type: 'certification',
+  },
+  {
+    title: '3 Years Backend Developer at TechCorp',
+    category: CredentialCategory.EXPERIENCE,
+    type: 'experience',
+  },
+  {
+    title: 'Lead Developer at InnovateX',
+    category: CredentialCategory.EXPERIENCE,
+    type: 'experience',
+  },
+  {
+    title: 'Open-Source Contribution: React Router',
+    category: CredentialCategory.PROJECT,
+    type: 'github_repo',
+  },
+  {
+    title: 'Full-Stack E-commerce Web App',
+    category: CredentialCategory.PROJECT,
+    type: 'project',
+  },
+  {
+    title: 'Winner – Hackathon Asia 2024',
+    category: CredentialCategory.AWARD,
+    type: 'award',
+  },
+  {
+    title: 'Published Paper on AI Optimisation',
+    category: CredentialCategory.AWARD,
+    type: 'award',
+  },
+  {
+    title: 'Docker Certified Associate',
+    category: CredentialCategory.CERTIFICATION,
+    type: 'certification',
+  },
+  {
+    title: 'Certified Kubernetes Administrator',
+    category: CredentialCategory.CERTIFICATION,
+    type: 'certification',
+  },
+] as const
+
+/* -------------------------------------------------------------------------- */
 /*                                S E E D E R                                 */
 /* -------------------------------------------------------------------------- */
 
 /**
- * Insert five demo candidate users and attach twelve placeholder credentials
- * to each profile for development / testing purposes.
+ * Insert five demo candidate users and attach twelve varied credentials
+ * (education, certifications, experience, projects and awards) to each.
  */
 export async function seedDemoUsers() {
   console.log('Seeding demo users and credentials…')
 
   for (const demo of DEMO_USERS) {
-    /* ----------------------------- User row ------------------------------ */
+    /* ----------------------------- User row ----------------------------- */
     const [user] = await db
       .insert(users)
       .values({
         name: demo.name,
-        email: demo.email,
+        email: demo.email.toLowerCase(),
         walletAddress: demo.walletAddress,
         role: 'candidate',
       })
+      .onConflictDoNothing()
       .returning({ id: users.id })
 
     if (!user) {
-      console.warn(`⚠️  Failed to insert user ${demo.email}; skipping…`)
+      console.warn(`⚠️  User ${demo.email} already exists; skipping user creation.`)
       continue
     }
 
-    /* --------------------------- Candidate row --------------------------- */
+    /* --------------------------- Candidate row -------------------------- */
     const [cand] = await db
       .insert(candidates)
       .values({ userId: user.id })
+      .onConflictDoNothing()
       .returning({ id: candidates.id })
 
     if (!cand) {
-      console.warn(`⚠️  Failed to create candidate for ${demo.email}; skipping…`)
+      console.warn(`⚠️  Candidate profile for ${demo.email} already exists; skipping.`)
       continue
     }
 
-    /* ------------------------- Credential rows --------------------------- */
-    const credentialRows = Array.from({ length: 12 }, (_, i) => ({
+    /* ------------------------- Credential rows -------------------------- */
+    const credRows = SAMPLE_CREDENTIALS.map((c) => ({
       candidateId: cand.id,
-      category: CredentialCategory.OTHER,
-      title: `Sample Credential ${i + 1}`,
-      type: 'github_repo',
+      category: c.category,
+      title: c.title,
+      type: c.type,
     }))
 
-    await db.insert(candidateCredentials).values(credentialRows)
+    await db.insert(candidateCredentials).values(credRows)
 
     console.log(
-      `➕  Seeded user "${demo.email}" with ${credentialRows.length} credentials (id=${user.id})`,
+      `➕  Seeded "${demo.email}" with ${credRows.length} credentials (candidateId=${cand.id})`,
     )
   }
 
