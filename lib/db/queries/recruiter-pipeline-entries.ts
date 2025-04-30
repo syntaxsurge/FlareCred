@@ -56,13 +56,22 @@ export async function getCandidatePipelineEntriesPage(
     .where(whereClause as any)
     .orderBy(orderBy)
 
-  const { rows, hasNext } = await paginate<PipelineEntryRow>(baseQuery as any, page, pageSize)
+  /* Use <any> so we can narrow addedAt safely without TS2358 */
+  const { rows, hasNext } = await paginate<any>(baseQuery as any, page, pageSize)
 
-  /* Cast Date → ISO string for uniform consumption */
-  const entries = rows.map((r) => ({
-    ...r,
-    addedAt: r.addedAt instanceof Date ? r.addedAt.toISOString() : r.addedAt,
-  })) as PipelineEntryRow[]
+  /* Serialise Date → ISO or coerce to string for uniform consumption */
+  const entries: PipelineEntryRow[] = rows.map((r: any) => ({
+    id: r.id,
+    pipelineId: r.pipelineId,
+    pipelineName: r.pipelineName,
+    stage: r.stage,
+    addedAt:
+      r.addedAt instanceof Date
+        ? r.addedAt.toISOString()
+        : r.addedAt !== undefined
+          ? String(r.addedAt)
+          : undefined,
+  }))
 
   return { entries, hasNext }
 }
