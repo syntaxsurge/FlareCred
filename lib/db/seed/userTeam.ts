@@ -1,3 +1,4 @@
+// lib/db/seed/userTeam.ts
 import { and, eq } from 'drizzle-orm'
 
 import { db } from '../drizzle'
@@ -11,17 +12,18 @@ import {
 import { recruiterPipelines } from '../schema/recruiter'
 
 /**
- * Seed core demo users (admin, candidate, issuer, recruiter), create personal placeholder
- * teams for each, add everyone to a shared "Test Team", and now:
- *   • create a Candidate profile with <b>five</b> default unverified credentials
- *   • create <b>five</b> sample Pipelines for the Recruiter to surface public job listings
+ * Seed core demo users (admin, candidate, issuer, recruiter), give each a
+ * personal team they own, and populate demo candidate credentials and recruiter
+ * pipelines for showcase pages.
  *
  * Wallet-only authentication means no passwords are stored.
  */
 export async function seedUserTeam() {
-  console.log('Seeding users, teams, candidate profile, credentials, and pipelines…')
+  console.log('Seeding users, personal teams, candidate profile, credentials and pipelines…')
 
-  /* ---------- users to seed ---------- */
+  /* ---------------------------------------------------------------------- */
+  /*                           U S E R   S E T U P                           */
+  /* ---------------------------------------------------------------------- */
   const SEED = [
     {
       name: 'Platform Admin',
@@ -49,19 +51,19 @@ export async function seedUserTeam() {
     },
   ]
 
-  const ids = new Map<string, number>() // email → id
+  const ids = new Map<string, number>() // email → userId
 
-  /* ---------- ensure users + placeholder teams (no membership) ---------- */
   for (const { name, email, role, walletAddress } of SEED) {
     const lowerEmail = email.toLowerCase()
     let [u] = await db.select().from(users).where(eq(users.email, lowerEmail)).limit(1)
 
+    /* --------------------------- Create / Update ------------------------- */
     if (!u) {
       ;[u] = await db
         .insert(users)
         .values({ name, email: lowerEmail, role, walletAddress })
         .returning()
-      console.log(`✅ Created user ${lowerEmail} (${name})`)
+      console.log(`✅  Created user ${lowerEmail} (${name})`)
     } else {
       const updates: Partial<typeof users.$inferInsert> = {}
       if (u.name !== name) updates.name = name
@@ -69,65 +71,55 @@ export async function seedUserTeam() {
       if (u.walletAddress !== walletAddress) updates.walletAddress = walletAddress
       if (Object.keys(updates).length) {
         await db.update(users).set(updates).where(eq(users.id, u.id))
-        console.log(`🔄 Updated user ${lowerEmail} →`, updates)
+        console.log(`🔄  Updated user ${lowerEmail} →`, updates)
       } else {
-        console.log(`ℹ️ User ${lowerEmail} exists`)
+        console.log(`ℹ️  User ${lowerEmail} exists`)
       }
     }
     ids.set(lowerEmail, u.id)
 
+    /* --------------------------- Personal Team --------------------------- */
     const personalName = `${name}'s Team`
-    const [existingTeam] = await db
-      .select()
-      .from(teams)
-      .where(eq(teams.name, personalName))
-      .limit(1)
+    let [teamRow] = await db.select().from(teams).where(eq(teams.name, personalName)).limit(1)
 
-    if (!existingTeam) {
-      await db.insert(teams).values({ name: personalName, creatorUserId: u.id })
-      console.log(`✅ Created placeholder team "${personalName}"`)
+    if (!teamRow) {
+      ;[teamRow] = await db
+        .insert(teams)
+        .values({ name: personalName, creatorUserId: u.id })
+        .returning()
+      console.log(`✅  Created personal team "${personalName}"`)
     } else {
-      console.log(`ℹ️ Placeholder team for ${lowerEmail} exists`)
+      console.log(`ℹ️  Personal team for ${lowerEmail} exists`)
     }
-  }
 
-  /* ---------- shared Test Team ---------- */
-  const adminId = ids.get('admin@test.com')!
-  const sharedName = 'Test Team'
-
-  let [shared] = await db.select().from(teams).where(eq(teams.name, sharedName)).limit(1)
-  if (!shared) {
-    ;[shared] = await db
-      .insert(teams)
-      .values({ name: sharedName, creatorUserId: adminId })
-      .returning()
-    console.log(`✅ Created shared team "${sharedName}"`)
-  } else {
-    console.log(`ℹ️ Shared team "${sharedName}" exists`)
-  }
-
-  /* ---------- add memberships ---------- */
-  for (const { email } of SEED) {
-    const userId = ids.get(email.toLowerCase())!
-    const role = email.toLowerCase() === 'admin@test.com' ? 'owner' : 'member'
-
-    const existing = await db
+    /* ------------------------- Team Membership --------------------------- */
+    const existingMember = await db
       .select()
       .from(teamMembers)
-      .where(and(eq(teamMembers.teamId, shared.id), eq(teamMembers.userId, userId)))
+      .where(and(eq(teamMembers.teamId, teamRow.id), eq(teamMembers.userId, u.id)))
       .limit(1)
 
-    if (existing.length === 0) {
-      await db.insert(teamMembers).values({ teamId: shared.id, userId, role })
-      console.log(`✅ Added ${email} to "${sharedName}" as ${role}`)
+    if (existingMember.length === 0) {
+      await db.insert(teamMembers).values({ teamId: teamRow.id, userId: u.id, role: 'owner' })
+      console.log(`✅  Added ${lowerEmail} as owner of "${personalName}"`)
+    } else {
+      if (existingMember[0].role !== 'owner') {
+        await db
+          .update(teamMembers)
+          .set({ role: 'owner' })
+          .where(eq(teamMembers.id, existingMember[0].id))
+        console.log(`🔧  Updated ${lowerEmail} membership to owner in "${personalName}"`)
+      } else {
+        console.log(`ℹ️  ${lowerEmail} already owner of "${personalName}"`)
+      }
     }
   }
 
   /* ====================================================================== */
-  /*                    N E W   D E M O   D A T A   B E L O W               */
+  /*                  D E M O   C A N D I D A T E   D A T A                 */
   /* ====================================================================== */
 
-  /* ---------- Candidate profile + credentials ---------- */
+  /* --------------------- Candidate profile & creds ---------------------- */
   const candidateUserId = ids.get('candidate@test.com')!
   let [cand] = await db
     .select()
@@ -140,9 +132,9 @@ export async function seedUserTeam() {
       .insert(candidates)
       .values({ userId: candidateUserId, bio: 'Motivated developer seeking new challenges.' })
       .returning()
-    console.log('✅ Created Candidate profile for Test Candidate')
+    console.log('✅  Created Candidate profile for Test Candidate')
   } else {
-    console.log('ℹ️ Candidate profile already present')
+    console.log('ℹ️  Candidate profile already present')
   }
 
   const existingCreds = await db
@@ -153,11 +145,7 @@ export async function seedUserTeam() {
   const presentTitles = new Set(existingCreds.map((c) => c.title))
 
   const DEMO_CREDENTIALS = [
-    {
-      title: 'B.Sc. in Computer Science',
-      category: CredentialCategory.EDUCATION,
-      type: 'degree',
-    },
+    { title: 'B.Sc. in Computer Science', category: CredentialCategory.EDUCATION, type: 'degree' },
     {
       title: 'Certified Kubernetes Administrator',
       category: CredentialCategory.CERTIFICATION,
@@ -195,10 +183,10 @@ export async function seedUserTeam() {
     await db.insert(candidateCredentials).values(credInserts)
     console.log(`➕  Inserted ${credInserts.length} demo credential(s) for Test Candidate`)
   } else {
-    console.log('ℹ️ Demo credentials already seeded for Candidate')
+    console.log('ℹ️  Demo credentials already seeded for Candidate')
   }
 
-  /* ---------- Recruiter pipelines (job openings) ---------- */
+  /* ---------------------- Recruiter pipelines --------------------------- */
   const recruiterUserId = ids.get('recruiter@test.com')!
   const existingPipes = await db
     .select({ name: recruiterPipelines.name })
@@ -234,10 +222,10 @@ export async function seedUserTeam() {
       },
     ]
     await db.insert(recruiterPipelines).values(PIPELINES)
-    console.log(`✅ Seeded ${PIPELINES.length} recruiter pipelines for demo jobs`)
+    console.log(`✅  Seeded ${PIPELINES.length} recruiter pipelines for demo jobs`)
   } else {
-    console.log('ℹ️ Recruiter pipelines already exist')
+    console.log('ℹ️  Recruiter pipelines already exist')
   }
 
-  console.log('🎉 User/Team/Candidate/Pipeline seeding complete.')
+  console.log('🎉  Seeding complete.')
 }
