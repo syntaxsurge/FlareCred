@@ -1,11 +1,7 @@
 import { and, eq } from 'drizzle-orm'
 
 import { db } from '../drizzle'
-import {
-  users,
-  teams,
-  teamMembers,
-} from '../schema'
+import { users, teams, teamMembers } from '../schema'
 import {
   candidates,
   candidateCredentials,
@@ -16,9 +12,9 @@ import { recruiterPipelines } from '../schema/recruiter'
 
 /**
  * Seed core demo users (admin, candidate, issuer, recruiter), create personal placeholder
- * teams for each, add everyone to a shared "Test Team", **and** now:
- *   • create a Candidate profile with two default unverified credentials
- *   • create two sample Pipelines for the Recruiter to surface public job listings
+ * teams for each, add everyone to a shared "Test Team", and now:
+ *   • create a Candidate profile with <b>five</b> default unverified credentials
+ *   • create <b>five</b> sample Pipelines for the Recruiter to surface public job listings
  *
  * Wallet-only authentication means no passwords are stored.
  */
@@ -163,6 +159,21 @@ export async function seedUserTeam() {
       type: 'degree',
     },
     {
+      title: 'Certified Kubernetes Administrator',
+      category: CredentialCategory.CERTIFICATION,
+      type: 'certification',
+    },
+    {
+      title: '3 Years Experience as Backend Developer',
+      category: CredentialCategory.EXPERIENCE,
+      type: 'experience',
+    },
+    {
+      title: 'Hackathon Winner: FlareCred 2024',
+      category: CredentialCategory.AWARD,
+      type: 'award',
+    },
+    {
       title: 'Open-Source Contribution: Awesome-Repo',
       category: CredentialCategory.PROJECT,
       type: 'github_repo',
@@ -205,6 +216,21 @@ export async function seedUserTeam() {
         recruiterId: recruiterUserId,
         name: 'Frontend Engineer – May 2025',
         description: 'React / Next.js role crafting modern UIs for credentialing.',
+      },
+      {
+        recruiterId: recruiterUserId,
+        name: 'Full-Stack Engineer – May 2025',
+        description: 'End-to-end development across our TypeScript stack.',
+      },
+      {
+        recruiterId: recruiterUserId,
+        name: 'DevOps Engineer – May 2025',
+        description: 'CI/CD, Kubernetes and cloud infrastructure automation.',
+      },
+      {
+        recruiterId: recruiterUserId,
+        name: 'QA Engineer – May 2025',
+        description: 'Automated testing to ensure product quality and reliability.',
       },
     ]
     await db.insert(recruiterPipelines).values(PIPELINES)
