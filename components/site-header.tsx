@@ -26,6 +26,7 @@ const LEARN_SECTIONS = [
 ] as const
 
 const TOOLS_MENU = [
+  { href: '/jobs', label: 'Job Openings' },
   { href: '/candidates', label: 'Candidates' },
   { href: '/issuers', label: 'Issuers' },
   { href: '/verify', label: 'Verify' },
