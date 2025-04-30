@@ -4,21 +4,19 @@ import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
 /* -------------------------------------------------------------------------- */
-/*            F I L T E R   N A V I G A T I O N   H E L P E R                 */
+/*                    F I L T E R   N A V I G A T I O N                       */
 /* -------------------------------------------------------------------------- */
 
 /**
- * Lightweight helper that lets filter components mutate a single query-string
- * param while **automatically batching** multiple rapid changes (e.g. slider
- * drag events) into one <code>router.push()</code> call.
+ * Helper that lets filter controls mutate query-string parameters while
+ * batching rapid changes (e.g. slider drags) into a single navigation.
  *
- * @param basePath       Static pathname (no search params) for the page.
- * @param initialParams  Seed params derived from the initial request.  These
- *                       are merged into the internal <code>URLSearchParams</code>
- *                       so the hook always starts from the current URL state.
+ * Unlike the previous version, navigation now sets <code>scroll&nbsp;=&nbsp;false</code>
+ * so the browser keeps the current viewport instead of jumping to the top.
  *
- * @returns <code>updateParam(key, value)</code> – call this for each filter
- *          change; pass an empty string to remove the param.
+ * @param basePath      Static pathname (no search params) for the page.
+ * @param initialParams Initial query params derived from the first render.
+ * @returns             <code>updateParam(key, value)</code> – call this per change.
  */
 export function useFilterNavigation(
   basePath: string,
@@ -26,56 +24,58 @@ export function useFilterNavigation(
 ) {
   const router = useRouter()
 
-  /* Internal mutable copy of the current search-params */
-  const paramsRef = React.useRef<URLSearchParams>(
-    new URLSearchParams(initialParams),
-  )
+  /** Mutable copy of the current search params. */
+  const paramsRef = React.useRef<URLSearchParams>(new URLSearchParams(initialParams))
 
-  /* Debounce timer so we only navigate **once** per change burst */
+  /** Debounce handle so multiple rapid updates result in a single push. */
   const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  /* Transition wrapper triggers React 18 concurrent navigation */
+  /** Concurrent navigation wrapper. */
   const [, startTransition] = React.useTransition()
 
   /* ---------------------------------------------------------------------- */
-  /*                        N A V I G A T I O N                             */
+  /*                               N A V I G A T E                           */
   /* ---------------------------------------------------------------------- */
 
-  const flush = React.useCallback(() => {
+  const navigate = React.useCallback(() => {
     timerRef.current = null
     const qs = paramsRef.current.toString()
     startTransition(() => {
-      router.push(qs ? `${basePath}?${qs}` : basePath)
+      router.push(qs ? `${basePath}?${qs}` : basePath, { scroll: false })
     })
-  }, [router, basePath, startTransition])
+  }, [basePath, router, startTransition])
+
+  /* ---------------------------------------------------------------------- */
+  /*                     P U B L I C   U P D A T E   A P I                   */
+  /* ---------------------------------------------------------------------- */
 
   /**
-   * Public API consumed by filter UIs.
-   * Mutates <code>paramsRef</code> synchronously then schedules a debounced
-   * navigation; multiple calls in the same tick are merged.
+   * Update (or delete) a single query-string parameter.
+   * Passing an empty string removes the key entirely.
    */
   const updateParam = React.useCallback(
     (key: string, value: string) => {
-      if (value === '' || value === undefined || value === null) {
-        paramsRef.current.delete(key)
-      } else {
+      if (value) {
         paramsRef.current.set(key, value)
+      } else {
+        paramsRef.current.delete(key)
       }
 
-      /* Restart debounce window (150 ms) */
+      /* Restart debounce window (200 ms) */
       if (timerRef.current) clearTimeout(timerRef.current)
-      timerRef.current = setTimeout(flush, 150)
+      timerRef.current = setTimeout(navigate, 200)
     },
-    [flush],
+    [navigate],
   )
 
-  /* Sync <code>paramsRef</code> when the user navigates via browser controls */
+  /* ---------------------------------------------------------------------- */
+  /*                             C L E A N U P                              */
+  /* ---------------------------------------------------------------------- */
+
   React.useEffect(() => {
-    const handlePopState = () => {
-      paramsRef.current = new URLSearchParams(window.location.search)
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
     }
-    window.addEventListener('popstate', handlePopState)
-    return () => window.removeEventListener('popstate', handlePopState)
   }, [])
 
   return updateParam
