@@ -1,4 +1,3 @@
-// lib/db/seed/userTeam.ts
 import { and, eq } from 'drizzle-orm'
 
 import { db } from '../drizzle'
@@ -147,14 +146,41 @@ export async function seedUserTeam() {
   const DEMO_CREDENTIALS = [
     { title: 'B.Sc. in Computer Science', category: CredentialCategory.EDUCATION, type: 'degree' },
     {
+      title: 'Graduate Certificate in Cybersecurity',
+      category: CredentialCategory.EDUCATION,
+      type: 'certificate',
+    },
+    {
       title: 'Certified Kubernetes Administrator',
       category: CredentialCategory.CERTIFICATION,
       type: 'certification',
     },
+    { title: 'AWS Solutions Architect Associate', category: CredentialCategory.CERTIFICATION, type: 'certification' },
+    { title: 'Docker Certified Associate', category: CredentialCategory.CERTIFICATION, type: 'certification' },
     {
       title: '3 Years Experience as Backend Developer',
       category: CredentialCategory.EXPERIENCE,
       type: 'experience',
+    },
+    {
+      title: 'Senior Backend Developer at TechCorp',
+      category: CredentialCategory.EXPERIENCE,
+      type: 'experience',
+    },
+    {
+      title: 'Open-Source Contribution: Awesome-Repo',
+      category: CredentialCategory.PROJECT,
+      type: 'github_repo',
+    },
+    {
+      title: 'React Native Mobile App Project',
+      category: CredentialCategory.PROJECT,
+      type: 'project',
+    },
+    {
+      title: 'Full-Stack Web Application Portfolio',
+      category: CredentialCategory.PROJECT,
+      type: 'project',
     },
     {
       title: 'Hackathon Winner: FlareCred 2024',
@@ -162,9 +188,9 @@ export async function seedUserTeam() {
       type: 'award',
     },
     {
-      title: 'Open-Source Contribution: Awesome-Repo',
-      category: CredentialCategory.PROJECT,
-      type: 'github_repo',
+      title: 'Tech Speaker at JSConf Asia 2024',
+      category: CredentialCategory.AWARD,
+      type: 'award',
     },
   ] as const
 
