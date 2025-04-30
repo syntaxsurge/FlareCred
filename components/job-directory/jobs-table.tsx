@@ -69,7 +69,11 @@ export default function JobsTable({
         enableHiding: false,
         sortable: false,
         render: (_v, row) => (
-          <ApplyButton pipelineId={row.id} onDone={() => router.refresh()} />
+          <ApplyButton
+            pipelineId={row.id}
+            applied={row.applied}
+            onDone={() => router.refresh()}
+          />
         ),
       },
     ]
@@ -93,12 +97,37 @@ export default function JobsTable({
 /*                                 A P P L Y                                  */
 /* -------------------------------------------------------------------------- */
 
-function ApplyButton({ pipelineId, onDone }: { pipelineId: number; onDone: () => void }) {
+function ApplyButton({
+  pipelineId,
+  applied,
+  onDone,
+}: {
+  pipelineId: number
+  applied: boolean
+  onDone: () => void
+}) {
+  const [isApplied, setApplied] = React.useState(applied)
+  const [pending, setPending] = React.useState(false)
+
+  /* Already applied – show muted button */
+  if (isApplied) {
+    return (
+      <ActionButton disabled variant='outline' size='sm' className='cursor-default opacity-60'>
+        Applied
+      </ActionButton>
+    )
+  }
+
   async function handleApply() {
+    setPending(true)
     const fd = new FormData()
     fd.append('pipelineId', String(pipelineId))
     const res = await applyToJobAction({}, fd)
-    if (res?.success) onDone()
+    setPending(false)
+    if (res?.success) {
+      setApplied(true)
+      onDone()
+    }
     return res
   }
 
@@ -106,6 +135,7 @@ function ApplyButton({ pipelineId, onDone }: { pipelineId: number; onDone: () =>
     <ActionButton
       onAction={handleApply}
       pendingLabel='Applying…'
+      disabled={pending}
       size='sm'
       className='rounded-full'
     >

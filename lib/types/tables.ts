@@ -55,6 +55,8 @@ export interface JobRow {
   recruiter: string
   description: string | null
   createdAt: string
+  /** true when the current candidate already applied */
+  applied: boolean
 }
 
 /* --------------------------------------------------------------------- */
