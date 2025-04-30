@@ -115,14 +115,20 @@ Contract compilation, testing and deployment are handled by a self-contained Har
 *   **Data Flow** – UI → Server Action → Drizzle → Flare Contracts. On-chain hashes/timestamps are the source of truth; Postgres is a query cache.
 
 ### 📊 Detailed Architecture Diagrams  
-_All diagrams live in `public/images/architecture` so they render correctly on GitHub and inside the app._
 
-| Candidate Flow | Issuer Flow | Admin Flow | Recruiter Flow |
-| -------------- | ----------- | ---------- | -------------- |
-| ![Candidate Architecture](public/images/architecture/FlareCred-Candidate-Architecture.jpg) | ![Issuer Architecture](public/images/architecture/FlareCred-Issuer-Architecture.jpg) | ![Admin Architecture](public/images/architecture/FlareCred-Admin-Architecture.jpg) | ![Recruiter Architecture](public/images/architecture/FlareCred-Recruiter-Architecture.jpg) |
+#### Candidate Flow  
+![Candidate Architecture](public/images/architecture/FlareCred-Candidate-Architecture.jpg)
+
+#### Issuer Flow  
+![Issuer Architecture](public/images/architecture/FlareCred-Issuer-Architecture.jpg)
+
+#### Admin Flow  
+![Admin Architecture](public/images/architecture/FlareCred-Admin-Architecture.jpg)
+
+#### Recruiter Flow  
+![Recruiter Architecture](public/images/architecture/FlareCred-Recruiter-Architecture.jpg)
 
 #### Subscription & Pricing Pipeline  
-
 ![Subscription & Pricing Architecture](public/images/architecture/FlareCred-Pricing-Architecture.jpg)
 
 ## 🙏 Need Help?
