@@ -7,22 +7,9 @@ import { Briefcase } from 'lucide-react'
 
 import { applyToJobAction } from '@/app/(tools)/jobs/actions'
 import { ActionButton } from '@/components/ui/action-button'
-import { DataTable } from '@/components/ui/tables/data-table'
-import type { Column } from '@/lib/types/components'
-import type { JobRow } from '@/lib/types/tables'
-
-/* -------------------------------------------------------------------------- */
-/*                                 P R O P S                                  */
-/* -------------------------------------------------------------------------- */
-
-interface JobsTableProps {
-  rows: JobRow[]
-  sort: string
-  order: 'asc' | 'desc'
-  basePath: string
-  initialParams: Record<string, string>
-  searchQuery: string
-}
+import { DataTable, type Column } from '@/components/ui/tables/data-table'
+import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
+import type { TableProps, JobRow } from '@/lib/types/tables'
 
 /* -------------------------------------------------------------------------- */
 /*                                C O M P O N E N T                           */
@@ -35,67 +22,74 @@ export default function JobsTable({
   basePath,
   initialParams,
   searchQuery,
-}: JobsTableProps) {
+}: TableProps<JobRow>) {
   const router = useRouter()
 
-  /* --------------------------- Filter callback --------------------------- */
-  const onFilterChange = React.useCallback(
-    (value: string) => {
-      const params = new URLSearchParams(initialParams)
-      if (value.trim()) {
-        params.set('q', value)
-      } else {
-        params.delete('q')
-      }
-      params.delete('page') // always reset pagination on new search
-      router.push(`${basePath}?${params.toString()}`)
-    },
-    [router, basePath, initialParams],
-  )
+  /* ---------------------------------------------------------------------- */
+  /* Centralised navigation helpers                                         */
+  /* ---------------------------------------------------------------------- */
+  const { search, handleSearchChange, sortableHeader } = useTableNavigation({
+    basePath,
+    initialParams,
+    sort,
+    order,
+    searchQuery,
+  })
 
-  /* ------------------------------- Columns ------------------------------ */
+  /* ---------------------------------------------------------------------- */
+  /* Column definitions                                                     */
+  /* ---------------------------------------------------------------------- */
   const columns = React.useMemo<Column<JobRow>[]>(() => {
     return [
-      { key: 'name', header: 'Job Title', sortable: true },
-      { key: 'recruiter', header: 'Recruiter', sortable: true },
+      {
+        key: 'name',
+        header: sortableHeader('Job Title', 'name'),
+        sortable: false,
+      },
+      {
+        key: 'recruiter',
+        header: sortableHeader('Recruiter', 'recruiter'),
+        sortable: false,
+      },
       {
         key: 'createdAt',
-        header: 'Posted',
+        header: sortableHeader('Posted', 'createdAt'),
+        sortable: false,
         render: (v) => format(new Date(v as string), 'PPP'),
-        sortable: true,
       },
       {
         key: 'description',
         header: 'Description',
-        render: (v) => (
-          <span className='line-clamp-2 max-w-xs text-muted-foreground'>{v}</span>
-        ),
         enableHiding: true,
+        sortable: false,
+        render: (v) => (
+          <span className='line-clamp-2 max-w-xs text-muted-foreground'>{v as string}</span>
+        ),
       },
       {
         key: 'id',
         header: 'Apply',
+        enableHiding: false, // prevent blank entry in columns dropdown
+        sortable: false,
         render: (_v, row) => (
           <ApplyButton pipelineId={row.id} onDone={() => router.refresh()} />
         ),
-        enableHiding: false, // prevent blank entry in columns dropdown
-        sortable: false,
       },
     ]
-  }, [router])
+  }, [sortableHeader, router])
 
-  /* ------------------------------- Render ------------------------------- */
+  /* ---------------------------------------------------------------------- */
+  /* Render                                                                 */
+  /* ---------------------------------------------------------------------- */
   return (
     <DataTable
       columns={columns}
       rows={rows}
-      basePath={basePath}
-      sort={sort}
-      order={order}
-      initialParams={initialParams}
       filterKey='name'
-      filterValue={searchQuery}
-      onFilterChange={onFilterChange}
+      filterValue={search}
+      onFilterChange={handleSearchChange}
+      pageSize={rows.length}
+      pageSizeOptions={[rows.length]}
       hidePagination
     />
   )
