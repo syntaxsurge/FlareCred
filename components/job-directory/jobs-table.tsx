@@ -157,7 +157,7 @@ function ApplyButton({
               </ActionButton>
             </span>
           </TooltipTrigger>
-          <TooltipContent>{disabledReason}</TooltipContent>
+          <TooltipContent className='font-semibold'>{disabledReason}</TooltipContent>
         </Tooltip>
       </TooltipProvider>
     )
