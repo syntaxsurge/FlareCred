@@ -167,6 +167,9 @@ export interface RecruiterCredentialRow {
   issuer: string | null
   status: string
   fileUrl: string | null
+  /** optional on-chain data */
+  txHash?: string | null
+  vcJson?: string | null
 }
 
 /* --------------------------------------------------------------------- */

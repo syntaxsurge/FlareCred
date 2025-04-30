@@ -11,12 +11,6 @@ import { issuers } from '../schema/issuer'
 /*                             Paginated fetch                                */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Fetch a page of credentials for a candidate with optional search/sort.
- *
- * When `verifiedFirst` is true the result is additionally ordered with all
- * verified rows first (descending boolean), used for the default view.
- */
 export async function getRecruiterCandidateCredentialsPage(
   candidateId: number,
   page: number,
@@ -55,11 +49,9 @@ export async function getRecruiterCandidateCredentialsPage(
       category: candidateCredentials.category,
       issuer: issuers.name,
       status: candidateCredentials.status,
-      verified: candidateCredentials.verified,
       fileUrl: candidateCredentials.fileUrl,
-      proofType: candidateCredentials.proofType,
-      proofData: candidateCredentials.proofData,
-      createdAt: candidateCredentials.createdAt,
+      txHash: candidateCredentials.txHash,
+      vcJson: candidateCredentials.vcJson,
     })
     .from(candidateCredentials)
     .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))

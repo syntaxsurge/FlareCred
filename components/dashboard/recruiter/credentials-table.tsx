@@ -1,13 +1,20 @@
 'use client'
 
 import * as React from 'react'
+import { Clipboard, ExternalLink, FileText } from 'lucide-react'
+import { toast } from 'sonner'
 
-import { FileText } from 'lucide-react'
-
-import StatusBadge from '@/components/ui/status-badge'
+import { StatusBadge } from '@/components/ui/status-badge'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
+import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { TableProps, RecruiterCredentialRow } from '@/lib/types/tables'
+import { copyToClipboard } from '@/lib/utils'
+import { txUrl } from '@/lib/utils/explorer'
+
+/* -------------------------------------------------------------------------- */
+/*                     Recruiter → Candidate Credentials                      */
+/* -------------------------------------------------------------------------- */
 
 export default function CredentialsTable({
   rows,
@@ -25,6 +32,45 @@ export default function CredentialsTable({
     order,
     searchQuery,
   })
+
+  /* -------------------------- Row-actions helper -------------------------- */
+  const makeActions = React.useCallback(
+    (row: RecruiterCredentialRow): TableRowAction<RecruiterCredentialRow>[] => {
+      const acts: TableRowAction<RecruiterCredentialRow>[] = []
+
+      /* View original file ------------------------------------------------- */
+      if (row.fileUrl) {
+        acts.push({ label: 'View file', icon: FileText, href: row.fileUrl })
+      }
+
+      /* Copy raw VC JSON --------------------------------------------------- */
+      if (row.vcJson) {
+        acts.push({
+          label: 'Copy VC JSON',
+          icon: Clipboard,
+          onClick: () => copyToClipboard(row.vcJson!),
+        })
+      }
+
+      /* View on-chain tx --------------------------------------------------- */
+      if (row.txHash) {
+        acts.push({
+          label: 'View transaction',
+          icon: ExternalLink,
+          href: txUrl(row.txHash),
+        })
+      } else {
+        acts.push({
+          label: 'No transaction',
+          icon: ExternalLink,
+          disabled: () => true,
+        })
+      }
+
+      return acts
+    },
+    [],
+  )
 
   /* ----------------------------- Columns ---------------------------------- */
   const columns = React.useMemo<Column<RecruiterCredentialRow>[]>(() => {
@@ -54,29 +100,16 @@ export default function CredentialsTable({
         render: (v) => <StatusBadge status={String(v)} />,
       },
       {
-        key: 'fileUrl',
-        header: 'File',
+        key: 'id',
+        header: '',
         enableHiding: false,
         sortable: false,
-        render: (v) =>
-          v ? (
-            <a
-              href={v as string}
-              target='_blank'
-              rel='noopener noreferrer'
-              className='text-primary inline-flex items-center gap-1 underline'
-            >
-              <FileText className='h-4 w-4' />
-              View
-            </a>
-          ) : (
-            '—'
-          ),
+        render: (_v, row) => <TableRowActions row={row} actions={makeActions(row)} />,
       },
     ]
-  }, [sortableHeader])
+  }, [sortableHeader, makeActions])
 
-  /* ------------------------------- View ---------------------------------- */
+  /* ------------------------------- View ----------------------------------- */
   return (
     <DataTable
       columns={columns}
@@ -84,6 +117,7 @@ export default function CredentialsTable({
       filterKey='title'
       filterValue={search}
       onFilterChange={handleSearchChange}
+      /* All pagination handled server-side in parent */
       pageSize={rows.length}
       pageSizeOptions={[rows.length]}
       hidePagination
