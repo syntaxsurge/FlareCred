@@ -64,7 +64,7 @@ export default async function PipelinesPage({
     id: p.id,
     name: p.name,
     description: p.description,
-    createdAt: p.createdAt.toISOString(),
+    createdAt: p.createdAt,
   }))
 
   /* ------------------------ Build initialParams -------------------------- */
