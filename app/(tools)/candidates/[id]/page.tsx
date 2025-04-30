@@ -2,7 +2,6 @@ import { asc, eq, and } from 'drizzle-orm'
 
 import CandidateDetailedProfileView from '@/components/dashboard/candidate/profile-detailed-view'
 import { db } from '@/lib/db/drizzle'
-import { getCandidateCredentialsSection } from '@/lib/db/queries/candidate-details'
 import { getCandidateSkillPassesSection } from '@/lib/db/queries/candidate-skill-passes'
 import { candidates, users, issuers } from '@/lib/db/schema'
 import {
@@ -13,6 +12,7 @@ import {
 } from '@/lib/db/schema/candidate'
 import type { StatusCounts } from '@/lib/types/candidate'
 import type { RecruiterCredentialRow } from '@/lib/types/tables'
+import { getCandidateCredentialsSection } from '@/lib/db/queries/candidate-credentials-core'
 
 export const revalidate = 0
 
