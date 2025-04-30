@@ -22,11 +22,10 @@ import { Octokit } from '@octokit/rest'
 import { createHelia } from 'helia'
 
 import { GITHUB_TOKEN, IPFS_PINATA_KEY, IPFS_PINATA_SECRET } from '@/lib/config.js'
-
 import { formatIso } from '../lib/utils/time.js'
 
 /* -------------------------------------------------------------------------- */
-/*                         C L I   &   E N V   P A R S E                      */
+/*                          C L I   &   E N V   P A R S E                     */
 /* -------------------------------------------------------------------------- */
 
 const arg = process.argv[2] ?? null
@@ -90,6 +89,8 @@ type JsonApiProof = {
     body: unknown
   }
   timestamp: string
+  /** FDC-required inclusion even if empty */
+  merkleProof: string[]
 }
 
 /** Canonical schema URI for JSON-API proofs per FDC spec (illustrative) */
@@ -108,6 +109,7 @@ const proof: JsonApiProof = {
     body: metrics,
   },
   timestamp: formatIso(new Date()),
+  merkleProof: [], // ← Ensure component serialisation
 }
 
 /* -------------------------------------------------------------------------- */
