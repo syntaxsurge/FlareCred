@@ -3,15 +3,21 @@
 import Link from 'next/link'
 import * as React from 'react'
 
+import { Button } from '@/components/ui/button'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { TableProps, TalentRow } from '@/lib/types/tables'
 
 /* -------------------------------------------------------------------------- */
-/*                            R E C R U I T E R ─ T A L E N T                 */
+/*                          R E C R U I T E R – T A L E N T                   */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Tabular results for recruiter talent-search.
+ * Clicking "View Profile” now routes to <code>/recruiter/talent/:id</code>,
+ * which exposes the Add-to-Pipeline controls.
+ */
 export default function TalentTable({
   rows,
   sort,
@@ -20,7 +26,7 @@ export default function TalentTable({
   initialParams,
   searchQuery,
 }: TableProps<TalentRow>) {
-  /* ------------------------- Navigation helpers ------------------------- */
+  /* ----------------------- Navigation helpers ------------------------ */
   const { search, handleSearchChange, sortableHeader } = useTableNavigation({
     basePath,
     initialParams,
@@ -29,7 +35,7 @@ export default function TalentTable({
     searchQuery,
   })
 
-  /* --------------------------- Column config ---------------------------- */
+  /* --------------------------- Columns ------------------------------- */
   const columns = React.useMemo<Column<TalentRow>[]>(() => {
     return [
       {
@@ -37,12 +43,10 @@ export default function TalentTable({
         header: sortableHeader('Name', 'name'),
         sortable: false,
         render: (v, row) => (
-          <Link href={`/candidates/${row.id}`} className='flex items-center gap-2'>
+          <div className='flex items-center gap-2'>
             <UserAvatar name={row.name} email={row.email} className='size-7' />
-            <span className='font-medium underline-offset-4 hover:underline'>
-              {v || 'Unnamed'}
-            </span>
-          </Link>
+            <span className='font-medium'>{v || 'Unnamed'}</span>
+          </div>
         ),
       },
       {
@@ -62,12 +66,24 @@ export default function TalentTable({
         key: 'topScore',
         header: sortableHeader('Top Score', 'topScore'),
         sortable: false,
-        render: (v) => (v === null ? '—' : `${v}%`),
+        render: (v) => (v === null || v === undefined ? '—' : `${v as number}%`),
+      },
+      {
+        key: 'id',
+        header: '',
+        enableHiding: false,
+        sortable: false,
+        render: (_v, row) => (
+          <Button asChild variant='link' size='sm' className='text-primary'>
+            {/* ✅  Corrected path points to recruiter-specific profile */}
+            <Link href={`/recruiter/talent/${row.id}`}>View Profile</Link>
+          </Button>
+        ),
       },
     ]
   }, [sortableHeader])
 
-  /* ------------------------------- View --------------------------------- */
+  /* ---------------------------- Render ------------------------------- */
   return (
     <DataTable
       columns={columns}
