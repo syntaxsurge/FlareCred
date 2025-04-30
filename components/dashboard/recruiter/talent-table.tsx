@@ -15,8 +15,8 @@ import type { TableProps, TalentRow } from '@/lib/types/tables'
 
 /**
  * Tabular results for recruiter talent-search.
- * Clicking "View Profile” now routes to <code>/recruiter/talent/:id</code>,
- * which exposes the Add-to-Pipeline controls.
+ * Clicking "View Profile” now opens the public candidate page in a new tab
+ * to simplify the recruiter workflow.
  */
 export default function TalentTable({
   rows,
@@ -74,9 +74,19 @@ export default function TalentTable({
         enableHiding: false,
         sortable: false,
         render: (_v, row) => (
-          <Button asChild variant='link' size='sm' className='text-primary'>
-            {/* ✅  Corrected path points to recruiter-specific profile */}
-            <Link href={`/recruiter/talent/${row.id}`}>View Profile</Link>
+          <Button
+            asChild
+            variant='link'
+            size='sm'
+            className='text-primary'
+          >
+            <Link
+              href={`/candidates/${row.id}`}
+              target='_blank'
+              rel='noopener noreferrer'
+            >
+              View Profile
+            </Link>
           </Button>
         ),
       },

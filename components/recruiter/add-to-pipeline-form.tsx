@@ -13,8 +13,11 @@ import {
 } from '@/components/ui/select'
 import type { AddToPipelineFormProps } from '@/lib/types/forms'
 
-import { addCandidateToPipelineAction } from '../../pipelines/actions'
+import { addCandidateToPipelineAction } from '@/app/(dashboard)/recruiter/pipelines/actions'
 
+/**
+ * Recruiter utility: add a candidate to one of the recruiter’s pipelines.
+ */
 export default function AddToPipelineForm({ candidateId, pipelines }: AddToPipelineFormProps) {
   const router = useRouter()
   const [pipelineId, setPipelineId] = useState<string>('')

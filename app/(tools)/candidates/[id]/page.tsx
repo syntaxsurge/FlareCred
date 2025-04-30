@@ -17,7 +17,7 @@ import {
 } from '@/lib/db/schema/candidate'
 import { issuers } from '@/lib/db/schema/issuer'
 import { recruiterPipelines } from '@/lib/db/schema/recruiter'
-import AddToPipelineForm from '@/app/(dashboard)/recruiter/talent/[id]/add-to-pipeline-form'
+import AddToPipelineForm from '@/components/recruiter/add-to-pipeline-form'
 import type {
   PipelineEntryRow,
   RecruiterCredentialRow,
