@@ -23,10 +23,9 @@ interface Props {
 }
 
 /**
- * Admin-side form that lets an administrator update the on-chain FLR prices for
- * the Base and Plus subscription tiers.  Transactions are now signed through
- * the active RainbowKit wallet (wagmi walletClient) so a wallet prompt appears
- * immediately instead of the button hanging.
+ * Admin form for updating on-chain FLR prices of the Base and Plus plans.
+ * The layout now fills the full card width and shows both fields side-by-side
+ * on larger screens for visual consistency with other admin pages.
  */
 export default function UpdatePlanPricesForm({ defaultBaseWei, defaultPlusWei }: Props) {
   /* ---------------------------------------------------------------------- */
@@ -60,6 +59,7 @@ export default function UpdatePlanPricesForm({ defaultBaseWei, defaultPlusWei }:
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+
     if (!isConnected) {
       toast.error('Connect a wallet first.')
       return
@@ -68,13 +68,22 @@ export default function UpdatePlanPricesForm({ defaultBaseWei, defaultPlusWei }:
     try {
       setPending(true)
 
-      /* ----------------------------- Base ------------------------------ */
-      await updatePlanPrice(1, base)
-      toast.success('Base plan price transaction sent.')
+      const txs: Promise<unknown>[] = []
 
-      /* ----------------------------- Plus ------------------------------ */
-      await updatePlanPrice(2, plus)
-      toast.success('Plus plan price transaction sent.')
+      if (ethers.parseUnits(base, 18) !== BigInt(defaultBaseWei)) {
+        txs.push(updatePlanPrice(1, base))
+      }
+      if (ethers.parseUnits(plus, 18) !== BigInt(defaultPlusWei)) {
+        txs.push(updatePlanPrice(2, plus))
+      }
+
+      if (txs.length === 0) {
+        toast.info('No changes to update.')
+        return
+      }
+
+      await Promise.all(txs)
+      toast.success('Plan prices updated.')
     } catch (err: any) {
       toast.error(err?.shortMessage ?? err?.message ?? 'Transaction failed.')
     } finally {
@@ -86,41 +95,43 @@ export default function UpdatePlanPricesForm({ defaultBaseWei, defaultPlusWei }:
   /*                                   UI                                   */
   /* ---------------------------------------------------------------------- */
   return (
-    <form onSubmit={handleSubmit} className='max-w-md space-y-6'>
-      {/* Base plan field */}
-      <div>
-        <label htmlFor='base' className='mb-1 block text-sm font-medium'>
-          Base Plan Price&nbsp;(FLR)
-        </label>
-        <Input
-          id='base'
-          type='number'
-          min='0'
-          step='0.000000000000000001'
-          value={base}
-          onChange={(e) => setBase(e.target.value)}
-          required
-        />
-      </div>
+    <form onSubmit={handleSubmit} className='space-y-6'>
+      <div className='grid gap-6 sm:grid-cols-2'>
+        {/* Base plan field */}
+        <div>
+          <label htmlFor='base' className='mb-1 block text-sm font-medium'>
+            Base Plan Price&nbsp;(FLR)
+          </label>
+          <Input
+            id='base'
+            type='number'
+            min='0'
+            step='0.000000000000000001'
+            value={base}
+            onChange={(e) => setBase(e.target.value)}
+            required
+          />
+        </div>
 
-      {/* Plus plan field */}
-      <div>
-        <label htmlFor='plus' className='mb-1 block text-sm font-medium'>
-          Plus Plan Price&nbsp;(FLR)
-        </label>
-        <Input
-          id='plus'
-          type='number'
-          min='0'
-          step='0.000000000000000001'
-          value={plus}
-          onChange={(e) => setPlus(e.target.value)}
-          required
-        />
+        {/* Plus plan field */}
+        <div>
+          <label htmlFor='plus' className='mb-1 block text-sm font-medium'>
+            Plus Plan Price&nbsp;(FLR)
+          </label>
+          <Input
+            id='plus'
+            type='number'
+            min='0'
+            step='0.000000000000000001'
+            value={plus}
+            onChange={(e) => setPlus(e.target.value)}
+            required
+          />
+        </div>
       </div>
 
       {/* Submit button */}
-      <Button type='submit' className='w-full' disabled={pending}>
+      <Button type='submit' className='w-full sm:w-auto' disabled={pending}>
         {pending ? (
           <>
             <Loader2 className='mr-2 h-4 w-4 animate-spin' />
