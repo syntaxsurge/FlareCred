@@ -39,6 +39,15 @@ export interface CandidateDirectoryRow {
   verified: number
 }
 
+/** Public job listing row */
+export interface JobRow {
+  id: number
+  name: string
+  recruiter: string
+  description: string | null
+  createdAt: string
+}
+
 /* --------------------------------------------------------------------- */
 /*                              Invitations                              */
 /* --------------------------------------------------------------------- */
