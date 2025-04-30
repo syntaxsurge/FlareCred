@@ -16,8 +16,9 @@ import {
   SelectItem,
   SelectValue,
 } from '@/components/ui/select'
-import { PROOF_TYPES, type ProofType } from '@/lib/constants/credential'
+import { PROOF_TYPES } from '@/lib/constants/credential'
 import type { AddCredentialFormProps } from '@/lib/types/forms'
+import { ProofType } from '@/lib/types/credential'
 
 /* -------------------------------------------------------------------------- */
 /*                                 CONSTANTS                                  */
