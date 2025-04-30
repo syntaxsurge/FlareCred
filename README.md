@@ -117,9 +117,9 @@ Contract compilation, testing and deployment are handled by a self-contained Har
 ### 📊 Detailed Architecture Diagrams  
 _All diagrams live in `public/images/architecture` so they render correctly on GitHub and inside the app._
 
-| Candidate Flow | Issuer Flow | Admin Flow |
-| --- | --- | --- |
-| ![Candidate Architecture](public/images/architecture/FlareCred-Candidate-Architecture.jpg) | ![Issuer Architecture](public/images/architecture/FlareCred-Issuer-Architecture.jpg) | ![Admin Architecture](public/images/architecture/FlareCred-Admin-Architecture.jpg) |
+| Candidate Flow | Issuer Flow | Admin Flow | Recruiter Flow |
+| -------------- | ----------- | ---------- | -------------- |
+| ![Candidate Architecture](public/images/architecture/FlareCred-Candidate-Architecture.jpg) | ![Issuer Architecture](public/images/architecture/FlareCred-Issuer-Architecture.jpg) | ![Admin Architecture](public/images/architecture/FlareCred-Admin-Architecture.jpg) | ![Recruiter Architecture](public/images/architecture/FlareCred-Recruiter-Architecture.jpg) |
 
 #### Subscription & Pricing Pipeline  
 
