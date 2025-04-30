@@ -1,11 +1,9 @@
-import { asc, desc, ilike, sql } from 'drizzle-orm'
 import { Users } from 'lucide-react'
 
 import CandidatesTable from '@/components/candidate-directory/candidates-table'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
-import { db } from '@/lib/db/drizzle'
-import { candidates, candidateCredentials, users } from '@/lib/db/schema'
+import { getCandidateListingPage } from '@/lib/db/queries/candidates-core'
 import type { CandidateDirectoryRow } from '@/lib/types/tables'
 
 export const revalidate = 0
@@ -16,6 +14,9 @@ export const revalidate = 0
 
 type Query = Record<string, string | string[] | undefined>
 const BASE_PATH = '/candidates'
+
+const ALLOWED_SORT_KEYS = ['name', 'email', 'verified'] as const
+type SortKey = (typeof ALLOWED_SORT_KEYS)[number]
 
 function first(p: Query, k: string) {
   return Array.isArray(p[k]) ? p[k]?.[0] : p[k]
@@ -35,57 +36,29 @@ export default async function CandidateDirectoryPage({
   const page = Math.max(1, Number(first(params, 'page') ?? '1'))
   const sizeRaw = Number(first(params, 'size') ?? '10')
   const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
-  const sort = first(params, 'sort') ?? 'name'
+
+  const sortRaw = first(params, 'sort') ?? 'name'
+  const sort: SortKey = ALLOWED_SORT_KEYS.includes(sortRaw as SortKey)
+    ? (sortRaw as SortKey)
+    : 'name'
+
   const order = first(params, 'order') === 'desc' ? 'desc' : 'asc'
   const searchTerm = (first(params, 'q') ?? '').trim().toLowerCase()
 
-  /* ----------------------------- Sort map ------------------------------- */
-  const sortMap = {
-    name: users.name,
-    email: users.email,
-    verified: sql<number>`verified_count`,
-  } as const
-  const orderExpr =
-    order === 'asc'
-      ? asc(sortMap[sort as keyof typeof sortMap])
-      : desc(sortMap[sort as keyof typeof sortMap])
+  /* ------------------------------ Data fetch ---------------------------- */
+  const { candidates, hasNext } = await getCandidateListingPage(
+    page,
+    pageSize,
+    sort as any,
+    order as 'asc' | 'desc',
+    searchTerm,
+  )
 
-  /* ----------------------------- Base where ----------------------------- */
-  let whereExpr: any = sql`TRUE`
-  if (searchTerm.length > 0) {
-    whereExpr = ilike(users.name, `%${searchTerm}%`)
-    whereExpr = sql`${whereExpr} OR ${ilike(users.email, `%${searchTerm}%`)}`
-  }
-
-  /* ----------------------------- Fetch rows ----------------------------- */
-  const offset = (page - 1) * pageSize
-  const rowsRaw = await db
-    .select({
-      id: candidates.id,
-      name: users.name,
-      email: users.email,
-      verified:
-        sql<number>`COUNT(CASE WHEN ${candidateCredentials.status} = 'verified' THEN 1 END)`.as(
-          'verified_count',
-        ),
-    })
-    .from(candidates)
-    .innerJoin(users, sql`${candidates.userId} = ${users.id}`)
-    .leftJoin(candidateCredentials, sql`${candidateCredentials.candidateId} = ${candidates.id}`)
-    .where(whereExpr)
-    .groupBy(candidates.id, users.name, users.email)
-    .orderBy(orderExpr)
-    .limit(pageSize + 1)
-    .offset(offset)
-
-  const hasNext = rowsRaw.length > pageSize
-  if (hasNext) rowsRaw.pop()
-
-  const rows: CandidateDirectoryRow[] = rowsRaw.map((r) => ({
-    id: r.id,
-    name: r.name,
-    email: r.email,
-    verified: Number(r.verified),
+  const rows: CandidateDirectoryRow[] = candidates.map((c) => ({
+    id: c.id,
+    name: c.name,
+    email: c.email,
+    verified: c.verified,
   }))
 
   /* ---------------------------- initialParams --------------------------- */

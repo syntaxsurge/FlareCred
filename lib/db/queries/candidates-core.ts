@@ -16,13 +16,22 @@ import { users } from '../schema/core'
  * Candidate Directory and recruiter-side Talent Search.
  *
  * Optional filters:
- *   • verifiedOnly → only candidates with at least one verified credential
- *   • skillMin/skillMax → inclusive range for top Skill-Pass score
+ *   • <code>verifiedOnly</code> → only candidates with at least one verified credential
+ *   • <code>skillMin/skillMax</code> → inclusive top-score range for Skill Passes
  */
+
+/* Pre-computed verified-count SQL fragment reused in SELECT and ORDER BY */
+const VERIFIED_COUNT_EXPR = sql<number>`(
+  SELECT COUNT(*)
+  FROM candidate_credentials cc
+  WHERE cc.candidate_id = ${candidates.id}
+    AND cc.verified
+)`
+
 export async function getCandidateListingPage(
   page: number,
   pageSize = 10,
-  sortBy: 'name' | 'email' | 'id' = 'name',
+  sortBy: 'name' | 'email' | 'id' | 'verified' = 'name',
   order: 'asc' | 'desc' = 'asc',
   searchTerm = '',
   verifiedOnly = false,
@@ -34,6 +43,7 @@ export async function getCandidateListingPage(
     name: users.name,
     email: users.email,
     id: candidates.id,
+    verified: VERIFIED_COUNT_EXPR,
   } as const
 
   const orderBy = buildOrderExpr(sortMap, sortBy, order)
@@ -45,14 +55,7 @@ export async function getCandidateListingPage(
   if (searchCond) filters.push(searchCond)
 
   if (verifiedOnly) {
-    filters.push(
-      sql`EXISTS (
-        SELECT 1
-        FROM candidate_credentials cc
-        WHERE cc.candidate_id = ${candidates.id}
-          AND cc.verified
-      )`,
-    )
+    filters.push(sql`(${VERIFIED_COUNT_EXPR}) > 0`)
   }
 
   /* Skill-score range filter */
@@ -86,12 +89,7 @@ export async function getCandidateListingPage(
       name: users.name,
       email: users.email,
       bio: candidates.bio,
-      verified: sql<number>`(
-        SELECT COUNT(*)
-        FROM candidate_credentials cc
-        WHERE cc.candidate_id = ${candidates.id}
-          AND cc.verified
-      )`.as('verified'),
+      verified: VERIFIED_COUNT_EXPR.as('verified'),
       topScore: sql<number | null>`(
         SELECT MAX(score)
         FROM quiz_attempts qa
