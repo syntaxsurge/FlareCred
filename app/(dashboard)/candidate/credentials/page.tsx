@@ -25,11 +25,9 @@ export default async function CredentialsPage({
 }) {
   const params = (await searchParams) as Query
 
-  /* -------------------------- Auth -------------------------- */
   const user = await getUser()
   if (!user) redirect('/connect-wallet')
 
-  /* ----------------------- DID Check ------------------------ */
   const [{ did } = {}] = await db
     .select({ did: teams.did })
     .from(teamMembers)
@@ -38,13 +36,11 @@ export default async function CredentialsPage({
     .limit(1)
   const hasDid = !!did
 
-  /* --------------------- Add Credential SA ------------------ */
   const addCredentialAction = async (formData: FormData): Promise<{ error?: string } | void> => {
     'use server'
     return await (await import('./actions')).addCredential({}, formData)
   }
 
-  /* ------------------------ Params ------------------------- */
   const page = Math.max(1, Number(first(params, 'page') ?? '1'))
   const sizeRaw = Number(first(params, 'size') ?? '10')
   const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
@@ -52,7 +48,6 @@ export default async function CredentialsPage({
   const order = first(params, 'order') === 'asc' ? 'asc' : 'desc'
   const searchTerm = (first(params, 'q') ?? '').trim().toLowerCase()
 
-  /* ------------------- Data fetch -------------------------- */
   const { rows: credentialRows, hasNext } = await getCandidateCredentialsPage(
     user.id,
     page,
@@ -70,10 +65,10 @@ export default async function CredentialsPage({
     issuer: c.issuer ?? null,
     status: c.status,
     fileUrl: null,
+    txHash: c.txHash ?? null,
     vcJson: c.vcJson ?? null,
   }))
 
-  /* ------------ Preserve existing query params ------------ */
   const initialParams: Record<string, string> = {}
   const copy = (k: string) => {
     const v = first(params, k)
@@ -84,7 +79,6 @@ export default async function CredentialsPage({
   copy('order')
   if (searchTerm) initialParams.q = searchTerm
 
-  /* --------------------------- UI -------------------------- */
   return (
     <PageCard
       icon={FileText}

@@ -74,17 +74,17 @@ export const candidateCredentials = pgTable('candidate_credentials', {
   title: varchar('title', { length: 200 }).notNull(),
   /**
    * Fine-grained type identifier (e.g. 'bachelor', 'github_repo').
-   * Currently recognised sub-types include **'github_repo'** for GitHub
-   * repository contribution credentials introduced in the Bonus Track.
    */
   type: varchar('type', { length: 50 }).notNull(),
   fileUrl: text('file_url'),
-  /** ----- NEW: FDC proof tracking ------------------------------------- */
+  /** ----- FDC proof tracking ------------------------------------------- */
   proofType: varchar('proof_type', { length: 30 }).notNull().default(''),
   proofData: text('proof_data').notNull().default(''),
-  /** ------------------------------------------------------------------- */
+  /** -------------------------------------------------------------------- */
   status: varchar('status', { length: 20 }).notNull().default(CredentialStatus.UNVERIFIED),
   verified: boolean('verified').notNull().default(false),
+  /** On-chain transaction hash anchoring the Credential NFT (optional). */
+  txHash: text('tx_hash'),
   /** Full VC JSON (optional). */
   vcJson: text('vc_json'),
   issuedAt: timestamp('issued_at'),
@@ -129,10 +129,6 @@ export const skillQuizzes = pgTable('skill_quizzes', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
 
-/**
- * NEW: individual questions attached to a quiz.
- * Shuffling happens client-side using the RNG seed.
- */
 export const skillQuizQuestions = pgTable('skill_quiz_questions', {
   id: serial('id').primaryKey(),
   quizId: integer('quiz_id')
@@ -153,7 +149,7 @@ export const quizAttempts = pgTable('quiz_attempts', {
   maxScore: integer('max_score').default(100),
   pass: integer('pass').default(0),
   vcIssuedId: text('vc_issued_id'),
-  /** Optional Verifiable Credential JSON (raw string) */
+  /** Optional Verifiable Credential JSON */
   vcJson: text('vc_json'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),

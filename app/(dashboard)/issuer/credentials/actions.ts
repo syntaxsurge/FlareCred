@@ -23,7 +23,6 @@ import { signCredentialMint } from '@/lib/utils/signature'
 export const approveCredentialAction = validatedActionWithUser(
   z.object({ credentialId: z.coerce.number() }),
   async ({ credentialId }, _, user) => {
-    /* 1. issuer ownership -------------------------------------------------- */
     const [issuer] = await db
       .select()
       .from(issuers)
@@ -32,7 +31,6 @@ export const approveCredentialAction = validatedActionWithUser(
     if (!issuer) return buildError('Issuer not found.')
     if (!issuer.did) return buildError('Link a DID before approving credentials.')
 
-    /* 2. credential row ---------------------------------------------------- */
     const [cred] = await db
       .select()
       .from(candidateCredentials)
@@ -46,7 +44,6 @@ export const approveCredentialAction = validatedActionWithUser(
     if (!cred) return buildError('Credential not found for this issuer.')
     if (cred.status === CredentialStatus.VERIFIED) return buildError('Credential already verified.')
 
-    /* 2b. enforce FDC proof ------------------------------------------------- */
     let parsedProof: unknown = cred.proofData
     try {
       parsedProof =
@@ -65,7 +62,6 @@ export const approveCredentialAction = validatedActionWithUser(
       return buildError(`FDC verification failed: ${err?.message ?? String(err)}`)
     }
 
-    /* Extract tx-hash (if present) for later deep-link --------------------- */
     let proofTx: string | undefined
     try {
       if (cred.proofType === 'EVM' || cred.proofType === 'PAYMENT') {
@@ -84,7 +80,6 @@ export const approveCredentialAction = validatedActionWithUser(
       /* ignore */
     }
 
-    /* 3. subject DID ------------------------------------------------------- */
     const [candRow] = await db
       .select({ cand: candidates, candUser: users })
       .from(candidates)
@@ -103,13 +98,11 @@ export const approveCredentialAction = validatedActionWithUser(
     if (!subjectDid)
       return buildError('Candidate has no DID – ask them to create one before verification.')
 
-    /* 4. Prepare VC JSON & on-chain data ----------------------------------- */
     let vcJsonText: string | undefined = cred.vcJson ?? undefined
     let tokenId: string | undefined
     let txHash: string | undefined
 
     if (!vcJsonText) {
-      /* ---------- credentialSubject assembly ---------- */
       const credentialSubject: Record<string, unknown> = {
         id: subjectDid,
         title: cred.title,
@@ -138,18 +131,13 @@ export const approveCredentialAction = validatedActionWithUser(
       vcJsonText = JSON.stringify(vcPayload)
       const vcHash = toBytes32(vcJsonText)
 
-      /* Anchor on Flare ---------------------------------------------------- */
       const to = extractAddressFromDid(subjectDid)
       if (!to) return buildError('Malformed subject DID.')
 
-      /* ---------------- Platform signer injection ------------------------ */
       const PK = process.env.PLATFORM_SIGNER_PRIVATE_KEY
       if (!PK) return buildError('Platform signer private key not configured.')
       const platformSigner = new ethers.Wallet(PK, provider)
 
-      /* Produce ECDSA signature so contract call passes even if role mapping
-       * is out-of-sync.  This covers the "Credential: signature required”
-       * revert encountered on GitHub credentials.                             */
       let sig: string
       try {
         sig = await signCredentialMint(to, vcHash, '')
@@ -161,7 +149,7 @@ export const approveCredentialAction = validatedActionWithUser(
         const res = await issueFlareCredential({
           to,
           vcHash,
-          uri: '', // off-chain VC stored in DB; IPFS pinning can update later
+          uri: '',
           signer: platformSigner,
           signature: sig,
         })
@@ -172,7 +160,6 @@ export const approveCredentialAction = validatedActionWithUser(
       }
     }
 
-    /* Build new vcJson payload -------------------------------------------- */
     let newVcJson: string
     try {
       const baseVcObj =
@@ -188,7 +175,6 @@ export const approveCredentialAction = validatedActionWithUser(
       if (proofTx) merged.proofTx = proofTx
       newVcJson = JSON.stringify(merged)
     } catch {
-      // Fallback minimal
       newVcJson = JSON.stringify({
         tokenId,
         txHash,
@@ -196,7 +182,6 @@ export const approveCredentialAction = validatedActionWithUser(
       })
     }
 
-    /* 5. persist ----------------------------------------------------------- */
     await db
       .update(candidateCredentials)
       .set({
@@ -204,6 +189,7 @@ export const approveCredentialAction = validatedActionWithUser(
         verified: true,
         verifiedAt: new Date(),
         vcJson: newVcJson,
+        ...(txHash ? { txHash } : {}),
       })
       .where(eq(candidateCredentials.id, cred.id))
 

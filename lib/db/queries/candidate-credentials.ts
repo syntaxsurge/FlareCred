@@ -12,9 +12,6 @@ import { buildOrderExpr, paginate } from './query-helpers'
 /*                       Public Query Helpers                                 */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Paginate the caller’s own credentials (candidate dashboard).
- */
 export async function getCandidateCredentialsPage(
   userId: number,
   page: number,
@@ -44,9 +41,6 @@ export async function getCandidateCredentialsPage(
   return getCandidateCredentialsSection(cand.id, page, pageSize, sort, order, searchTerm)
 }
 
-/**
- * Paginate credentials by candidateId (used by recruiter & public profiles).
- */
 export async function getCandidateCredentialsSection(
   candidateId: number,
   page: number,
@@ -55,7 +49,6 @@ export async function getCandidateCredentialsSection(
   order: 'asc' | 'desc',
   searchTerm: string,
 ): Promise<PageResult<CandidateCredentialRow> & { statusCounts: StatusCounts }> {
-  /* -------------------------- Status counts --------------------------- */
   const [counts] = await db
     .select({
       verified:
@@ -78,7 +71,6 @@ export async function getCandidateCredentialsSection(
     .from(candidateCredentials)
     .where(eq(candidateCredentials.candidateId, candidateId))
 
-  /* --------------------------- ORDER BY ------------------------------- */
   const sortMap = {
     title: candidateCredentials.title,
     category: candidateCredentials.category,
@@ -87,7 +79,6 @@ export async function getCandidateCredentialsSection(
   } as const
   const orderBy = buildOrderExpr(sortMap, sort, order)
 
-  /* ---------------------------- WHERE --------------------------------- */
   const whereExpr =
     searchTerm.trim().length === 0
       ? eq(candidateCredentials.candidateId, candidateId)
@@ -96,7 +87,6 @@ export async function getCandidateCredentialsSection(
           ilike(candidateCredentials.title, `%${searchTerm}%`),
         )
 
-  /* ----------------------------- Query -------------------------------- */
   const baseQuery = db
     .select({
       id: candidateCredentials.id,
@@ -108,6 +98,7 @@ export async function getCandidateCredentialsSection(
       fileUrl: candidateCredentials.fileUrl,
       proofType: candidateCredentials.proofType,
       proofData: candidateCredentials.proofData,
+      txHash: candidateCredentials.txHash,
       vcJson: candidateCredentials.vcJson,
     })
     .from(candidateCredentials)
@@ -131,6 +122,7 @@ export async function getCandidateCredentialsSection(
     fileUrl: r.fileUrl ?? null,
     proofType: r.proofType ?? null,
     proofData: r.proofData ?? null,
+    txHash: r.txHash ?? null,
     vcJson: r.vcJson ?? null,
   }))
 
