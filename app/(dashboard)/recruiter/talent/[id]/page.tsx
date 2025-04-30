@@ -3,12 +3,7 @@ import { redirect } from 'next/navigation'
 import { asc, desc, eq, inArray } from 'drizzle-orm'
 
 import CandidateDetailedProfileView from '@/components/dashboard/candidate/profile-detailed-view'
-import { type Stage } from '@/lib/constants/recruiter'
 import { db } from '@/lib/db/drizzle'
-import {
-  getCandidateCredentialsSection,
-  type StatusCounts,
-} from '@/lib/db/queries/candidate-details'
 import { getUser } from '@/lib/db/queries/queries'
 import {
   users,
@@ -25,6 +20,9 @@ import {
 } from '@/lib/db/schema/candidate'
 
 import AddToPipelineForm from './add-to-pipeline-form'
+import { Stage } from '@/lib/types/recruiter'
+import { getCandidateCredentialsSection } from '@/lib/db/queries/candidate-credentials-core'
+import { StatusCounts } from '@/lib/types/candidate'
 
 export const revalidate = 0
 
