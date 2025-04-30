@@ -15,20 +15,29 @@ import {
 } from '@/lib/db/schema'
 import {
   candidateCredentials,
+  candidateHighlights,
   CredentialCategory,
   type CredentialStatus,
 } from '@/lib/db/schema/candidate'
-
+import { getCandidateCredentialsSection } from '@/lib/db/queries/candidate-credentials-core'
+import { getCandidateSkillPassesSection } from '@/lib/db/queries/candidate-skill-passes'
 import AddToPipelineForm from './add-to-pipeline-form'
 import { Stage } from '@/lib/types/recruiter'
-import { getCandidateCredentialsSection } from '@/lib/db/queries/candidate-credentials-core'
 import { StatusCounts } from '@/lib/types/candidate'
 
 export const revalidate = 0
 
+/* -------------------------------------------------------------------------- */
+/*                                   TYPES                                    */
+/* -------------------------------------------------------------------------- */
+
 type Params = { id: string }
 type Query = Record<string, string | string[] | undefined>
 const first = (p: Query, k: string) => (Array.isArray(p[k]) ? p[k]?.[0] : p[k])
+
+/* -------------------------------------------------------------------------- */
+/*                                    Page                                    */
+/* -------------------------------------------------------------------------- */
 
 export default async function RecruiterCandidateProfile({
   params,
@@ -41,10 +50,12 @@ export default async function RecruiterCandidateProfile({
   const candidateId = Number(id)
   const q = (await searchParams) as Query
 
+  /* ------------------------------ Auth guard ----------------------------- */
   const user = await getUser()
   if (!user) redirect('/connect-wallet')
   if (user.role !== 'recruiter') redirect('/')
 
+  /* ----------------------------- Candidate row --------------------------- */
   const [row] = await db
     .select({ cand: candidates, userRow: users })
     .from(candidates)
@@ -54,15 +65,15 @@ export default async function RecruiterCandidateProfile({
 
   if (!row) redirect('/recruiter/talent')
 
-  /* --------------------- Experience & Project highlights --------------------- */
+  /* ------------------------ Experience & Projects ------------------------ */
   const hlRows = await db
     .select({
-      credentialId: pipelineCandidates.credentialId,
-      sortOrder: pipelineCandidates.sortOrder,
+      credentialId: candidateHighlights.credentialId,
+      sortOrder: candidateHighlights.sortOrder,
     })
-    .from(pipelineCandidates)
-    .where(eq(pipelineCandidates.candidateId, candidateId))
-    .orderBy(asc(pipelineCandidates.sortOrder))
+    .from(candidateHighlights)
+    .where(eq(candidateHighlights.candidateId, candidateId))
+    .orderBy(asc(candidateHighlights.sortOrder))
 
   const highlightedIds = hlRows.map((h) => h.credentialId)
 
@@ -79,7 +90,6 @@ export default async function RecruiterCandidateProfile({
             description: candidateCredentials.type,
             category: candidateCredentials.category,
             status: candidateCredentials.status,
-            /** NEW PROOF FIELDS */
             proofType: candidateCredentials.proofType,
             proofData: candidateCredentials.proofData,
           })
@@ -87,7 +97,6 @@ export default async function RecruiterCandidateProfile({
           .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
           .where(inArray(candidateCredentials.id, highlightedIds))
 
-  /* maintain order */
   highlightedCreds.sort((a, b) => highlightedIds.indexOf(a.id) - highlightedIds.indexOf(b.id))
 
   const experiences = highlightedCreds
@@ -113,7 +122,7 @@ export default async function RecruiterCandidateProfile({
       status: p.status as CredentialStatus,
     }))
 
-  /* --------------------- Pipelines owned by recruiter --------------------- */
+  /* --------------------- Recruiter-owned pipelines ---------------------- */
   const pipelines = await db
     .select({ id: recruiterPipelines.id, name: recruiterPipelines.name })
     .from(recruiterPipelines)
@@ -136,7 +145,7 @@ export default async function RecruiterCandidateProfile({
         ? `In ${pipelineEntriesAll[0].pipelineName}`
         : `In ${pipelineEntriesAll.length} Pipelines`
 
-  /* ----------------------------- Credentials section ----------------------------- */
+  /* ------------------------- Credentials section ------------------------ */
   const page = Math.max(1, Number(first(q, 'page') ?? '1'))
   const sizeRaw = Number(first(q, 'size') ?? '10')
   const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
@@ -167,7 +176,7 @@ export default async function RecruiterCandidateProfile({
   keep('order')
   if (searchTerm) credInitialParams['q'] = searchTerm
 
-  /* ----------------------------- Pipeline entries section ----------------------------- */
+  /* ------------------------- Pipeline entries --------------------------- */
   const pipePage = Math.max(1, Number(first(q, 'pipePage') ?? '1'))
   const pipeSizeRaw = Number(first(q, 'pipeSize') ?? '10')
   const pipePageSize = [10, 20, 50].includes(pipeSizeRaw) ? pipeSizeRaw : 10
@@ -219,25 +228,54 @@ export default async function RecruiterCandidateProfile({
   keepPipe('pipeOrder')
   if (pipeSearchTerm) pipeInitialParams['pipeQ'] = pipeSearchTerm
 
-  /* ----------------------------- Quiz passes ----------------------------- */
-  const passes = await db
+  /* --------------------------- Skill Passes ---------------------------- */
+  const passPage = Math.max(1, Number(first(q, 'passPage') ?? '1'))
+  const passSizeRaw = Number(first(q, 'passSize') ?? '10')
+  const passPageSize = [10, 20, 50].includes(passSizeRaw) ? passSizeRaw : 10
+  const passAllowedSort = ['quizTitle', 'score', 'createdAt'] as const
+  type PassSortKey = (typeof passAllowedSort)[number]
+  const passSortRaw = (first(q, 'passSort') ?? 'createdAt') as string
+  const passSort: PassSortKey = passAllowedSort.includes(passSortRaw as PassSortKey)
+    ? (passSortRaw as PassSortKey)
+    : 'createdAt'
+  const passOrder = first(q, 'passOrder') === 'asc' ? 'asc' : 'desc'
+  const passSearch = (first(q, 'passQ') ?? '').trim()
+
+  const { rows: passRows, hasNext: passHasNext } = await getCandidateSkillPassesSection(
+    candidateId,
+    passPage,
+    passPageSize,
+    passSort,
+    passOrder as any,
+    passSearch,
+  )
+
+  const passInitialParams: Record<string, string> = {}
+  const keepPass = (k: string) => {
+    const v = first(q, k)
+    if (v) passInitialParams[k] = v
+  }
+  ;['passSize', 'passSort', 'passOrder'].forEach(keepPass)
+  if (passSearch) passInitialParams['passQ'] = passSearch
+
+  /* ------------------------- Snapshot metrics -------------------------- */
+  const allPasses = await db
     .select()
     .from(quizAttempts)
     .where(eq(quizAttempts.candidateId, candidateId))
     .orderBy(desc(quizAttempts.createdAt))
 
-  /* ----------------------------- Snapshot metrics ----------------------------- */
   const issuerSet = new Set<string>()
   highlightedCreds.forEach((c) => c.issuerName && issuerSet.add(c.issuerName))
   credRows.forEach((c: any) => c.issuer && issuerSet.add(c.issuer))
 
-  const scoreVals = passes.map((p) => p.score).filter((s): s is number => s !== null)
+  const scoreVals = allPasses.map((p) => p.score).filter((s): s is number => s !== null)
   const avgScore =
     scoreVals.length > 0
       ? Math.round(scoreVals.reduce((a, b) => a + b, 0) / scoreVals.length)
       : null
 
-  /* ----------------------------- Render ----------------------------- */
+  /* ------------------------------ Render ------------------------------- */
   return (
     <CandidateDetailedProfileView
       candidateId={candidateId}
@@ -247,7 +285,18 @@ export default async function RecruiterCandidateProfile({
       bio={row.cand.bio ?? null}
       pipelineSummary={pipelineSummary}
       statusCounts={statusCounts as StatusCounts}
-      passes={passes}
+      passes={{
+        rows: passRows,
+        sort: passSort,
+        order: passOrder as 'asc' | 'desc',
+        pagination: {
+          page: passPage,
+          hasNext: passHasNext,
+          pageSize: passPageSize,
+          basePath: `/recruiter/talent/${candidateId}`,
+          initialParams: passInitialParams,
+        },
+      }}
       snapshot={{
         uniqueIssuers: issuerSet.size,
         avgScore,
