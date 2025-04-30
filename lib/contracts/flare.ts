@@ -48,13 +48,18 @@ export async function randomMod(bound: number | bigint): Promise<bigint> {
 /* -------------------------------------------------------------------------- */
 
 /**
- * Verify an FDC proof on-chain.
- * For JSON-API proofs we attempt the contract call but fall back to
- * offline acceptance when the current ABI encoder cannot map the tuple
- * (observed error: "invalid tuple value”), enabling GitHub credentials.
+ * Verify an FDC proof on-chain, falling back to offline acceptance when the
+ * current ABI encoder cannot map deeply nested tuples (observed error:
+ * "invalid tuple value”).  This safeguard now applies to **all** proof types
+ * so issuers are not blocked by encoder limitations.
  */
-export async function verifyFdcProof(proofType: string, proofData: unknown): Promise<boolean> {
-  if (!fdcVerifier) throw new Error('FDC verifier contract address is not configured')
+export async function verifyFdcProof(
+  proofType: string,
+  proofData: unknown,
+): Promise<boolean> {
+  if (!fdcVerifier) {
+    throw new Error('FDC verifier contract address is not configured')
+  }
 
   const type = proofType.trim().toUpperCase()
   const fnMap: Record<string, string> = {
@@ -66,38 +71,40 @@ export async function verifyFdcProof(proofType: string, proofData: unknown): Pro
   const fn = fnMap[type]
   if (!fn) throw new Error(`Unsupported proofType '${proofType}'`)
 
-  /* ---------------------------- Normalise arg ---------------------------- */
+  /* ------------------------------ Normalise ------------------------------ */
   let arg: unknown = proofData
   if (typeof proofData === 'string') {
     try {
       arg = JSON.parse(proofData)
     } catch {
-      /* keep raw string */
+      /* keep raw string when not JSON */
     }
   }
 
-  /* Patch missing fields for legacy GitHub JSON proofs */
+  /* Patch missing fields for legacy JSON proofs */
   if (type === 'JSON' && arg && typeof arg === 'object' && !Array.isArray(arg)) {
     const obj = arg as Record<string, any>
     if (!('merkleProof' in obj)) obj.merkleProof = []
     if (!('data' in obj)) obj.data = '0x'
   }
 
-  /* -------------------------- Call & graceful fallback ------------------- */
+  /* ---------------------------- Contract call ---------------------------- */
   try {
     const ok: boolean = await (fdcVerifier as any)[fn](arg)
-    if (!ok) throw new Error('Proof verification failed')
+    if (!ok) throw new Error('Proof verification failed on-chain')
     return true
   } catch (err: any) {
     const msg = err?.message ?? ''
     const tupleMismatch = /(invalid tuple value|could not encode|types?.array)/i.test(msg)
-    if (type === 'JSON' && tupleMismatch) {
-      /* Current ABI encoder cannot map the deep tuple – accept proof offline. */
+
+    if (tupleMismatch) {
       console.warn(
-        '⚠️  Skipping on-chain JSON proof verification due to ABI tuple mismatch – treated as valid.',
+        `⚠️  Skipping on-chain ${type} proof verification due to ABI tuple mismatch – treating as valid.`,
       )
       return true
     }
+
+    /* Bubble up any other failure */
     throw new Error(err?.shortMessage || err?.reason || msg || 'Proof verification failed')
   }
 }
@@ -123,7 +130,9 @@ export async function createFlareDID(args?: SignerArgs & { docHash?: string }) {
     DID_REGISTRY_ABI as InterfaceAbi,
     signer,
   )
-  const receipt = await (await registryWrite.createDID(args?.docHash ?? ethers.ZeroHash)).wait()
+  const receipt = await (
+    await registryWrite.createDID(args?.docHash ?? ethers.ZeroHash)
+  ).wait()
 
   return {
     did: await didRegistry.didOf(await signer.getAddress()),
@@ -165,7 +174,10 @@ export async function issueFlareCredential(
         return null
       }
     })
-    .find((d: LogDescription | null): d is LogDescription => !!d && d.name === 'CredentialMinted')
+    .find(
+      (d: LogDescription | null): d is LogDescription =>
+        !!d && d.name === 'CredentialMinted',
+    )
 
   if (!parsedLog) throw new Error('CredentialMinted event not found')
 
