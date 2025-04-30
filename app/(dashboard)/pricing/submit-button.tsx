@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { SUBSCRIPTION_MANAGER_ADDRESS, CHAIN_ID } from '@/lib/config'
 import { SUBSCRIPTION_MANAGER_ABI } from '@/lib/contracts/abis'
 import { useFlareUsdPrice } from '@/lib/hooks/use-flare-usd-price'
+import { syncSubscription } from '@/lib/payments/client'
 import type { SubmitButtonProps } from '@/lib/types/forms'
 
 export function SubmitButton({ planKey, priceWei }: SubmitButtonProps) {
@@ -21,7 +22,6 @@ export function SubmitButton({ planKey, priceWei }: SubmitButtonProps) {
   const router = useRouter()
 
   const { usd, stale } = useFlareUsdPrice()
-
   const [pending, setPending] = useState(false)
 
   /* ------------------------- USD label ---------------------------------- */
@@ -70,6 +70,10 @@ export function SubmitButton({ planKey, priceWei }: SubmitButtonProps) {
 
       /* Confirmation -------------------------------------------------------- */
       await publicClient?.waitForTransactionReceipt({ hash: txHash })
+
+      /* Persist to DB ------------------------------------------------------- */
+      await syncSubscription(planKey)
+
       toast.success('Subscription activated ✅', { id: toastId })
       router.refresh()
     } catch (err: any) {

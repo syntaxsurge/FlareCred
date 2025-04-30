@@ -15,6 +15,7 @@ import { CHAIN_ID, SUBSCRIPTION_MANAGER_ADDRESS } from '@/lib/config'
 import { PLAN_META } from '@/lib/constants/pricing'
 import { SUBSCRIPTION_MANAGER_ABI } from '@/lib/contracts/abis'
 import { useFlareUsdPrice } from '@/lib/hooks/use-flare-usd-price'
+import { syncSubscription } from '@/lib/payments/client'
 import type { SettingsProps } from '@/lib/types/components'
 
 import { InviteTeamMember } from './invite-team'
@@ -30,7 +31,6 @@ function RenewSubscriptionButton({ planName }: { planName: 'base' | 'plus' }) {
   const publicClient = usePublicClient()
 
   const [pending, setPending] = useState(false)
-
   const { usd, stale } = useFlareUsdPrice()
 
   const meta = PLAN_META.find((p) => p.key === planName)
@@ -60,13 +60,13 @@ function RenewSubscriptionButton({ planName }: { planName: 'base' | 'plus' }) {
     const toastId = toast.loading('Preparing renewal…')
 
     try {
-      /* Network */
+      /* Network ----------------------------------------------------------- */
       if (chain?.id !== CHAIN_ID) {
         toast.loading('Switching network…', { id: toastId })
         await switchChainAsync({ chainId: CHAIN_ID })
       }
 
-      /* Contract call */
+      /* Contract call ----------------------------------------------------- */
       toast.loading('Awaiting wallet signature…', { id: toastId })
       const txHash = await walletClient.writeContract({
         address: SUBSCRIPTION_MANAGER_ADDRESS,
@@ -78,6 +78,10 @@ function RenewSubscriptionButton({ planName }: { planName: 'base' | 'plus' }) {
 
       toast.loading(`Tx sent: ${txHash.slice(0, 10)}…`, { id: toastId })
       await publicClient?.waitForTransactionReceipt({ hash: txHash })
+
+      /* Persist to DB ----------------------------------------------------- */
+      await syncSubscription(planKey)
+
       toast.success('Subscription renewed ✅', { id: toastId })
       location.reload()
     } catch (err: any) {
@@ -183,7 +187,7 @@ export function Settings({
             {team.did ? (
               <>
                 <p className='text-sm'>DID:</p>
-                <p className='font-semibold break-all'>{team.did}</p>
+                <p className='break-all font-semibold'>{team.did}</p>
               </>
             ) : (
               <p className='text-muted-foreground text-sm'>
