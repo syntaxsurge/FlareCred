@@ -12,6 +12,15 @@ import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { TableProps, JobRow } from '@/lib/types/tables'
 
 /* -------------------------------------------------------------------------- */
+/*                              T Y P E S                                     */
+/* -------------------------------------------------------------------------- */
+
+interface JobsTableProps extends TableProps<JobRow> {
+  /** True when the viewing user has the "candidate" role */
+  isCandidate: boolean
+}
+
+/* -------------------------------------------------------------------------- */
 /*                              J O B S   T A B L E                           */
 /* -------------------------------------------------------------------------- */
 
@@ -22,7 +31,8 @@ export default function JobsTable({
   basePath,
   initialParams,
   searchQuery,
-}: TableProps<JobRow>) {
+  isCandidate,
+}: JobsTableProps) {
   const router = useRouter()
 
   /* Centralised table-navigation helpers */
@@ -60,7 +70,6 @@ export default function JobsTable({
         header: 'Description',
         enableHiding: true,
         sortable: false,
-        /* Show full description – no truncation */
         render: (v) => <span className='text-muted-foreground'>{v as string}</span>,
       },
       {
@@ -72,12 +81,13 @@ export default function JobsTable({
           <ApplyButton
             pipelineId={row.id}
             applied={row.applied}
+            isCandidate={isCandidate}
             onDone={() => router.refresh()}
           />
         ),
       },
     ]
-  }, [sortableHeader, router])
+  }, [sortableHeader, router, isCandidate])
 
   return (
     <DataTable
@@ -100,20 +110,24 @@ export default function JobsTable({
 function ApplyButton({
   pipelineId,
   applied,
+  isCandidate,
   onDone,
 }: {
   pipelineId: number
   applied: boolean
+  isCandidate: boolean
   onDone: () => void
 }) {
   const [isApplied, setApplied] = React.useState(applied)
   const [pending, setPending] = React.useState(false)
 
-  /* Already applied – show muted button */
-  if (isApplied) {
+  /* Disabled when already applied or viewer is not a candidate */
+  const disabled = isApplied || !isCandidate
+
+  if (disabled) {
     return (
       <ActionButton disabled variant='outline' size='sm' className='cursor-default opacity-60'>
-        Applied
+        {isApplied ? 'Applied' : 'Apply'}
       </ActionButton>
     )
   }

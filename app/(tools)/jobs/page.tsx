@@ -21,7 +21,7 @@ type Query = Record<string, string | string[] | undefined>
 const BASE_PATH = '/jobs'
 const first = (p: Query, k: string) => (Array.isArray(p[k]) ? p[k]?.[0] : p[k])
 
-/* Allowed sort keys (validated to prevent SQL-inj) */
+/* Allowed sort keys */
 const SORT_KEYS = ['name', 'recruiter', 'createdAt'] as const
 type SortKey = (typeof SORT_KEYS)[number]
 
@@ -38,15 +38,11 @@ export default async function JobsDirectoryPage({
 
   /* ----------------------------- Query params ---------------------------- */
   const page = Math.max(1, Number(first(params, 'page') ?? '1'))
-
   const sizeRaw = Number(first(params, 'size') ?? '10')
   const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
 
   const sortRaw = first(params, 'sort') ?? 'createdAt'
-  const sort: SortKey = SORT_KEYS.includes(sortRaw as SortKey)
-    ? (sortRaw as SortKey)
-    : 'createdAt'
-
+  const sort: SortKey = SORT_KEYS.includes(sortRaw as SortKey) ? (sortRaw as SortKey) : 'createdAt'
   const order = first(params, 'order') === 'asc' ? 'asc' : 'desc'
   const searchTerm = (first(params, 'q') ?? '').trim().toLowerCase()
 
@@ -59,15 +55,16 @@ export default async function JobsDirectoryPage({
     searchTerm,
   )
 
-  /* ------------------------ Applied-status enrichment -------------------- */
+  /* ------------------- Enrich with applied status & role ------------------ */
   const user = await getUser()
+  const isCandidate = user?.role === 'candidate'
 
   let appliedSet = new Set<number>()
-  if (user && user.role === 'candidate') {
+  if (isCandidate) {
     const [cand] = await db
       .select({ id: candidatesTable.id })
       .from(candidatesTable)
-      .where(eq(candidatesTable.userId, user.id))
+      .where(eq(candidatesTable.userId, user!.id))
       .limit(1)
 
     if (cand) {
@@ -118,6 +115,7 @@ export default async function JobsDirectoryPage({
           basePath={BASE_PATH}
           initialParams={initialParams}
           searchQuery={searchTerm}
+          isCandidate={isCandidate}
         />
 
         <TablePagination
