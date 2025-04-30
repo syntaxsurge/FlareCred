@@ -1,3 +1,4 @@
+import { eq } from 'drizzle-orm'
 import type { AdminIssuerRow } from '@/lib/types/tables'
 
 import { db } from '../drizzle'
@@ -37,7 +38,7 @@ export async function getAdminIssuersPage(
       status: issuers.status,
     })
     .from(issuers)
-    .leftJoin(users, issuers.ownerUserId.eq(users.id))
+    .leftJoin(users, eq(issuers.ownerUserId, users.id))
 
   const { rows, hasNext } = await getPaginatedList<AdminIssuerRow>(
     baseQuery,

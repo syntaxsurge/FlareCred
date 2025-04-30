@@ -1,3 +1,4 @@
+import { eq } from 'drizzle-orm'
 import type { AdminCredentialRow } from '@/lib/types/tables'
 
 import { db } from '../drizzle'
@@ -36,9 +37,9 @@ export async function getAdminCredentialsPage(
       vcJson: candidateCredentials.vcJson,
     })
     .from(candidateCredentials)
-    .leftJoin(candidates, candidateCredentials.candidateId.eq(candidates.id))
-    .leftJoin(users, candidates.userId.eq(users.id))
-    .leftJoin(issuers, candidateCredentials.issuerId.eq(issuers.id))
+    .leftJoin(candidates, eq(candidateCredentials.candidateId, candidates.id))
+    .leftJoin(users, eq(candidates.userId, users.id))
+    .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
 
   const { rows, hasNext } = await getPaginatedList<AdminCredentialRow>(
     baseQuery,
