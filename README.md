@@ -114,6 +114,17 @@ Contract compilation, testing and deployment are handled by a self-contained Har
 *   **Smart Contracts** – Identity (`DIDRegistry`), Credentials (`CredentialNFT`), Billing (`SubscriptionManager`), Oracle & RNG helpers plus the `FlareCredVerifier` delegate for FDC proof checks.
 *   **Data Flow** – UI → Server Action → Drizzle → Flare Contracts. On-chain hashes/timestamps are the source of truth; Postgres is a query cache.
 
+### 📊 Detailed Architecture Diagrams  
+_All diagrams live in `public/images` so they render correctly on GitHub and inside the app._
+
+| Candidate Flow | Issuer Flow | Admin Flow |
+| --- | --- | --- |
+| ![Candidate Architecture](public/images/FlareCred-Candidate-Architecture.jpg) | ![Issuer Architecture](public/images/FlareCred-Issuer-Architecture.jpg) | ![Admin Architecture](public/images/FlareCred-Admin-Architecture.jpg) |
+
+#### Subscription & Pricing Pipeline  
+
+![Subscription & Pricing Architecture](public/images/FlareCred-Pricing-Architecture.jpg)
+
 ## 🙏 Need Help?
 
 Open an issue or start a discussion on GitHub — we welcome questions, feedback and PRs.
