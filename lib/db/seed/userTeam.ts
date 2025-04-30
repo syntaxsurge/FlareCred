@@ -220,6 +220,41 @@ export async function seedUserTeam() {
         name: 'QA Engineer – May 2025',
         description: 'Automated testing to ensure product quality and reliability.',
       },
+      {
+        recruiterId: recruiterUserId,
+        name: 'Product Manager – May 2025',
+        description: 'Define roadmap and champion user-centric product strategy.',
+      },
+      {
+        recruiterId: recruiterUserId,
+        name: 'Data Engineer – May 2025',
+        description: 'Design data pipelines and analytics infrastructure.',
+      },
+      {
+        recruiterId: recruiterUserId,
+        name: 'Mobile Developer – May 2025',
+        description: 'Craft high-performance mobile apps with React Native.',
+      },
+      {
+        recruiterId: recruiterUserId,
+        name: 'Security Engineer – May 2025',
+        description: 'Safeguard platform integrity and perform threat modelling.',
+      },
+      {
+        recruiterId: recruiterUserId,
+        name: 'UX Designer – May 2025',
+        description: 'Deliver intuitive experiences through research-driven design.',
+      },
+      {
+        recruiterId: recruiterUserId,
+        name: 'Technical Writer – May 2025',
+        description: 'Create clear, concise documentation for developers and users.',
+      },
+      {
+        recruiterId: recruiterUserId,
+        name: 'Cloud Architect – May 2025',
+        description: 'Design cost-effective, resilient cloud architectures on Flare.',
+      },
     ]
     await db.insert(recruiterPipelines).values(PIPELINES)
     console.log(`✅  Seeded ${PIPELINES.length} recruiter pipelines for demo jobs`)
