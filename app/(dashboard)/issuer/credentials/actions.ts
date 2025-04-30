@@ -1,11 +1,13 @@
 'use server'
 
 import { eq, and } from 'drizzle-orm'
+import { ethers } from 'ethers'
 import { z } from 'zod'
 
 import { validatedActionWithUser } from '@/lib/auth/middleware'
 import { isGithubRepoCredential } from '@/lib/constants/credential'
 import { issueFlareCredential, verifyFdcProof } from '@/lib/contracts/flare'
+import { provider } from '@/lib/contracts'
 import { db } from '@/lib/db/drizzle'
 import { candidateCredentials, CredentialStatus, candidates } from '@/lib/db/schema/candidate'
 import { users, teams, teamMembers } from '@/lib/db/schema/core'
@@ -139,11 +141,17 @@ export const approveCredentialAction = validatedActionWithUser(
       const to = extractAddressFromDid(subjectDid)
       if (!to) return buildError('Malformed subject DID.')
 
+      /* ---------------- Platform signer injection ------------------------ */
+      const PK = process.env.PLATFORM_SIGNER_PRIVATE_KEY
+      if (!PK) return buildError('Platform signer private key not configured.')
+      const platformSigner = new ethers.Wallet(PK, provider)
+
       try {
         const res = await issueFlareCredential({
           to,
           vcHash,
           uri: '', // off-chain VC stored in DB; IPFS pinning can update later
+          signer: platformSigner,
         })
         tokenId = res.tokenId.toString()
         txHash = res.txHash
