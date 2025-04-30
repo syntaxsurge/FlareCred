@@ -142,14 +142,20 @@ function ApplyButton({
       <TooltipProvider delayDuration={150}>
         <Tooltip>
           <TooltipTrigger asChild>
-            <ActionButton
-              disabled
-              variant='outline'
-              size='sm'
-              className='cursor-default opacity-60'
-            >
-              {isApplied ? 'Applied' : 'Apply'}
-            </ActionButton>
+            {/* Wrapper span keeps element interactive so the tooltip works */}
+            <span className='inline-block'>
+              <ActionButton
+                onAction={async () => ({})}
+                disabled
+                variant='outline'
+                size='sm'
+                className='cursor-not-allowed opacity-60'
+                aria-disabled='true'
+                tabIndex={-1}
+              >
+                {isApplied ? 'Applied' : 'Apply'}
+              </ActionButton>
+            </span>
           </TooltipTrigger>
           <TooltipContent>{disabledReason}</TooltipContent>
         </Tooltip>
