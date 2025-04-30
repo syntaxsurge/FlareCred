@@ -27,7 +27,10 @@ import StatusBadge from '@/components/ui/status-badge'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { SnapshotMetrics } from '@/lib/types/candidate'
-import type { CandidateDetailedProfileViewProps as Props } from '@/lib/types/components'
+import type {
+  CandidateDetailedProfileViewProps as Props,
+  ProfileStat,
+} from '@/lib/types/components'
 
 import ProfileHeader from './profile-header'
 
@@ -134,6 +137,15 @@ export default function CandidateDetailedProfileView({
     { href: socials.websiteUrl, icon: Globe2, label: 'Website' },
   ].filter(Boolean) as { href: string; icon: React.ElementType; label: string }[]
 
+  /* ----------------------- Build profile stats --------------------------- */
+  const stats: ProfileStat[] = [
+    { label: 'Credentials', value: totalCredentials },
+    { label: 'Skill Passes', value: passes.rows.length },
+  ]
+  if (pipelineSummary) {
+    stats.push({ label: 'Pipelines', value: pipelineSummary })
+  }
+
   return (
     <section className='space-y-10'>
       <ProfileHeader
@@ -142,11 +154,7 @@ export default function CandidateDetailedProfileView({
         avatarSrc={avatarSrc}
         profilePath={profilePath}
         showShare={showShare}
-        stats={[
-          { label: 'Credentials', value: totalCredentials },
-          { label: 'Skill Passes', value: passes.rows.length },
-          { label: 'Pipelines', value: pipelineSummary || '—' },
-        ]}
+        stats={stats}
         socials={socialIcons}
       />
 
