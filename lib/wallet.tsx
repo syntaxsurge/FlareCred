@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 'use client'
 
 import { useRouter, usePathname } from 'next/navigation'
@@ -98,7 +97,6 @@ function WalletConnectionListener() {
       })()
     }
     prevConnected.current = isConnected
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConnected])
 
   /* -------- First connect: establish/refresh session then redirect/refresh --- */
@@ -128,7 +126,6 @@ function WalletConnectionListener() {
         /* ignore fetch errors */
       }
     })()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConnected, address])
 
   return null

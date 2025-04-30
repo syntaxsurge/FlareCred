@@ -50,7 +50,7 @@ function shuffle<T>(arr: T[], seedHex: string): T[] {
 }
 
 export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
-  const { isConnected, address, chain } = useAccount()
+  const { address, chain } = useAccount()
   const { switchChainAsync } = useSwitchChain()
   const { data: walletClient } = useWalletClient()
   const publicClient = usePublicClient()
@@ -63,7 +63,7 @@ export default function StartQuizForm({ quiz }: { quiz: Quiz }) {
   const [question, setQuestion] = useState<{ id: number; prompt: string } | null>(null)
   const [score, setScore] = useState<number | null>(null)
   const [message, setMessage] = useState('')
-  const [vcHash, setVcHash] = useState<string>('')
+  const [_, setVcHash] = useState<string>('')
   const [vcJson, setVcJson] = useState<string>('')
   const [txHash, setTxHash] = useState<string>('')
 
