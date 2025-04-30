@@ -14,6 +14,7 @@ import { users, teams, teamMembers } from '@/lib/db/schema/core'
 import { issuers } from '@/lib/db/schema/issuer'
 import { buildError } from '@/lib/utils'
 import { extractAddressFromDid, toBytes32 } from '@/lib/utils/address'
+import { signCredentialMint } from '@/lib/utils/signature'
 
 /* -------------------------------------------------------------------------- */
 /*                       A P P R O V E  /  S I G N  V C                       */
@@ -146,12 +147,23 @@ export const approveCredentialAction = validatedActionWithUser(
       if (!PK) return buildError('Platform signer private key not configured.')
       const platformSigner = new ethers.Wallet(PK, provider)
 
+      /* Produce ECDSA signature so contract call passes even if role mapping
+       * is out-of-sync.  This covers the "Credential: signature required”
+       * revert encountered on GitHub credentials.                             */
+      let sig: string
+      try {
+        sig = await signCredentialMint(to, vcHash, '')
+      } catch (err: any) {
+        return buildError(`Failed to create platform signature: ${err?.message || String(err)}`)
+      }
+
       try {
         const res = await issueFlareCredential({
           to,
           vcHash,
           uri: '', // off-chain VC stored in DB; IPFS pinning can update later
           signer: platformSigner,
+          signature: sig,
         })
         tokenId = res.tokenId.toString()
         txHash = res.txHash
