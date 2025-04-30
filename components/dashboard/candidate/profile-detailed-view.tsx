@@ -323,6 +323,33 @@ export default function CandidateDetailedProfileView({
             </TabsContent>
           </Tabs>
 
+          {/* Pipeline entries – moved above credentials */}
+          {pipeline && (
+            <Card id='pipeline-entries'>
+              <CardHeader className='flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between'>
+                <CardTitle>Pipeline Entries</CardTitle>
+                {pipeline.addToPipelineForm}
+              </CardHeader>
+              <CardContent className='space-y-4'>
+                <PipelineEntriesTable
+                  rows={pipeline.rows}
+                  sort={pipeline.sort}
+                  order={pipeline.order}
+                  basePath={pipeline.pagination.basePath}
+                  initialParams={pipeline.pagination.initialParams}
+                  searchQuery={pipeline.pagination.initialParams['pipeQ'] ?? ''}
+                />
+                <TablePagination
+                  page={pipeline.pagination.page}
+                  hasNext={pipeline.pagination.hasNext}
+                  basePath={pipeline.pagination.basePath}
+                  initialParams={pipeline.pagination.initialParams}
+                  pageSize={pipeline.pagination.pageSize}
+                />
+              </CardContent>
+            </Card>
+          )}
+
           {/* Credentials */}
           <Card id='credentials'>
             <CardHeader>
@@ -352,33 +379,6 @@ export default function CandidateDetailedProfileView({
               />
             </CardContent>
           </Card>
-
-          {/* Pipeline entries */}
-          {pipeline && (
-            <Card id='pipeline-entries'>
-              <CardHeader className='flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between'>
-                <CardTitle>Pipeline Entries</CardTitle>
-                {pipeline.addToPipelineForm}
-              </CardHeader>
-              <CardContent className='space-y-4'>
-                <PipelineEntriesTable
-                  rows={pipeline.rows}
-                  sort={pipeline.sort}
-                  order={pipeline.order}
-                  basePath={pipeline.pagination.basePath}
-                  initialParams={pipeline.pagination.initialParams}
-                  searchQuery={pipeline.pagination.initialParams['pipeQ'] ?? ''}
-                />
-                <TablePagination
-                  page={pipeline.pagination.page}
-                  hasNext={pipeline.pagination.hasNext}
-                  basePath={pipeline.pagination.basePath}
-                  initialParams={pipeline.pagination.initialParams}
-                  pageSize={pipeline.pagination.pageSize}
-                />
-              </CardContent>
-            </Card>
-          )}
 
           {/* Skill passes */}
           <Card id='skill-passes'>
