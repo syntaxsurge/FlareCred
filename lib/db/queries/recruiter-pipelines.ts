@@ -27,7 +27,7 @@ export async function getRecruiterPipelinesPage(
     id: p.id,
     name: p.name,
     description: p.description,
-    createdAt: typeof p.createdAt === 'string' ? p.createdAt : p.createdAt.toISOString(),
+    createdAt: p.createdAt, // already normalised to ISO string
   }))
 
   return { pipelines: rows, hasNext }
