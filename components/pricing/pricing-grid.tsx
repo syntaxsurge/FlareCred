@@ -19,6 +19,9 @@ import type { PricingGridProps } from '@/lib/types/ui'
 export function PricingGrid({ currentPlanName, planMeta }: PricingGridProps) {
   const { usd, stale } = useFlareUsdPrice()
 
+  const current = currentPlanName?.toLowerCase() ?? null
+  const isPaidUser = current !== null && current !== 'free'
+
   return (
     <>
       {stale && (
@@ -32,8 +35,9 @@ export function PricingGrid({ currentPlanName, planMeta }: PricingGridProps) {
           const priceFlr = Number(formatUnits(meta.priceWei, FLR_DECIMALS))
           const usdLabel = usd ? ` ≈ $${(priceFlr * usd).toFixed(2)}` : ''
 
-          const isCurrent =
-            !!currentPlanName && currentPlanName.toLowerCase() === meta.name.toLowerCase()
+          const isCurrent = current === meta.name.toLowerCase()
+          const highlight = isCurrent || (!current && meta.key === 'free')
+          const hideButton = meta.key === 'free' && isPaidUser
 
           return (
             <PricingCard
@@ -42,6 +46,8 @@ export function PricingGrid({ currentPlanName, planMeta }: PricingGridProps) {
               priceFlr={priceFlr}
               usdLabel={usdLabel}
               isCurrent={isCurrent}
+              highlight={highlight}
+              hideButton={hideButton}
             />
           )
         })}
@@ -54,21 +60,27 @@ export function PricingGrid({ currentPlanName, planMeta }: PricingGridProps) {
 /*                           P R I C I N G   C A R D                          */
 /* -------------------------------------------------------------------------- */
 
+interface PricingCardProps {
+  meta: PricingGridProps['planMeta'][number]
+  priceFlr: number
+  usdLabel: string
+  isCurrent: boolean
+  highlight: boolean
+  hideButton: boolean
+}
+
 function PricingCard({
   meta,
   priceFlr,
   usdLabel,
   isCurrent,
-}: {
-  meta: PricingGridProps['planMeta'][number]
-  priceFlr: number
-  usdLabel: string
-  isCurrent: boolean
-}) {
+  highlight,
+  hideButton,
+}: PricingCardProps) {
   return (
     <div
       className={`border-border bg-background/70 rounded-3xl border p-8 shadow-sm backdrop-blur transition-shadow hover:shadow-xl ${
-        meta.highlight ? 'ring-primary ring-2' : ''
+        highlight ? 'ring-primary ring-2' : ''
       }`}
     >
       <h3 className='text-foreground mb-2 text-2xl font-semibold'>{meta.name}</h3>
@@ -92,7 +104,7 @@ function PricingCard({
       </ul>
 
       {/* Action button */}
-      {isCurrent ? (
+      {hideButton ? null : isCurrent ? (
         <Button
           variant='secondary'
           disabled
@@ -102,7 +114,7 @@ function PricingCard({
         </Button>
       ) : meta.key === 'free' ? (
         <Button asChild variant='secondary' className='w-full rounded-full'>
-          <Link href='/sign-up'>Get Started</Link>
+          <Link href='/connect-wallet'>Get Started</Link>
         </Button>
       ) : (
         (() => {
