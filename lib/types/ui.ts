@@ -1,6 +1,7 @@
 import type { ComponentPropsWithoutRef } from 'react'
 
 import type { Avatar } from '@/components/ui/avatar'
+import type { PlanMeta } from '@/lib/types/pricing'
 
 /* -------------------------------------------------------------------------- */
 /*                               User Avatar                                  */
@@ -26,12 +27,17 @@ export interface UserAvatarProps extends ComponentPropsWithoutRef<typeof Avatar>
 /*                               Pricing Grid                                 */
 /* -------------------------------------------------------------------------- */
 
+/** Serialisable variant used by the client-side pricing grid */
+export type PlanMetaSerialised = Omit<PlanMeta, 'priceWei'> & { priceWei: string }
+
 /**
  * Props consumed by the <PricingGrid/> marketing component.
  */
 export interface PricingGridProps {
   /** Team’s current plan ("Free” | "Base” | "Plus”) or <code>null</code> if anonymous. */
   currentPlanName?: string | null
+  /** Live plan metadata pulled from the SubscriptionManager contract. */
+  planMeta: PlanMetaSerialised[]
 }
 
 /* -------------------------------------------------------------------------- */

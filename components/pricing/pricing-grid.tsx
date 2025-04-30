@@ -8,7 +8,7 @@ import { Check } from 'lucide-react'
 
 import { SubmitButton } from '@/app/(dashboard)/pricing/submit-button'
 import { Button } from '@/components/ui/button'
-import { PLAN_META, FLR_DECIMALS } from '@/lib/constants/pricing'
+import { FLR_DECIMALS } from '@/lib/constants/pricing'
 import { useFlareUsdPrice } from '@/lib/hooks/use-flare-usd-price'
 import type { PricingGridProps } from '@/lib/types/ui'
 
@@ -16,7 +16,7 @@ import type { PricingGridProps } from '@/lib/types/ui'
 /*                         P R I C I N G   G R I D                            */
 /* -------------------------------------------------------------------------- */
 
-export function PricingGrid({ currentPlanName }: PricingGridProps) {
+export function PricingGrid({ currentPlanName, planMeta }: PricingGridProps) {
   const { usd, stale } = useFlareUsdPrice()
 
   return (
@@ -28,7 +28,7 @@ export function PricingGrid({ currentPlanName }: PricingGridProps) {
       )}
 
       <div className='grid gap-10 md:grid-cols-3'>
-        {PLAN_META.map((meta) => {
+        {planMeta.map((meta) => {
           const priceFlr = Number(formatUnits(meta.priceWei, FLR_DECIMALS))
           const usdLabel = usd ? ` ≈ $${(priceFlr * usd).toFixed(2)}` : ''
 
@@ -60,7 +60,7 @@ function PricingCard({
   usdLabel,
   isCurrent,
 }: {
-  meta: (typeof PLAN_META)[number]
+  meta: PricingGridProps['planMeta'][number]
   priceFlr: number
   usdLabel: string
   isCurrent: boolean
@@ -109,7 +109,7 @@ function PricingCard({
           const planKey: 1 | 2 = meta.key === 'base' ? 1 : 2
           return (
             <Suspense fallback={<Button className='w-full'>Loading…</Button>}>
-              <SubmitButton planKey={planKey} priceWei={meta.priceWei} />
+              <SubmitButton planKey={planKey} priceWei={BigInt(meta.priceWei)} />
             </Suspense>
           )
         })()

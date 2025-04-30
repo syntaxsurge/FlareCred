@@ -1,6 +1,9 @@
 import { PricingGrid } from '@/components/pricing/pricing-grid'
+import { fetchPlanMeta } from '@/lib/payments/pricing'
 
 export default async function PricingSection() {
+  const planMeta = await fetchPlanMeta()
+
   return (
     <section id='pricing' className='bg-muted/40 py-24'>
       <div className='mx-auto max-w-6xl px-4 text-center'>
@@ -12,7 +15,7 @@ export default async function PricingSection() {
         </p>
 
         <div className='mt-16'>
-          <PricingGrid />
+          <PricingGrid planMeta={planMeta} />
         </div>
       </div>
     </section>
