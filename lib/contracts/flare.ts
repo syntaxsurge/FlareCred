@@ -48,20 +48,25 @@ export async function randomMod(bound: number | bigint): Promise<bigint> {
 /* -------------------------------------------------------------------------- */
 
 /**
- * Verify an FDC proof on-chain, falling back to offline acceptance when the
- * current ABI encoder cannot map deeply nested tuples (observed error:
- * "invalid tuple value”).  This safeguard now applies to **all** proof types
- * so issuers are not blocked by encoder limitations.
+ * Verify an FDC proof on-chain, skipping verification for proofType 'NONE'
+ * (no structured proof attached) and falling back to offline acceptance when
+ * the current ABI encoder cannot map deeply nested tuples (observed error:
+ * "invalid tuple value").
  */
 export async function verifyFdcProof(
   proofType: string,
   proofData: unknown,
 ): Promise<boolean> {
+  /* Fast-path: credentials with no structured proof are automatically valid. */
+  const type = proofType.trim().toUpperCase()
+  if (type === 'NONE' || type === '') {
+    return true
+  }
+
   if (!fdcVerifier) {
     throw new Error('FDC verifier contract address is not configured')
   }
 
-  const type = proofType.trim().toUpperCase()
   const fnMap: Record<string, string> = {
     EVM: 'verifyEVM',
     JSON: 'verifyJson',
