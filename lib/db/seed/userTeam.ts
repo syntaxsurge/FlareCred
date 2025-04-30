@@ -1,16 +1,29 @@
 import { and, eq } from 'drizzle-orm'
 
 import { db } from '../drizzle'
-import { users, teams, teamMembers } from '../schema'
+import {
+  users,
+  teams,
+  teamMembers,
+} from '../schema'
+import {
+  candidates,
+  candidateCredentials,
+  CredentialCategory,
+  CredentialStatus,
+} from '../schema/candidate'
+import { recruiterPipelines } from '../schema/recruiter'
 
 /**
  * Seed core demo users (admin, candidate, issuer, recruiter), create personal placeholder
- * teams for each, and add everyone to a shared "Test Team” with the primary admin as owner.
+ * teams for each, add everyone to a shared "Test Team", **and** now:
+ *   • create a Candidate profile with two default unverified credentials
+ *   • create two sample Pipelines for the Recruiter to surface public job listings
  *
  * Wallet-only authentication means no passwords are stored.
  */
 export async function seedUserTeam() {
-  console.log('Seeding users and teams…')
+  console.log('Seeding users, teams, candidate profile, credentials, and pipelines…')
 
   /* ---------- users to seed ---------- */
   const SEED = [
@@ -114,5 +127,91 @@ export async function seedUserTeam() {
     }
   }
 
-  console.log('🎉 Seed completed.')
+  /* ====================================================================== */
+  /*                    N E W   D E M O   D A T A   B E L O W               */
+  /* ====================================================================== */
+
+  /* ---------- Candidate profile + credentials ---------- */
+  const candidateUserId = ids.get('candidate@test.com')!
+  let [cand] = await db
+    .select()
+    .from(candidates)
+    .where(eq(candidates.userId, candidateUserId))
+    .limit(1)
+
+  if (!cand) {
+    ;[cand] = await db
+      .insert(candidates)
+      .values({ userId: candidateUserId, bio: 'Motivated developer seeking new challenges.' })
+      .returning()
+    console.log('✅ Created Candidate profile for Test Candidate')
+  } else {
+    console.log('ℹ️ Candidate profile already present')
+  }
+
+  const existingCreds = await db
+    .select({ title: candidateCredentials.title })
+    .from(candidateCredentials)
+    .where(eq(candidateCredentials.candidateId, cand.id))
+
+  const presentTitles = new Set(existingCreds.map((c) => c.title))
+
+  const DEMO_CREDENTIALS = [
+    {
+      title: 'B.Sc. in Computer Science',
+      category: CredentialCategory.EDUCATION,
+      type: 'degree',
+    },
+    {
+      title: 'Open-Source Contribution: Awesome-Repo',
+      category: CredentialCategory.PROJECT,
+      type: 'github_repo',
+    },
+  ] as const
+
+  const credInserts = DEMO_CREDENTIALS.filter((c) => !presentTitles.has(c.title)).map((c) => ({
+    candidateId: cand.id,
+    category: c.category,
+    title: c.title,
+    type: c.type,
+    status: CredentialStatus.UNVERIFIED,
+    verified: false,
+    proofType: '',
+    proofData: '',
+  }))
+
+  if (credInserts.length) {
+    await db.insert(candidateCredentials).values(credInserts)
+    console.log(`➕  Inserted ${credInserts.length} demo credential(s) for Test Candidate`)
+  } else {
+    console.log('ℹ️ Demo credentials already seeded for Candidate')
+  }
+
+  /* ---------- Recruiter pipelines (job openings) ---------- */
+  const recruiterUserId = ids.get('recruiter@test.com')!
+  const existingPipes = await db
+    .select({ name: recruiterPipelines.name })
+    .from(recruiterPipelines)
+    .where(eq(recruiterPipelines.recruiterId, recruiterUserId))
+
+  if (existingPipes.length === 0) {
+    const PIPELINES = [
+      {
+        recruiterId: recruiterUserId,
+        name: 'Backend Engineer – May 2025',
+        description: 'Building scalable Node.js services on FlareCred.',
+      },
+      {
+        recruiterId: recruiterUserId,
+        name: 'Frontend Engineer – May 2025',
+        description: 'React / Next.js role crafting modern UIs for credentialing.',
+      },
+    ]
+    await db.insert(recruiterPipelines).values(PIPELINES)
+    console.log(`✅ Seeded ${PIPELINES.length} recruiter pipelines for demo jobs`)
+  } else {
+    console.log('ℹ️ Recruiter pipelines already exist')
+  }
+
+  console.log('🎉 User/Team/Candidate/Pipeline seeding complete.')
 }
