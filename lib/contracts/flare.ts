@@ -69,16 +69,19 @@ export async function verifyFdcProof(proofType: string, proofData: unknown): Pro
   }
 
   /* ---------------------------------------------------------------------- */
-  /*   Patch missing merkleProof for legacy GitHub proofs (JSON structure)   */
+  /*   Patch missing fields for legacy GitHub JSON proofs                    */
   /* ---------------------------------------------------------------------- */
   if (
     proofType.toUpperCase() === 'JSON' &&
     arg &&
     typeof arg === 'object' &&
-    !Array.isArray(arg) &&
-    !('merkleProof' in arg)
+    !Array.isArray(arg)
   ) {
-    ;(arg as any).merkleProof = [] // ensure ABI encoder receives the component
+    const obj = arg as Record<string, any>
+    /* Ensure merkleProof exists (empty array when omitted) */
+    if (!('merkleProof' in obj)) obj.merkleProof = []
+    /* Ensure data exists (empty bytes when omitted) */
+    if (!('data' in obj)) obj.data = '0x'
   }
 
   try {
