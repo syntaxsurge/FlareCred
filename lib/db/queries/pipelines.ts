@@ -1,0 +1,71 @@
+import { and, eq, sql } from 'drizzle-orm'
+
+import { db } from '../drizzle'
+import { buildOrderExpr, buildSearchCondition, paginate } from './query-helpers'
+import { recruiterPipelines } from '../schema/recruiter'
+import { users } from '../schema/core'
+
+/* -------------------------------------------------------------------------- */
+/*                         Generic Pipelines Listing                          */
+/* -------------------------------------------------------------------------- */
+
+export interface PipelineListingRow {
+  id: number
+  name: string
+  description: string | null
+  createdAt: Date | string
+  recruiterName: string
+}
+
+/**
+ * Shared helper that returns a paginated, searchable and sortable list of
+ * recruiter pipelines. When `recruiterId` is supplied the result is filtered
+ * to pipelines owned by that recruiter; otherwise all pipelines are returned.
+ */
+export async function getPipelinesPage(
+  page: number,
+  pageSize = 10,
+  sortBy: 'name' | 'createdAt' = 'createdAt',
+  order: 'asc' | 'desc' = 'desc',
+  searchTerm = '',
+  recruiterId?: number,
+): Promise<{ pipelines: PipelineListingRow[]; hasNext: boolean }> {
+  /* --------------------------- ORDER BY helper --------------------------- */
+  const sortMap = {
+    name: recruiterPipelines.name,
+    createdAt: recruiterPipelines.createdAt,
+  } as const
+
+  const orderBy = buildOrderExpr(sortMap, sortBy, order)
+
+  /* ----------------------------- WHERE clause ---------------------------- */
+  const searchCond = buildSearchCondition(searchTerm, [recruiterPipelines.name, users.name])
+  const filters: any[] = []
+  if (recruiterId !== undefined) filters.push(eq(recruiterPipelines.recruiterId, recruiterId))
+  if (searchCond) filters.push(searchCond)
+
+  const whereExpr = filters.length > 0 ? and(...filters) : sql`TRUE`
+
+  /* ------------------------------ Query ---------------------------------- */
+  const baseQuery = db
+    .select({
+      id: recruiterPipelines.id,
+      name: recruiterPipelines.name,
+      description: recruiterPipelines.description,
+      createdAt: recruiterPipelines.createdAt,
+      recruiterName: users.name,
+    })
+    .from(recruiterPipelines)
+    .innerJoin(users, eq(recruiterPipelines.recruiterId, users.id))
+    .where(whereExpr as any)
+    .orderBy(orderBy)
+
+  const { rows, hasNext } = await paginate<PipelineListingRow>(baseQuery as any, page, pageSize)
+
+  const pipelines = rows.map((r) => ({
+    ...r,
+    createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : r.createdAt,
+  })) as PipelineListingRow[]
+
+  return { pipelines, hasNext }
+}

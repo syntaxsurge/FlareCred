@@ -1,10 +1,6 @@
-import { eq, and } from 'drizzle-orm'
-
 import type { PipelineRow } from '@/lib/types/tables'
 
-import { db } from '../drizzle'
-import { buildOrderExpr, buildSearchCondition, paginate } from './query-helpers'
-import { recruiterPipelines } from '../schema/recruiter'
+import { getPipelinesPage } from './pipelines'
 
 /**
  * Paginate pipelines for the given recruiter with optional search and sorting.
@@ -17,32 +13,22 @@ export async function getRecruiterPipelinesPage(
   order: 'asc' | 'desc' = 'desc',
   searchTerm = '',
 ): Promise<{ pipelines: PipelineRow[]; hasNext: boolean }> {
-  /* --------------------------- ORDER BY helper --------------------------- */
-  const sortMap = {
-    name: recruiterPipelines.name,
-    createdAt: recruiterPipelines.createdAt,
-  } as const
+  const { pipelines, hasNext } = await getPipelinesPage(
+    page,
+    pageSize,
+    sortBy,
+    order,
+    searchTerm,
+    recruiterId,
+  )
 
-  const orderBy = buildOrderExpr(sortMap, sortBy, order)
+  /* Strip recruiterName for recruiter-specific table rows */
+  const rows: PipelineRow[] = pipelines.map((p) => ({
+    id: p.id,
+    name: p.name,
+    description: p.description,
+    createdAt: typeof p.createdAt === 'string' ? p.createdAt : p.createdAt.toISOString(),
+  }))
 
-  /* ----------------------------- WHERE clause ---------------------------- */
-  const base = eq(recruiterPipelines.recruiterId, recruiterId)
-  const searchCond = buildSearchCondition(searchTerm, [recruiterPipelines.name])
-  const whereClause = searchCond ? and(base, searchCond) : base
-
-  /* ------------------------------ Query ---------------------------------- */
-  const baseQuery = db
-    .select({
-      id: recruiterPipelines.id,
-      name: recruiterPipelines.name,
-      description: recruiterPipelines.description,
-      createdAt: recruiterPipelines.createdAt,
-    })
-    .from(recruiterPipelines)
-    .where(whereClause as any)
-    .orderBy(orderBy)
-
-  const { rows, hasNext } = await paginate<PipelineRow>(baseQuery as any, page, pageSize)
-
-  return { pipelines: rows as PipelineRow[], hasNext }
+  return { pipelines: rows, hasNext }
 }

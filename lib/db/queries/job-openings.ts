@@ -1,10 +1,6 @@
-import { sql, eq } from 'drizzle-orm'
-
 import type { JobRow } from '@/lib/types/tables'
-import { db } from '../drizzle'
-import { buildOrderExpr, buildSearchCondition, paginate } from './query-helpers'
-import { recruiterPipelines } from '../schema/recruiter'
-import { users } from '../schema/core'
+
+import { getPipelinesPage } from './pipelines'
 
 /**
  * Fetch a paginated, searchable, sortable list of public job openings
@@ -17,45 +13,26 @@ export async function getJobOpeningsPage(
   order: 'asc' | 'desc' = 'desc',
   searchTerm = '',
 ): Promise<{ jobs: JobRow[]; hasNext: boolean }> {
-  /* --------------------------- ORDER-BY helper --------------------------- */
-  const sortMap = {
-    name: recruiterPipelines.name,
-    recruiter: users.name,
-    createdAt: recruiterPipelines.createdAt,
-  } as const
+  /* Map UI sort key to underlying sort column */
+  const mappedSort: 'name' | 'createdAt' = sortBy === 'recruiter' ? 'name' : sortBy
 
-  const orderBy = buildOrderExpr(sortMap, sortBy, order)
+  const { pipelines, hasNext } = await getPipelinesPage(
+    page,
+    pageSize,
+    mappedSort,
+    order,
+    searchTerm,
+    undefined, // no recruiterId filter – public listing
+  )
 
-  /* ----------------------------- WHERE clause --------------------------- */
-  const searchCond = buildSearchCondition(searchTerm, [
-    recruiterPipelines.name,
-    users.name,
-    recruiterPipelines.description,
-  ])
-  const whereExpr: any = searchCond ?? sql`TRUE`
-
-  /* ------------------------------- Query -------------------------------- */
-  const baseQuery = db
-    .select({
-      id: recruiterPipelines.id,
-      name: recruiterPipelines.name,
-      recruiter: users.name,
-      description: recruiterPipelines.description,
-      createdAt: recruiterPipelines.createdAt,
-    })
-    .from(recruiterPipelines)
-    .innerJoin(users, eq(recruiterPipelines.recruiterId, users.id))
-    .where(whereExpr)
-    .orderBy(orderBy)
-
-  const { rows, hasNext } = await paginate<JobRow>(baseQuery as any, page, pageSize)
-
-  /* Normalise Date → ISO for serialisable rows */
-  const jobs = rows.map((r) => ({
-    ...r,
-    createdAt:
-      r.createdAt instanceof Date ? r.createdAt.toISOString() : (r.createdAt as string),
-  })) as JobRow[]
+  /* Convert to JobRow shape expected by the tools/jobs page */
+  const jobs: JobRow[] = pipelines.map((p) => ({
+    id: p.id,
+    name: p.name,
+    recruiter: p.recruiterName,
+    description: p.description,
+    createdAt: typeof p.createdAt === 'string' ? p.createdAt : p.createdAt.toISOString(),
+  }))
 
   return { jobs, hasNext }
 }
