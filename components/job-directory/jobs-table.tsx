@@ -10,6 +10,12 @@ import { ActionButton } from '@/components/ui/action-button'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { TableProps, JobRow } from '@/lib/types/tables'
+import {
+  TooltipProvider,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from '@/components/ui/tooltip'
 
 /* -------------------------------------------------------------------------- */
 /*                              T Y P E S                                     */
@@ -74,7 +80,7 @@ export default function JobsTable({
       },
       {
         key: 'id',
-        header: 'Apply',
+        header: '',
         enableHiding: false,
         sortable: false,
         render: (_v, row) => (
@@ -124,11 +130,30 @@ function ApplyButton({
   /* Disabled when already applied or viewer is not a candidate */
   const disabled = isApplied || !isCandidate
 
+  /* Specific reason for tooltip */
+  const disabledReason = isApplied
+    ? 'You have already applied to this job.'
+    : !isCandidate
+    ? 'Only candidates may apply to job openings.'
+    : ''
+
   if (disabled) {
     return (
-      <ActionButton disabled variant='outline' size='sm' className='cursor-default opacity-60'>
-        {isApplied ? 'Applied' : 'Apply'}
-      </ActionButton>
+      <TooltipProvider delayDuration={150}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <ActionButton
+              disabled
+              variant='outline'
+              size='sm'
+              className='cursor-default opacity-60'
+            >
+              {isApplied ? 'Applied' : 'Apply'}
+            </ActionButton>
+          </TooltipTrigger>
+          <TooltipContent>{disabledReason}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     )
   }
 
