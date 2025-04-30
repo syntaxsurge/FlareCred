@@ -118,8 +118,13 @@ export default function CandidateDetailedProfileView({
   pipeline,
   showShare = true,
 }: Props) {
+  /* Ensure numeric conversion to avoid string concatenation like "0005" */
   const totalCredentials =
-    statusCounts.verified + statusCounts.pending + statusCounts.rejected + statusCounts.unverified
+    Number(statusCounts.verified) +
+    Number(statusCounts.pending) +
+    Number(statusCounts.rejected) +
+    Number(statusCounts.unverified)
+
   const profilePath = `/candidates/${candidateId}`
 
   const socialIcons = [
