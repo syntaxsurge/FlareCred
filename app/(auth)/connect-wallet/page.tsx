@@ -1,6 +1,5 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 import { ConnectButton } from '@rainbow-me/rainbowkit'
@@ -12,12 +11,11 @@ import { useAccount } from 'wagmi'
  * After the wallet connects, we verify that the backend has established a
  * session (`/api/auth/wallet-status`) before redirecting to the dashboard.
  *
- * To guarantee fresh role-specific data, we append a timestamp to the target
- * URL so that the App Router performs a new server render instead of reusing
- * cached RSC output from a previous session.
+ * We perform a **hard page reload** once the session cookie is present so that
+ * every server component—including the dashboard sidebar—re-renders with the
+ * correct role for the newly-selected wallet.
  */
 export default function ConnectWalletPage() {
-  const router = useRouter()
   const { isConnected, address } = useAccount()
   const [checking, setChecking] = useState(false)
 
@@ -37,12 +35,15 @@ export default function ConnectWalletPage() {
         })
         const json = await res.json().catch(() => ({}))
 
-        if (!cancelled && res.ok && json?.exists) {
-          /* Cache-bust by appending a timestamp so the dashboard layout
-             always re-renders with the correct role-specific sidebar. */
-          router.replace(`/dashboard?t=${Date.now()}`)
+        /* If the wallet already has a complete user record, trigger a hard reload
+           so server components rebuild using the fresh session cookie. */
+        if (res.ok && json?.exists) {
+          window.location.href = `/dashboard?t=${Date.now()}`
           return
         }
+
+        /* Otherwise, remain on this page; the WalletOnboardModal will appear
+           automatically to complete profile creation. */
       } finally {
         if (!cancelled) setChecking(false)
       }
@@ -52,7 +53,7 @@ export default function ConnectWalletPage() {
     return () => {
       cancelled = true
     }
-  }, [isConnected, address, router])
+  }, [isConnected, address])
 
   return (
     <section className='mx-auto flex min-h-[calc(100dvh-64px)] max-w-md flex-col items-center justify-center gap-6 px-4 text-center'>
