@@ -1,18 +1,10 @@
 'use client'
 
 import * as React from 'react'
-import { startTransition, useEffect, useState } from 'react'
+import { useState, useEffect, startTransition } from 'react'
 
 import { Copy, Loader2, Pencil, RefreshCcw } from 'lucide-react'
 import { toast } from 'sonner'
-import {
-  useAccount,
-  usePublicClient,
-  useWalletClient,
-  useSwitchChain,
-  useChainId,
-} from 'wagmi'
-import { ZeroHash, getAddress } from 'ethers'
 
 import {
   AlertDialog,
@@ -27,17 +19,15 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { DID_REGISTRY_ADDRESS, CHAIN_ID } from '@/lib/config'
-import { DID_REGISTRY_ABI } from '@/lib/contracts/abis'
 import { copyToClipboard } from '@/lib/utils'
 import type { DidActionState, UpdateDidFormProps } from '@/lib/types/forms'
 
 import { upsertPlatformDidAction } from './actions'
 
 /**
- * Form letting an admin paste, edit or generate the platform DID.
- * Generation now opens the connected wallet and calls DIDRegistry.createDID
- * so the signer requirement is satisfied client-side.
+ * Admin form for editing or generating the platform DID.
+ * Generation now calls a server action that signs the transaction
+ * with the backend platform signer, so no wallet interaction is needed.
  */
 export default function UpdateDidForm({ defaultDid }: UpdateDidFormProps) {
   /* ------------------------------------------------------------------ */
@@ -46,103 +36,54 @@ export default function UpdateDidForm({ defaultDid }: UpdateDidFormProps) {
   const [currentDid, setCurrentDid] = useState<string>(defaultDid ?? '')
   const [didInput, setDidInput] = useState<string>(currentDid)
   const [editing, setEditing] = useState<boolean>(false)
+  const [generating, setGenerating] = useState<boolean>(false)
 
-  const [saveState, saveAction, saving] = React.useActionState<DidActionState, FormData>(
+  const [state, action, saving] = React.useActionState<DidActionState, FormData>(
     upsertPlatformDidAction,
     {},
   )
 
-  /* Separate "generating” spinner flag because generation is now manual */
-  const [generating, setGenerating] = useState<boolean>(false)
-
   /* ------------------------------------------------------------------ */
-  /*                     W A L L E T /   C H A I N                     */
-  /* ------------------------------------------------------------------ */
-  const { address, isConnected } = useAccount()
-  const { data: walletClient } = useWalletClient()
-  const publicClient = usePublicClient()
-  const { switchChainAsync } = useSwitchChain()
-  const activeChainId = useChainId()
-
-  /* ------------------------------------------------------------------ */
-  /*                              E F X                                */
+  /*                              E F F E C T S                         */
   /* ------------------------------------------------------------------ */
   useEffect(() => {
-    if (saveState?.error) toast.error(saveState.error)
-    if (saveState?.success) {
-      toast.success(saveState.success)
-      if (saveState.did) {
-        setCurrentDid(saveState.did)
-        setDidInput(saveState.did)
+    if (state?.error) toast.error(state.error)
+    if (state?.success) {
+      toast.success(state.success)
+      if (state.did) {
+        setCurrentDid(state.did)
+        setDidInput(state.did)
       }
       setEditing(false)
     }
-  }, [saveState])
+  }, [state])
 
   /* ------------------------------------------------------------------ */
-  /*                         H E L P E R S                             */
+  /*                              H E L P E R S                         */
   /* ------------------------------------------------------------------ */
   function confirmSave() {
     const fd = new FormData()
     fd.append('did', didInput.trim())
-    startTransition(() => saveAction(fd))
+    startTransition(() => action(fd))
   }
 
-  async function generateDidOnChain() {
+  async function generateDid() {
     if (generating) return
-    if (!isConnected || !walletClient || !address) {
-      toast.error('Connect a wallet first.')
-      return
-    }
-    if (!DID_REGISTRY_ADDRESS) {
-      toast.error('DID registry address missing in config.')
-      return
-    }
-
+    setGenerating(true)
     try {
-      setGenerating(true)
-
-      /* Ensure we are on the correct chain -------------------------------- */
-      if (activeChainId !== CHAIN_ID) {
-        await switchChainAsync({ chainId: CHAIN_ID })
-      }
-
-      /* ------------------------------------------------------------------ */
-      /*                1️⃣  Create DID → wallet signature                   */
-      /* ------------------------------------------------------------------ */
-      toast.loading('Awaiting wallet signature…')
-      const txHash = await walletClient.writeContract({
-        address: DID_REGISTRY_ADDRESS,
-        abi: DID_REGISTRY_ABI,
-        functionName: 'createDID',
-        args: [ZeroHash],
-      })
-
-      toast.loading(`Tx sent: ${txHash.slice(0, 10)}…`)
-      await publicClient.waitForTransactionReceipt({ hash: txHash })
-
-      /* Derive DID deterministically: did:flare:0x… ---------------------- */
-      const did = `did:flare:${getAddress(address)}`
-
-      /* ------------------------------------------------------------------ */
-      /*                2️⃣  Persist DID via server action                   */
-      /* ------------------------------------------------------------------ */
-      const fd = new FormData()
-      fd.append('did', did)
-      await saveAction(fd) // re-use existing action & toast flow
-    } catch (err: any) {
-      toast.error(err?.shortMessage || err?.message || 'Transaction failed.')
+      const fd = new FormData() // empty → server generates via platform signer
+      await action(fd)
     } finally {
       setGenerating(false)
     }
   }
 
   /* ------------------------------------------------------------------ */
-  /*                             U I                                   */
+  /*                                 UI                                 */
   /* ------------------------------------------------------------------ */
   return (
     <div className='space-y-6'>
-      {/* DID input + copy ------------------------------------------------- */}
+      {/* DID field ------------------------------------------------------- */}
       <div className='flex flex-col gap-3 sm:flex-row sm:items-center'>
         <Input
           value={didInput}
@@ -263,13 +204,13 @@ export default function UpdateDidForm({ defaultDid }: UpdateDidFormProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Generate a fresh Flare DID?</AlertDialogTitle>
             <AlertDialogDescription>
-              A brand-new DID will be created via your connected wallet; you’ll need to confirm the
-              transaction and the resulting DID will permanently replace the existing one.
+              The platform signer will create and fund the transaction automatically – no wallet
+              interaction required.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={generateDidOnChain} disabled={generating}>
+            <AlertDialogAction onClick={generateDid} disabled={generating}>
               {generating ? <Loader2 className='mr-2 h-4 w-4 animate-spin' /> : 'Generate'}
             </AlertDialogAction>
           </AlertDialogFooter>
