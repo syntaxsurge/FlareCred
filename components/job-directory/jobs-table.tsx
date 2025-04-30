@@ -1,15 +1,19 @@
 'use client'
 
+import React from 'react'
 import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
 import { Briefcase } from 'lucide-react'
-import React from 'react'
 
 import { applyToJobAction } from '@/app/(tools)/jobs/actions'
 import { ActionButton } from '@/components/ui/action-button'
 import { DataTable } from '@/components/ui/tables/data-table'
 import type { Column } from '@/lib/types/components'
 import type { JobRow } from '@/lib/types/tables'
+
+/* -------------------------------------------------------------------------- */
+/*                                 P R O P S                                  */
+/* -------------------------------------------------------------------------- */
 
 interface JobsTableProps {
   rows: JobRow[]
@@ -19,6 +23,10 @@ interface JobsTableProps {
   initialParams: Record<string, string>
   searchQuery: string
 }
+
+/* -------------------------------------------------------------------------- */
+/*                                C O M P O N E N T                           */
+/* -------------------------------------------------------------------------- */
 
 export default function JobsTable({
   rows,
@@ -30,15 +38,26 @@ export default function JobsTable({
 }: JobsTableProps) {
   const router = useRouter()
 
-  /* ----------------------------- Columns --------------------------------- */
-  const columns = React.useMemo<Column<JobRow>[]>(() => {
-    const applyButton = (row: JobRow) => (
-      <ApplyButton pipelineId={row.id} onDone={() => router.refresh()} />
-    )
+  /* --------------------------- Filter callback --------------------------- */
+  const onFilterChange = React.useCallback(
+    (value: string) => {
+      const params = new URLSearchParams(initialParams)
+      if (value.trim()) {
+        params.set('q', value)
+      } else {
+        params.delete('q')
+      }
+      params.delete('page') // always reset pagination on new search
+      router.push(`${basePath}?${params.toString()}`)
+    },
+    [router, basePath, initialParams],
+  )
 
+  /* ------------------------------- Columns ------------------------------ */
+  const columns = React.useMemo<Column<JobRow>[]>(() => {
     return [
-      { key: 'name', header: 'Job Title' },
-      { key: 'recruiter', header: 'Recruiter' },
+      { key: 'name', header: 'Job Title', sortable: true },
+      { key: 'recruiter', header: 'Recruiter', sortable: true },
       {
         key: 'createdAt',
         header: 'Posted',
@@ -48,35 +67,43 @@ export default function JobsTable({
       {
         key: 'description',
         header: 'Description',
-        render: (v) => <span className='line-clamp-2 max-w-xs text-muted-foreground'>{v}</span>,
+        render: (v) => (
+          <span className='line-clamp-2 max-w-xs text-muted-foreground'>{v}</span>
+        ),
         enableHiding: true,
       },
       {
         key: 'id',
-        header: '',
-        render: (_v, row) => applyButton(row),
+        header: 'Apply',
+        render: (_v, row) => (
+          <ApplyButton pipelineId={row.id} onDone={() => router.refresh()} />
+        ),
+        enableHiding: false, // prevent blank entry in columns dropdown
+        sortable: false,
       },
     ]
   }, [router])
 
-  /* ----------------------------- Render ---------------------------------- */
+  /* ------------------------------- Render ------------------------------- */
   return (
     <DataTable
       columns={columns}
       rows={rows}
-      filterKey='name'
-      filterValue={searchQuery}
       basePath={basePath}
       sort={sort}
       order={order}
       initialParams={initialParams}
+      filterKey='name'
+      filterValue={searchQuery}
+      onFilterChange={onFilterChange}
+      hidePagination
     />
   )
 }
 
-/* ------------------------------------------------------------------------ */
-/*                          Apply-button helper                             */
-/* ------------------------------------------------------------------------ */
+/* -------------------------------------------------------------------------- */
+/*                             A P P L Y  B U T T O N                         */
+/* -------------------------------------------------------------------------- */
 
 function ApplyButton({ pipelineId, onDone }: { pipelineId: number; onDone: () => void }) {
   async function handleApply() {
