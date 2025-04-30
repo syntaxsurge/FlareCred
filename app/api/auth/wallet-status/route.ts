@@ -1,6 +1,4 @@
-// SPDX-License-Identifier: MIT
-import { NextResponse } from 'next/server'
-
+import { NextRequest, NextResponse } from 'next/server'
 import { eq } from 'drizzle-orm'
 import { ethers } from 'ethers'
 import { z } from 'zod'
@@ -14,40 +12,48 @@ import { users } from '@/lib/db/schema'
 /* -------------------------------------------------------------------------- */
 
 const paramsSchema = z.object({
+  /** Checksummed 20-byte EVM address supplied via query-string. */
   address: z.string().regex(/^0x[0-9a-fA-F]{40}$/, 'Invalid wallet address'),
 })
 
 /* -------------------------------------------------------------------------- */
-/*                                    GET                                     */
+/*                                     GET                                    */
 /* -------------------------------------------------------------------------- */
 
-export async function GET(req: Request) {
+/**
+ * Validate the supplied wallet address, refresh the server-side session when
+ * the user exists, and return a boolean `{ exists }` so the client can decide
+ * whether to redirect straight to the dashboard or launch the onboarding flow.
+ */
+export async function GET(req: NextRequest) {
   try {
-    const url = new URL(req.url)
-    const parsed = paramsSchema.safeParse({ address: url.searchParams.get('address') || '' })
+    /* ------------------------------- Parse ------------------------------- */
+    const qs = Object.fromEntries(req.nextUrl.searchParams.entries())
+    const parsed = paramsSchema.safeParse(qs)
     if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid or missing address.' }, { status: 400 })
+      return NextResponse.json({ error: 'Invalid address parameter.' }, { status: 400 })
     }
 
-    const address = ethers.getAddress(parsed.data.address)
+    const walletAddress = ethers.getAddress(parsed.data.address)
 
-    /* Fetch full user record so we can initialise a session */
-    const [user] = await db.select().from(users).where(eq(users.walletAddress, address)).limit(1)
+    /* -------------------------- Lookup user ----------------------------- */
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.walletAddress, walletAddress))
+      .limit(1)
 
-    const profileComplete =
-      !!user &&
-      String(user.name ?? '').trim().length > 0 &&
-      String(user.email ?? '').trim().length > 0 &&
-      String(user.role ?? '').trim().length > 0
-
-    /* If profile is complete, create/refresh the session cookie */
-    if (profileComplete) {
-      await setSession(user as any)
+    if (!user) {
+      /* No matching account – client will present the on-board modal. */
+      return NextResponse.json({ exists: false }, { status: 200 })
     }
 
-    return NextResponse.json({ exists: profileComplete })
-  } catch (err) {
-    console.error('wallet-status error:', err)
+    /* ------------------------- Refresh session -------------------------- */
+    await setSession(user)
+
+    return NextResponse.json({ exists: true }, { status: 200 })
+  } catch (err: any) {
+    console.error('wallet-status GET error:', err)
     return NextResponse.json({ error: 'Internal server error.' }, { status: 500 })
   }
 }
