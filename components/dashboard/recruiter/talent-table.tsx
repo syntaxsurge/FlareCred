@@ -4,8 +4,13 @@ import Link from 'next/link'
 import * as React from 'react'
 
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
+import { UserAvatar } from '@/components/ui/user-avatar'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { TableProps, TalentRow } from '@/lib/types/tables'
+
+/* -------------------------------------------------------------------------- */
+/*                            R E C R U I T E R ─ T A L E N T                 */
+/* -------------------------------------------------------------------------- */
 
 export default function TalentTable({
   rows,
@@ -15,7 +20,7 @@ export default function TalentTable({
   initialParams,
   searchQuery,
 }: TableProps<TalentRow>) {
-  /* -------------------- Navigation helpers -------------------- */
+  /* ------------------------- Navigation helpers ------------------------- */
   const { search, handleSearchChange, sortableHeader } = useTableNavigation({
     basePath,
     initialParams,
@@ -24,48 +29,45 @@ export default function TalentTable({
     searchQuery,
   })
 
-  /* ------------------------ Column defs ----------------------- */
+  /* --------------------------- Column config ---------------------------- */
   const columns = React.useMemo<Column<TalentRow>[]>(() => {
     return [
       {
         key: 'name',
         header: sortableHeader('Name', 'name'),
         sortable: false,
-        render: (v) => <span className='font-medium'>{v || '—'}</span>,
+        render: (v, row) => (
+          <Link href={`/candidates/${row.id}`} className='flex items-center gap-2'>
+            <UserAvatar name={row.name} email={row.email} className='size-7' />
+            <span className='font-medium underline-offset-4 hover:underline'>
+              {v || 'Unnamed'}
+            </span>
+          </Link>
+        ),
       },
       {
         key: 'email',
         header: sortableHeader('Email', 'email'),
         sortable: false,
         render: (v) => v as string,
+        className: 'break-all',
       },
       {
         key: 'verified',
-        header: 'Verified Credentials',
+        header: sortableHeader('Verified Creds', 'verified'),
         sortable: false,
-        render: (v) => v as number,
+        render: (v) => ((v as number) > 0 ? v : '—'),
       },
       {
         key: 'topScore',
-        header: 'Top Skill Score',
+        header: sortableHeader('Top Score', 'topScore'),
         sortable: false,
-        render: (v) => (v === null ? '—' : v),
-      },
-      {
-        key: 'id',
-        header: '',
-        enableHiding: false,
-        sortable: false,
-        render: (_v, row) => (
-          <Link href={`/recruiter/talent/${row.id}`} className='text-primary underline'>
-            View Profile
-          </Link>
-        ),
+        render: (v) => (v === null ? '—' : `${v}%`),
       },
     ]
   }, [sortableHeader])
 
-  /* --------------------------- UI ---------------------------- */
+  /* ------------------------------- View --------------------------------- */
   return (
     <DataTable
       columns={columns}

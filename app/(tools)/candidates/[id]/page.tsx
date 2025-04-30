@@ -1,66 +1,42 @@
-import { asc, eq, and } from 'drizzle-orm'
+import { redirect } from 'next/navigation'
+
+import { eq } from 'drizzle-orm'
 
 import CandidateDetailedProfileView from '@/components/dashboard/candidate/profile-detailed-view'
 import { db } from '@/lib/db/drizzle'
+import { getUser } from '@/lib/db/queries/queries'
+import { getCandidatePipelineEntriesPage } from '@/lib/db/queries/recruiter-pipeline-entries'
 import { getCandidateSkillPassesSection } from '@/lib/db/queries/candidate-skill-passes'
-import { candidates, users, issuers } from '@/lib/db/schema'
+import { getCandidateCredentialsSection } from '@/lib/db/queries/candidate-credentials-core'
+import { candidates, users } from '@/lib/db/schema'
 import {
-  candidateCredentials,
   candidateHighlights,
+  candidateCredentials,
   CredentialCategory,
   CredentialStatus,
 } from '@/lib/db/schema/candidate'
+import { issuers } from '@/lib/db/schema/issuer'
+import type {
+  PipelineEntryRow,
+  RecruiterCredentialRow,
+  TalentRow,
+  SkillPassRow,
+} from '@/lib/types/tables'
 import type { StatusCounts } from '@/lib/types/candidate'
-import type { RecruiterCredentialRow } from '@/lib/types/tables'
-import { getCandidateCredentialsSection } from '@/lib/db/queries/candidate-credentials-core'
+import { Stage } from '@/lib/types/recruiter'
 
 export const revalidate = 0
 
 /* -------------------------------------------------------------------------- */
-/*                                   TYPES                                    */
+/*                                   Helpers                                  */
 /* -------------------------------------------------------------------------- */
 
 type Params = { id: string }
 type Query = Record<string, string | string[] | undefined>
-
-type Experience = {
-  id: number
-  title: string
-  company: string | null
-  type: string | null
-  link: string | null
-  createdAt: Date
-  status?: string | null
-}
-
-type Project = {
-  id: number
-  title: string
-  link: string | null
-  description: string | null
-  createdAt: Date
-  status?: string | null
-}
-
-/** Raw row returned from the highlights query */
-type HighlightRow = {
-  id: number
-  title: string
-  createdAt: Date
-  issuerName: string | null
-  link: string | null
-  description: string | null
-  status: string | null
-  sortOrder: number | null
-  /** String literals returned by DB enum; matches keys of CredentialCategory */
-  category: keyof typeof CredentialCategory
-}
-
-/* Helpers */
 const first = (p: Query, k: string) => (Array.isArray(p[k]) ? p[k]?.[0] : p[k])
 
 /* -------------------------------------------------------------------------- */
-/*                                    PAGE                                    */
+/*                                   Page                                     */
 /* -------------------------------------------------------------------------- */
 
 export default async function PublicCandidateProfile({
@@ -74,7 +50,7 @@ export default async function PublicCandidateProfile({
   const candidateId = Number(id)
   const q = (await searchParams) as Query
 
-  /* ------------------------- Candidate row ------------------------------ */
+  /* ----------------------------- Candidate row --------------------------- */
   const [row] = await db
     .select({ cand: candidates, userRow: users })
     .from(candidates)
@@ -84,83 +60,63 @@ export default async function PublicCandidateProfile({
 
   if (!row) return <div>Candidate not found.</div>
 
-  /* ------------------ Experiences & Projects --------------------------- */
-  const highlightBase = () =>
-    db
-      .select({
-        id: candidateCredentials.id,
-        title: candidateCredentials.title,
-        createdAt: candidateCredentials.createdAt,
-        issuerName: issuers.name,
-        link: candidateCredentials.fileUrl,
-        description: candidateCredentials.type,
-        status: candidateCredentials.status,
-        category: candidateCredentials.category,
-        sortOrder: candidateHighlights.sortOrder,
-      })
-      .from(candidateHighlights)
-      .innerJoin(
-        candidateCredentials,
-        eq(candidateHighlights.credentialId, candidateCredentials.id),
-      )
-      .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
+  /* -------------------------- Logged-in user ----------------------------- */
+  const user = await getUser()
+  const isRecruiter = user?.role === 'recruiter'
 
-  const experienceRowsRaw = await highlightBase()
-    .where(
-      and(
-        eq(candidateHighlights.candidateId, candidateId),
-        eq(candidateCredentials.category, CredentialCategory.EXPERIENCE),
-      ),
+  /* ---------------------------------------------------------------------- */
+  /*                    Experiences & Projects ( Highlights )               */
+  /* ---------------------------------------------------------------------- */
+  const highlightRows = await db
+    .select({
+      id: candidateCredentials.id,
+      title: candidateCredentials.title,
+      createdAt: candidateCredentials.createdAt,
+      issuerName: issuers.name,
+      link: candidateCredentials.fileUrl,
+      description: candidateCredentials.type,
+      status: candidateCredentials.status,
+      category: candidateCredentials.category,
+      sortOrder: candidateHighlights.sortOrder,
+    })
+    .from(candidateHighlights)
+    .innerJoin(
+      candidateCredentials,
+      eq(candidateHighlights.credentialId, candidateCredentials.id),
     )
-    .orderBy(asc(candidateHighlights.sortOrder))
+    .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
+    .where(eq(candidateHighlights.candidateId, candidateId))
 
-  const projectRowsRaw = await highlightBase()
-    .where(
-      and(
-        eq(candidateHighlights.candidateId, candidateId),
-        eq(candidateCredentials.category, CredentialCategory.PROJECT),
-      ),
-    )
-    .orderBy(asc(candidateHighlights.sortOrder))
-
-  const experienceRows: HighlightRow[] = experienceRowsRaw as HighlightRow[]
-  const projectRows: HighlightRow[] = projectRowsRaw as HighlightRow[]
-
-  const experiences: Experience[] = experienceRows.map(
-    (e): Experience => ({
+  const experiences = highlightRows
+    .filter((h) => h.category === CredentialCategory.EXPERIENCE)
+    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+    .map((e) => ({
       id: e.id,
       title: e.title,
       company: e.issuerName,
-      type: e.description,
-      link: e.link,
       createdAt: e.createdAt,
-      status: e.status,
-    }),
-  )
+      status: e.status as CredentialStatus,
+    }))
 
-  const projects: Project[] = projectRows.map(
-    (p): Project => ({
+  const projects = highlightRows
+    .filter((h) => h.category === CredentialCategory.PROJECT)
+    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+    .map((p) => ({
       id: p.id,
       title: p.title,
       link: p.link,
       description: p.description,
       createdAt: p.createdAt,
-      status: p.status,
-    }),
-  )
+      status: p.status as CredentialStatus,
+    }))
 
-  /* ---------------------- Paged credentials ---------------------------- */
+  /* ---------------------------------------------------------------------- */
+  /*                 Credentials (shared core helper)                       */
+  /* ---------------------------------------------------------------------- */
   const page = Math.max(1, Number(first(q, 'page') ?? '1'))
   const sizeRaw = Number(first(q, 'size') ?? '10')
   const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
-
-  const allowedSortKeys = ['createdAt', 'status', 'title', 'issuer'] as const
-  type SortKey = (typeof allowedSortKeys)[number]
-  const sortRaw = (first(q, 'sort') ?? 'status') as string
-  const sort: SortKey = allowedSortKeys.includes(sortRaw as SortKey)
-    ? (sortRaw as SortKey)
-    : 'status'
-
+  const sort = first(q, 'sort') ?? 'status'
   const order = first(q, 'order') === 'asc' ? 'asc' : 'desc'
   const searchTerm = (first(q, 'q') ?? '').trim()
 
@@ -172,23 +128,21 @@ export default async function PublicCandidateProfile({
     candidateId,
     page,
     pageSize,
-    sort,
-    order as 'asc' | 'desc',
+    sort as any,
+    order as any,
     searchTerm,
   )
 
-  const credRows: RecruiterCredentialRow[] = rawCredRows.map(
-    (c): RecruiterCredentialRow => ({
-      id: c.id,
-      title: c.title,
-      category: (c as any).category ?? CredentialCategory.OTHER,
-      issuer: (c as any).issuer ?? null,
-      status: (c as any).status as CredentialStatus,
-      fileUrl: (c as any).fileUrl ?? null,
-      txHash: (c as any).txHash ?? null,
-      vcJson: (c as any).vcJson ?? null,
-    }),
-  )
+  const credRows: RecruiterCredentialRow[] = rawCredRows.map((c) => ({
+    id: c.id,
+    title: c.title,
+    category: c.category ?? CredentialCategory.OTHER,
+    issuer: c.issuer ?? null,
+    status: c.status as CredentialStatus,
+    fileUrl: c.fileUrl ?? null,
+    txHash: c.txHash ?? null,
+    vcJson: c.vcJson ?? null,
+  }))
 
   const credInitialParams: Record<string, string> = {}
   const keep = (k: string) => {
@@ -200,7 +154,9 @@ export default async function PublicCandidateProfile({
   keep('order')
   if (searchTerm) credInitialParams['q'] = searchTerm
 
-  /* ------------------------ Skill Passes ------------------------------ */
+  /* ---------------------------------------------------------------------- */
+  /*                     Skill Passes (shared helper)                       */
+  /* ---------------------------------------------------------------------- */
   const passPage = Math.max(1, Number(first(q, 'passPage') ?? '1'))
   const passSizeRaw = Number(first(q, 'passSize') ?? '10')
   const passPageSize = [10, 20, 50].includes(passSizeRaw) ? passSizeRaw : 10
@@ -230,7 +186,84 @@ export default async function PublicCandidateProfile({
   ;['passSize', 'passSort', 'passOrder'].forEach(keepPass)
   if (passSearch) passInitialParams['passQ'] = passSearch
 
-  /* ---------------------------- View ---------------------------------- */
+  /* ---------------------------------------------------------------------- */
+  /*                   Recruiter-only Pipeline Entries                      */
+  /* ---------------------------------------------------------------------- */
+  let pipelineSummary: string | undefined
+  let pipelineSection:
+    | {
+        rows: PipelineEntryRow[]
+        sort: string
+        order: 'asc' | 'desc'
+        pagination: {
+          page: number
+          hasNext: boolean
+          pageSize: number
+          basePath: string
+          initialParams: Record<string, string>
+        }
+      }
+    | undefined
+
+  if (isRecruiter) {
+    const pipePage = Math.max(1, Number(first(q, 'pipePage') ?? '1'))
+    const pipeSizeRaw = Number(first(q, 'pipeSize') ?? '10')
+    const pipePageSize = [10, 20, 50].includes(pipeSizeRaw) ? pipeSizeRaw : 10
+    const allowedPipeSort = ['pipelineName', 'stage', 'addedAt'] as const
+    type PipeSortKey = (typeof allowedPipeSort)[number]
+    const pipeSortRaw = (first(q, 'pipeSort') ?? 'addedAt') as string
+    const pipeSort: PipeSortKey = allowedPipeSort.includes(pipeSortRaw as PipeSortKey)
+      ? (pipeSortRaw as PipeSortKey)
+      : 'addedAt'
+    const pipeOrder = first(q, 'pipeOrder') === 'asc' ? 'asc' : 'desc'
+    const pipeSearchTerm = (first(q, 'pipeQ') ?? '').trim()
+
+    const { entries, hasNext: pipeHasNext } = await getCandidatePipelineEntriesPage(
+      candidateId,
+      user!.id,
+      pipePage,
+      pipePageSize,
+      pipeSort,
+      pipeOrder,
+      pipeSearchTerm,
+    )
+
+    const pipeInitialParams: Record<string, string> = {}
+    const keepPipe = (k: string) => {
+      const v = first(q, k)
+      if (v) pipeInitialParams[k] = v
+    }
+    keepPipe('pipeSize')
+    keepPipe('pipeSort')
+    keepPipe('pipeOrder')
+    if (pipeSearchTerm) pipeInitialParams['pipeQ'] = pipeSearchTerm
+
+    /* Build summary (e.g. "In X Pipelines”) */
+    const uniquePipelines = new Set(entries.map((e) => e.pipelineName))
+    if (entries.length > 0) {
+      pipelineSummary =
+        uniquePipelines.size === 1
+          ? `In ${[...uniquePipelines][0]}`
+          : `In ${uniquePipelines.size} Pipelines`
+    }
+
+    pipelineSection = {
+      rows: entries,
+      sort: pipeSort,
+      order: pipeOrder as 'asc' | 'desc',
+      pagination: {
+        page: pipePage,
+        hasNext: pipeHasNext,
+        pageSize: pipePageSize,
+        basePath: `/candidates/${candidateId}`,
+        initialParams: pipeInitialParams,
+      },
+    }
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /*                               Render                                   */
+  /* ---------------------------------------------------------------------- */
   return (
     <CandidateDetailedProfileView
       candidateId={candidateId}
@@ -238,9 +271,10 @@ export default async function PublicCandidateProfile({
       email={row.userRow?.email ?? ''}
       avatarSrc={(row.userRow as any)?.image ?? null}
       bio={row.cand.bio ?? null}
+      pipelineSummary={pipelineSummary}
       statusCounts={statusCounts as StatusCounts}
       passes={{
-        rows: passRows,
+        rows: passRows as SkillPassRow[],
         sort: passSort,
         order: passOrder as 'asc' | 'desc',
         pagination: {
@@ -271,6 +305,7 @@ export default async function PublicCandidateProfile({
           initialParams: credInitialParams,
         },
       }}
+      pipeline={pipelineSection}
       showShare
     />
   )
