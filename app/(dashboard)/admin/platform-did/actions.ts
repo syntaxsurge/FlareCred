@@ -6,15 +6,15 @@ import { ethers } from 'ethers'
 
 import { validatedActionWithUser } from '@/lib/auth/middleware'
 import { createFlareDID } from '@/lib/contracts/flare'
-import { provider } from '@/lib/contracts'
+import { provider, didRegistry } from '@/lib/contracts'
 import { upsertEnv } from '@/lib/utils/env'
 
 /* -------------------------------------------------------------------------- */
-/*                                 V A L I D A T I O N                        */
+/*                                V A L I D A T I O N                         */
 /* -------------------------------------------------------------------------- */
 
 const schema = z.object({
-  /** Optional DID – when absent we auto-generate via the platform signer */
+  /** Optional DID – when absent we auto-generate via the platform signer. */
   did: z
     .string()
     .trim()
@@ -35,30 +35,60 @@ export const upsertPlatformDidAction = validatedActionWithUser(
 
     let newDid = did?.trim()
 
-    try {
-      /* ------------------------------------------------------------------ */
-      /*                    Auto-generate when no DID supplied               */
-      /* ------------------------------------------------------------------ */
-      if (!newDid) {
-        const pk = process.env.PLATFORM_SIGNER_PRIVATE_KEY
-        if (!pk) {
-          return {
-            error:
-              'PLATFORM_SIGNER_PRIVATE_KEY env var not configured – cannot generate a platform DID.',
-          }
+    /* ------------------------------------------------------------------ */
+    /*                  Auto-generate or fetch existing DID               */
+    /* ------------------------------------------------------------------ */
+    if (!newDid) {
+      const pk = process.env.PLATFORM_SIGNER_PRIVATE_KEY
+      if (!pk) {
+        return {
+          error:
+            'PLATFORM_SIGNER_PRIVATE_KEY env var not configured – cannot generate a platform DID.',
         }
-
-        const platformSigner = new ethers.Wallet(pk, provider)
-        const { did: generatedDid } = await createFlareDID({ signer: platformSigner })
-        newDid = generatedDid
       }
 
-      /* ------------------------------------------------------------------ */
-      /*                       Persist into environment                      */
-      /* ------------------------------------------------------------------ */
-      await upsertEnv('NEXT_PUBLIC_PLATFORM_ISSUER_DID', newDid)
-    } catch (err: any) {
-      return { error: `Failed to generate or update Flare DID: ${String(err)}` }
+      const platformSigner = new ethers.Wallet(pk, provider)
+
+      try {
+        /* Attempt fresh mint ------------------------------------------------ */
+        const { did: generatedDid } = await createFlareDID({ signer: platformSigner })
+        newDid = generatedDid
+      } catch (err: any) {
+        const msg =
+          err?.shortMessage || err?.reason || err?.message || (typeof err === 'string' ? err : '')
+        const alreadyExists = /DID already exists/i.test(msg)
+
+        if (!alreadyExists) {
+          /* Unknown failure – bubble up ------------------------------------ */
+          return { error: `Failed to create Flare DID: ${msg}` }
+        }
+
+        /* DID already minted – fetch from registry ------------------------- */
+        try {
+          newDid = await didRegistry.didOf(await platformSigner.getAddress())
+          if (!newDid) {
+            return {
+              error:
+                'DID already exists on-chain but could not be retrieved; verify contract state.',
+            }
+          }
+        } catch (fetchErr: any) {
+          return {
+            error: `Failed to fetch existing DID from registry: ${
+              fetchErr?.message || String(fetchErr)
+            }`,
+          }
+        }
+      }
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*                     Persist DID into environment                    */
+    /* ------------------------------------------------------------------ */
+    try {
+      await upsertEnv('NEXT_PUBLIC_PLATFORM_ISSUER_DID', newDid!)
+    } catch (envErr: any) {
+      return { error: `Failed to persist DID to environment: ${String(envErr)}` }
     }
 
     revalidatePath('/admin/platform-did')
