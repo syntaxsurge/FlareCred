@@ -2,89 +2,22 @@ import { redirect } from 'next/navigation'
 import type { ElementType } from 'react'
 
 import { eq, and } from 'drizzle-orm'
-import { BadgeCheck, Clock, XCircle, FileText, Github } from 'lucide-react'
+import { FileText, BadgeCheck, Clock, XCircle } from 'lucide-react'
 
 import { CredentialActions } from '@/components/dashboard/issuer/credential-actions'
+import GithubProofDialog from '@/components/dashboard/issuer/github-proof-dialog'
 import RequireDidGate from '@/components/dashboard/require-did-gate'
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import PageCard from '@/components/ui/page-card'
+import StatusBadge from '@/components/ui/status-badge'
 import { isGithubRepoCredential } from '@/lib/constants/credential'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
 import { candidateCredentials, CredentialStatus, candidates } from '@/lib/db/schema/candidate'
 import { users } from '@/lib/db/schema/core'
 import { issuers } from '@/lib/db/schema/issuer'
-import { cn } from '@/lib/utils'
 
 export const revalidate = 0
-
-/* -------------------------------------------------------------------------- */
-/*                          UI helpers & mappers                              */
-/* -------------------------------------------------------------------------- */
-
-/** Return a Lucide icon component mapped to the credential status. */
-function statusIcon(status: CredentialStatus): ElementType {
-  switch (status) {
-    case CredentialStatus.VERIFIED:
-      return BadgeCheck
-    case CredentialStatus.REJECTED:
-      return XCircle
-    default:
-      return Clock
-  }
-}
-
-function StatusBadge({ status }: { status: CredentialStatus }) {
-  const cls = 'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize'
-  const map: Record<CredentialStatus, string> = {
-    [CredentialStatus.VERIFIED]:
-      'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
-    [CredentialStatus.PENDING]:
-      'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-    [CredentialStatus.REJECTED]: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
-    [CredentialStatus.UNVERIFIED]: 'bg-muted text-foreground/80',
-  }
-  return <span className={cn(cls, map[status])}>{status.toLowerCase()}</span>
-}
-
-function GithubProofDialog({ proofJson }: { proofJson: string }) {
-  'use client'
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <button
-          className='text-primary inline-flex items-center gap-2 font-medium underline-offset-2 hover:underline'
-          type='button'
-        >
-          <Github className='h-4 w-4' />
-          View GitHub Proof
-        </button>
-      </DialogTrigger>
-      <DialogContent className='max-w-2xl'>
-        <DialogHeader>
-          <DialogTitle className='flex items-center gap-2'>
-            <Github className='h-5 w-5' />
-            GitHub Proof JSON
-          </DialogTitle>
-        </DialogHeader>
-        <pre className='bg-muted max-h-[70vh] overflow-auto rounded-md p-4 text-xs leading-relaxed whitespace-pre-wrap'>
-          {proofJson}
-        </pre>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
-/* -------------------------------------------------------------------------- */
-/*                                   Page                                     */
-/* -------------------------------------------------------------------------- */
 
 export default async function CredentialDetailPage({
   params,
@@ -94,14 +27,14 @@ export default async function CredentialDetailPage({
   const { id } = await params
   const credentialId = Number(id)
 
-  /* Auth & issuer ownership ------------------------------------------------ */
+  /* --------------------------- Auth & issuer ---------------------------- */
   const user = await getUser()
   if (!user) redirect('/connect-wallet')
 
   const [issuer] = await db.select().from(issuers).where(eq(issuers.ownerUserId, user.id)).limit(1)
   if (!issuer) redirect('/issuer/onboard')
 
-  /* Credential lookup ------------------------------------------------------ */
+  /* -------------------------- Credential row ---------------------------- */
   const [data] = await db
     .select({ cred: candidateCredentials, cand: candidates, candUser: users })
     .from(candidateCredentials)
@@ -115,10 +48,19 @@ export default async function CredentialDetailPage({
 
   const { cred, candUser } = data
   const status = cred.status as CredentialStatus
-  const StatusIcon = statusIcon(status)
+  const StatusIcon: ElementType = (() => {
+    switch (status) {
+      case CredentialStatus.VERIFIED:
+        return BadgeCheck
+      case CredentialStatus.REJECTED:
+        return XCircle
+      default:
+        return Clock
+    }
+  })()
   const isGithub = isGithubRepoCredential(cred.type)
 
-  /* Prettify GitHub proof JSON for modal ----------------------------------- */
+  /* ------------------------ GitHub proof pretty ------------------------- */
   let proofPretty = cred.proofData
   if (isGithub) {
     try {
@@ -128,7 +70,7 @@ export default async function CredentialDetailPage({
     }
   }
 
-  /* -------------------------------- View ---------------------------------- */
+  /* -------------------------------- UI ---------------------------------- */
   return (
     <RequireDidGate createPath='/issuer/create-did'>
       <PageCard
@@ -138,16 +80,16 @@ export default async function CredentialDetailPage({
         className='w-full'
       >
         <div className='space-y-6'>
-          {/* Meta row ------------------------------------------------------- */}
+          {/* Meta row */}
           <div className='flex flex-wrap items-center gap-4'>
             <p className='text-muted-foreground text-sm'>
               Submitted by{' '}
               <span className='font-medium'>{candUser?.name || candUser?.email || 'Unknown'}</span>
             </p>
-            <StatusBadge status={status} />
+            <StatusBadge status={status} showIcon />
           </div>
 
-          {/* Details card --------------------------------------------------- */}
+          {/* Details */}
           <Card className='shadow-sm'>
             <CardHeader>
               <CardTitle className='text-lg font-semibold'>Credential Details</CardTitle>

@@ -40,3 +40,11 @@ export function getProofTx(vcJson: string | null | undefined): string | null {
   }
   return null
 }
+
+/**
+ * Convert enum-like or snake_case strings to human-readable lowercase text.
+ * e.g. "PENDING_APPROVAL" → "pending approval", "active" → "active".
+ */
+export function prettify(text?: string | null): string {
+  return text ? text.replaceAll('_', ' ').toLowerCase() : '—'
+}

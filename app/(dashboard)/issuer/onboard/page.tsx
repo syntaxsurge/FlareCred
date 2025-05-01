@@ -2,25 +2,17 @@ import Image from 'next/image'
 import { redirect } from 'next/navigation'
 
 import { eq } from 'drizzle-orm'
-import {
-  Building2,
-  AtSign,
-  Tag,
-  BriefcaseBusiness,
-  Link,
-  BadgeCheck,
-  Hourglass,
-  XCircle,
-  Wrench,
-} from 'lucide-react'
+import { Building2, AtSign, Tag, BriefcaseBusiness, Link, Wrench } from 'lucide-react'
 
 import RequireDidGate from '@/components/dashboard/require-did-gate'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import DetailItem from '@/components/ui/detail-item'
 import PageCard from '@/components/ui/page-card'
+import StatusBadge from '@/components/ui/status-badge'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
 import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
-import { cn } from '@/lib/utils'
+import { prettify } from '@/lib/utils'
 
 import { CreateIssuerForm } from './create-issuer-form'
 import { EditIssuerForm } from './edit-issuer-form'
@@ -28,79 +20,12 @@ import { LinkDidForm } from './link-did-form'
 
 export const revalidate = 0
 
-/* -------------------------------------------------------------------------- */
-/*                                   HELPERS                                  */
-/* -------------------------------------------------------------------------- */
-
-function prettify(text?: string | null) {
-  return text ? text.replaceAll('_', ' ').toLowerCase() : '—'
-}
-
-function StatusPill({ status }: { status: string }) {
-  const base = 'inline-flex items-center rounded-full px-3 py-0.5 text-sm font-semibold capitalize'
-  const map: Record<string, string> = {
-    [IssuerStatus.ACTIVE]:
-      'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
-    [IssuerStatus.PENDING]: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-    [IssuerStatus.REJECTED]: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
-  }
-  return (
-    <span className={cn(base, map[status] ?? 'bg-muted text-foreground/80')}>
-      {status.toLowerCase()}
-    </span>
-  )
-}
-
-function StatusIcon({ status }: { status: string }) {
-  const base = 'h-6 w-6 flex-shrink-0'
-  switch (status) {
-    case IssuerStatus.ACTIVE:
-      return <BadgeCheck className={cn(base, 'text-emerald-500')} />
-    case IssuerStatus.REJECTED:
-      return <XCircle className={cn(base, 'text-rose-500')} />
-    default:
-      return <Hourglass className={cn(base, 'text-amber-500')} />
-  }
-}
-
-function Detail({
-  icon: Icon,
-  label,
-  value,
-  capitalize = false,
-  className,
-}: {
-  icon: any
-  label: string
-  value: string
-  capitalize?: boolean
-  className?: string
-}) {
-  return (
-    <div className={cn('flex items-start gap-3', className)}>
-      <Icon className='text-muted-foreground mt-0.5 h-5 w-5' />
-      <div>
-        <p className='text-muted-foreground text-xs font-medium uppercase'>{label}</p>
-        <p className={cn('font-medium break-all', capitalize && 'capitalize')}>{value}</p>
-      </div>
-    </div>
-  )
-}
-
-/* -------------------------------------------------------------------------- */
-/*                                     PAGE                                   */
-/* -------------------------------------------------------------------------- */
-
 export default async function IssuerOnboardPage() {
   const user = await getUser()
   if (!user) redirect('/connect-wallet')
 
   const [issuer] = await db.select().from(issuers).where(eq(issuers.ownerUserId, user.id)).limit(1)
 
-  /* ---------------------------------------------------------------------- */
-  /*  Entire view is now wrapped in RequireDidGate so issuers without a     */
-  /*  team DID get the modal immediately instead of the create-issuer form. */
-  /* ---------------------------------------------------------------------- */
   return (
     <RequireDidGate createPath='/issuer/create-did'>
       {/* ----------------------- First-time creation ----------------------- */}
@@ -129,15 +54,15 @@ export default async function IssuerOnboardPage() {
               </CardHeader>
               <CardContent className='space-y-4'>
                 <div className='space-y-2'>
-                  <Detail icon={Building2} label='Name' value={issuer.name} />
-                  <Detail icon={AtSign} label='Domain' value={issuer.domain} />
-                  <Detail
+                  <DetailItem icon={Building2} label='Name' value={issuer.name} />
+                  <DetailItem icon={AtSign} label='Domain' value={issuer.domain} />
+                  <DetailItem
                     icon={Tag}
                     label='Category'
                     value={prettify(issuer.category)}
                     capitalize
                   />
-                  <Detail
+                  <DetailItem
                     icon={BriefcaseBusiness}
                     label='Industry'
                     value={prettify(issuer.industry)}
@@ -200,10 +125,7 @@ export default async function IssuerOnboardPage() {
                   <p className='text-muted-foreground text-sm'>Organisation profile</p>
                 </div>
 
-                <div className='flex items-center gap-2'>
-                  <StatusIcon status={issuer.status} />
-                  <StatusPill status={issuer.status} />
-                </div>
+                <StatusBadge status={issuer.status} showIcon className='text-base' />
               </CardContent>
             </Card>
 
@@ -213,16 +135,21 @@ export default async function IssuerOnboardPage() {
                 <CardTitle className='text-lg font-semibold'>Organisation Details</CardTitle>
               </CardHeader>
               <CardContent className='grid gap-6 p-6 sm:grid-cols-2'>
-                <Detail icon={AtSign} label='Domain' value={issuer.domain} />
-                <Detail icon={Tag} label='Category' value={prettify(issuer.category)} capitalize />
-                <Detail
+                <DetailItem icon={AtSign} label='Domain' value={issuer.domain} />
+                <DetailItem
+                  icon={Tag}
+                  label='Category'
+                  value={prettify(issuer.category)}
+                  capitalize
+                />
+                <DetailItem
                   icon={BriefcaseBusiness}
                   label='Industry'
                   value={prettify(issuer.industry)}
                   capitalize
                 />
                 {issuer.did && (
-                  <Detail
+                  <DetailItem
                     icon={Link}
                     label='Flare DID'
                     value={issuer.did}
