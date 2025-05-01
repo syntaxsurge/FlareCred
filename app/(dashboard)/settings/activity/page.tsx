@@ -8,9 +8,22 @@ import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getActivityLogsPage } from '@/lib/db/queries/activity'
 import { getUser } from '@/lib/db/queries/queries'
 import type { ActivityLogRow } from '@/lib/types/tables'
-import { getParam, resolveSearchParams, pickParams, type Query } from '@/lib/utils/query'
+import {
+  parsePagination,
+  parseSort,
+  getSearchTerm,
+  pickParams,
+  resolveSearchParams,
+  type Query,
+} from '@/lib/utils/query'
 
 export const revalidate = 0
+
+/* -------------------------------------------------------------------------- */
+/*                                   Config                                   */
+/* -------------------------------------------------------------------------- */
+
+const ALLOWED_SORT_KEYS = ['timestamp'] as const
 
 /* -------------------------------------------------------------------------- */
 /*                                    Page                                    */
@@ -21,23 +34,17 @@ export default async function ActivityPage({
 }: {
   searchParams?: Promise<Query>
 }) {
-  /* Normalise Next.js `searchParams` (object or Promise) */
   const params = await resolveSearchParams(searchParams)
 
   const user = await getUser()
   if (!user) redirect('/connect-wallet')
 
-  /* ---------------------- Query parameters ---------------------- */
-  const page = Math.max(1, Number(getParam(params, 'page') ?? '1'))
-  const sizeRaw = Number(getParam(params, 'size') ?? '10')
-  const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
+  /* ---------------------- Pagination, sort, search ----------------------- */
+  const { page, pageSize } = parsePagination(params)
+  const { sort, order } = parseSort(params, ALLOWED_SORT_KEYS, 'timestamp')
+  const searchTerm = getSearchTerm(params)
 
-  /* Only timestamp sorting is supported */
-  const sort = 'timestamp'
-  const order = getParam(params, 'order') === 'asc' ? 'asc' : 'desc'
-  const searchTerm = (getParam(params, 'q') ?? '').trim()
-
-  /* ------------------------- Data fetch ------------------------- */
+  /* ---------------------------- Data fetch ------------------------------- */
   const { logs, hasNext } = await getActivityLogsPage(
     user.id,
     page,
@@ -49,10 +56,10 @@ export default async function ActivityPage({
 
   const rows: ActivityLogRow[] = logs
 
-  /* -------------------- Preserve query state -------------------- */
-  const initialParams = pickParams(params, ['size', 'order', 'q'])
+  /* ------------------------ Build initialParams -------------------------- */
+  const initialParams = pickParams(params, ['size', 'sort', 'order', 'q'])
 
-  /* ---------------------------- View ---------------------------- */
+  /* ------------------------------ View ----------------------------------- */
   return (
     <PageCard
       icon={ActivityIcon}

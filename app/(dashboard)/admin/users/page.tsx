@@ -9,13 +9,21 @@ import { getAdminUsersPage } from '@/lib/db/queries/admin-users'
 import { getUser } from '@/lib/db/queries/queries'
 import type { AdminUserRow } from '@/lib/types/tables'
 import {
-  getParam,
+  parsePagination,
+  parseSort,
+  getSearchTerm,
   pickParams,
   resolveSearchParams,
   type Query,
 } from '@/lib/utils/query'
 
 export const revalidate = 0
+
+/* -------------------------------------------------------------------------- */
+/*                                   Config                                   */
+/* -------------------------------------------------------------------------- */
+
+const ALLOWED_SORT_KEYS = ['name', 'email', 'role', 'createdAt'] as const
 
 /* -------------------------------------------------------------------------- */
 /*                                    Page                                    */
@@ -28,22 +36,17 @@ export default async function AdminUsersPage({ searchParams }: { searchParams?: 
   if (!currentUser) redirect('/connect-wallet')
   if (currentUser.role !== 'admin') redirect('/dashboard')
 
-  /* --------------------------- Query params ------------------------------ */
-  const page = Math.max(1, Number(getParam(params, 'page') ?? '1'))
-
-  const sizeRaw = Number(getParam(params, 'size') ?? '10')
-  const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
-
-  const sort = getParam(params, 'sort') ?? 'createdAt'
-  const order = getParam(params, 'order') === 'asc' ? 'asc' : 'desc'
-  const searchTerm = (getParam(params, 'q') ?? '').trim()
+  /* ---------------------- Pagination, sort, search ----------------------- */
+  const { page, pageSize } = parsePagination(params)
+  const { sort, order } = parseSort(params, ALLOWED_SORT_KEYS, 'createdAt')
+  const searchTerm = getSearchTerm(params)
 
   /* ---------------------------- Data fetch ------------------------------- */
   const { users, hasNext } = await getAdminUsersPage(
     page,
     pageSize,
-    sort as 'name' | 'email' | 'role' | 'createdAt',
-    order as 'asc' | 'desc',
+    sort as (typeof ALLOWED_SORT_KEYS)[number],
+    order,
     searchTerm,
   )
 

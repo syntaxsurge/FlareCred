@@ -9,9 +9,23 @@ import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getUser } from '@/lib/db/queries/queries'
 import { getTalentSearchPage } from '@/lib/db/queries/recruiter-talent'
 import type { TalentRow } from '@/lib/types/tables'
-import { getParam, resolveSearchParams, pickParams, type Query } from '@/lib/utils/query'
+import {
+  parsePagination,
+  parseSort,
+  getSearchTerm,
+  getParam,
+  pickParams,
+  resolveSearchParams,
+  type Query,
+} from '@/lib/utils/query'
 
 export const revalidate = 0
+
+/* -------------------------------------------------------------------------- */
+/*                                   Config                                   */
+/* -------------------------------------------------------------------------- */
+
+const ALLOWED_SORT_KEYS = ['name', 'email', 'id'] as const
 
 /* -------------------------------------------------------------------------- */
 /*                                    Page                                    */
@@ -28,16 +42,12 @@ export default async function TalentSearchPage({
   if (!user) redirect('/connect-wallet')
   if (user.role !== 'recruiter') redirect('/')
 
-  /* --------------------------- Query params ------------------------------ */
-  const page = Math.max(1, Number(getParam(params, 'page') ?? '1'))
+  /* ---------------------- Pagination, sort, search ----------------------- */
+  const { page, pageSize } = parsePagination(params)
+  const { sort, order } = parseSort(params, ALLOWED_SORT_KEYS, 'name')
+  const searchTerm = getSearchTerm(params)
 
-  const sizeRaw = Number(getParam(params, 'size') ?? '10')
-  const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
-
-  const sort = getParam(params, 'sort') ?? 'name'
-  const order = getParam(params, 'order') === 'desc' ? 'desc' : 'asc'
-
-  const searchTerm = (getParam(params, 'q') ?? '').trim()
+  /* ------------------ Additional numeric / boolean filters --------------- */
   const verifiedOnly = getParam(params, 'verifiedOnly') === '1'
   const skillMin = Math.max(0, Number(getParam(params, 'skillMin') ?? '0'))
   const skillMax = Math.min(100, Number(getParam(params, 'skillMax') ?? '100'))
@@ -46,8 +56,8 @@ export default async function TalentSearchPage({
   const { candidates, hasNext } = await getTalentSearchPage(
     page,
     pageSize,
-    sort as 'name' | 'email' | 'id',
-    order as 'asc' | 'desc',
+    sort as (typeof ALLOWED_SORT_KEYS)[number],
+    order,
     searchTerm,
     verifiedOnly,
     skillMin,
