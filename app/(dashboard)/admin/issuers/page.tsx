@@ -8,7 +8,12 @@ import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getAdminIssuersPage } from '@/lib/db/queries/admin-issuers'
 import { getUser } from '@/lib/db/queries/queries'
 import type { AdminIssuerRow } from '@/lib/types/tables'
-import { getParam, resolveSearchParams, type Query } from '@/lib/utils/query'
+import {
+  getParam,
+  pickParams,
+  resolveSearchParams,
+  type Query,
+} from '@/lib/utils/query'
 
 export const revalidate = 0
 
@@ -17,14 +22,15 @@ export default async function AdminIssuersPage({
 }: {
   searchParams?: Promise<Query>
 }) {
-  /* Resolve synchronous or async `searchParams` supplied by Next.js 15 */
+  /* Resolve synchronous or async `searchParams` supplied by Next.js */
   const params = await resolveSearchParams(searchParams)
 
+  /* Auth guard */
   const currentUser = await getUser()
   if (!currentUser) redirect('/connect-wallet')
   if (currentUser.role !== 'admin') redirect('/dashboard')
 
-  /* --------------------------- Query params ------------------------------ */
+  /* --------------------------- Query params --------------------------- */
   const page = Math.max(1, Number(getParam(params, 'page') ?? '1'))
 
   const sizeRaw = Number(getParam(params, 'size') ?? '10')
@@ -34,7 +40,7 @@ export default async function AdminIssuersPage({
   const order = getParam(params, 'order') === 'asc' ? 'asc' : 'desc'
   const searchTerm = (getParam(params, 'q') ?? '').trim()
 
-  /* ---------------------------- Data fetch ------------------------------- */
+  /* ---------------------------- Data fetch ---------------------------- */
   const { issuers, hasNext } = await getAdminIssuersPage(
     page,
     pageSize,
@@ -53,18 +59,10 @@ export default async function AdminIssuersPage({
     status: i.status,
   }))
 
-  /* ------------------------ Build initialParams -------------------------- */
-  const initialParams: Record<string, string> = {}
-  const keep = (k: string) => {
-    const v = getParam(params, k)
-    if (v) initialParams[k] = v
-  }
-  keep('size')
-  keep('sort')
-  keep('order')
-  if (searchTerm) initialParams.q = searchTerm
+  /* ------------------------ Build initialParams ----------------------- */
+  const initialParams = pickParams(params, ['size', 'sort', 'order', 'q'])
 
-  /* ------------------------------ View ----------------------------------- */
+  /* ------------------------------- View ------------------------------- */
   return (
     <PageCard
       icon={Building}

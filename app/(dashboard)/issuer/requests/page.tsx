@@ -12,38 +12,40 @@ import { getIssuerRequestsPage } from '@/lib/db/queries/issuer-requests'
 import { getUser } from '@/lib/db/queries/queries'
 import { issuers } from '@/lib/db/schema/issuer'
 import type { IssuerRequestRow } from '@/lib/types/tables'
-import { getParam, resolveSearchParams, type Query } from '@/lib/utils/query'
+import {
+  getParam,
+  pickParams,
+  resolveSearchParams,
+  type Query,
+} from '@/lib/utils/query'
 
 export const revalidate = 0
-
-/* -------------------------------------------------------------------------- */
-/*                                    Page                                    */
-/* -------------------------------------------------------------------------- */
 
 export default async function RequestsPage({
   searchParams,
 }: {
-  searchParams?: Promise<Query>
+  searchParams: Promise<Query> | Query
 }) {
-  /* Resolve synchronous or async `searchParams` uniformly */
+  /* Resolve sync/async `searchParams` uniformly */
   const params = await resolveSearchParams(searchParams)
 
+  /* Auth & issuer ownership */
   const user = await getUser()
   if (!user) redirect('/connect-wallet')
 
-  /* Issuer ownership */
   const [issuer] = await db.select().from(issuers).where(eq(issuers.ownerUserId, user.id)).limit(1)
   if (!issuer) redirect('/issuer/onboard')
 
-  /* --------------------------- Query params ------------------------------ */
+  /* --------------------------- Query params --------------------------- */
   const page = Math.max(1, Number(getParam(params, 'page') ?? '1'))
   const sizeRaw = Number(getParam(params, 'size') ?? '10')
   const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
+
   const sort = getParam(params, 'sort') ?? 'status'
   const order = getParam(params, 'order') === 'desc' ? 'desc' : 'asc'
   const searchTerm = (getParam(params, 'q') ?? '').trim()
 
-  /* ------------------------------ Data ----------------------------------- */
+  /* ------------------------------ Data -------------------------------- */
   const { requests, hasNext } = await getIssuerRequestsPage(
     issuer.id,
     page,
@@ -55,18 +57,10 @@ export default async function RequestsPage({
 
   const rows: IssuerRequestRow[] = requests
 
-  /* ------------------ Preserve existing query params --------------------- */
-  const initialParams: Record<string, string> = {}
-  const keep = (k: string) => {
-    const v = getParam(params, k)
-    if (v) initialParams[k] = v
-  }
-  keep('size')
-  keep('sort')
-  keep('order')
-  if (searchTerm) initialParams.q = searchTerm
+  /* ----------------------- Preserve query params ---------------------- */
+  const initialParams = pickParams(params, ['size', 'sort', 'order', 'q'])
 
-  /* ------------------------------ View ----------------------------------- */
+  /* ------------------------------ View -------------------------------- */
   return (
     <RequireDidGate createPath='/issuer/create-did'>
       <PageCard
