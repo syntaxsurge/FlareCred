@@ -5,28 +5,14 @@ import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getCandidateListingPage } from '@/lib/db/queries/candidates-core'
 import type { CandidateDirectoryRow } from '@/lib/types/tables'
-import {
-  parsePagination,
-  parseSort,
-  getSearchTerm,
-  pickParams,
-  resolveSearchParams,
-  type Query,
-} from '@/lib/utils/query'
+import { getTableParams, resolveSearchParams, type Query } from '@/lib/utils/query'
 
 export const revalidate = 0
 
-/* -------------------------------------------------------------------------- */
-/*                               Constants                                    */
-/* -------------------------------------------------------------------------- */
-
-const ALLOWED_SORT_KEYS = ['name', 'email', 'verified'] as const
-type SortKey = (typeof ALLOWED_SORT_KEYS)[number]
-
-/* -------------------------------------------------------------------------- */
-/*                                   Page                                     */
-/* -------------------------------------------------------------------------- */
-
+/**
+ * Public candidate directory.
+ * Simplified by using `getTableParams` for consistent query-string handling.
+ */
 export default async function CandidateDirectoryPage({
   searchParams,
 }: {
@@ -34,16 +20,23 @@ export default async function CandidateDirectoryPage({
 }) {
   const params = await resolveSearchParams(searchParams)
 
-  const { page, pageSize } = parsePagination(params)
-  const { sort, order } = parseSort(params, ALLOWED_SORT_KEYS, 'name')
-  const searchTerm = getSearchTerm(params).toLowerCase()
+  /* -------------------------- Table helpers --------------------------- */
+  const { page, pageSize, sort, order, searchTerm, initialParams } = getTableParams(
+    params,
+    ['name', 'email', 'verified'] as const,
+    'name',
+  )
 
+  /* Case-insensitive search term */
+  const termLower = searchTerm.toLowerCase()
+
+  /* ----------------------------- Data --------------------------------- */
   const { candidates, hasNext } = await getCandidateListingPage(
     page,
     pageSize,
-    sort as SortKey,
+    sort as 'name' | 'email' | 'verified',
     order,
-    searchTerm,
+    termLower,
   )
 
   const rows: CandidateDirectoryRow[] = candidates.map((c) => ({
@@ -53,8 +46,7 @@ export default async function CandidateDirectoryPage({
     verified: c.verified,
   }))
 
-  const initialParams = pickParams(params, ['size', 'sort', 'order', 'q'])
-
+  /* ----------------------------- View --------------------------------- */
   return (
     <PageCard
       icon={Users}

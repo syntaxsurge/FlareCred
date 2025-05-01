@@ -8,44 +8,38 @@ import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getAdminUsersPage } from '@/lib/db/queries/admin-users'
 import { getUser } from '@/lib/db/queries/queries'
 import type { AdminUserRow } from '@/lib/types/tables'
-import {
-  parsePagination,
-  parseSort,
-  getSearchTerm,
-  pickParams,
-  resolveSearchParams,
-  type Query,
-} from '@/lib/utils/query'
+import { getTableParams, resolveSearchParams, type Query } from '@/lib/utils/query'
 
 export const revalidate = 0
 
-/* -------------------------------------------------------------------------- */
-/*                                   Config                                   */
-/* -------------------------------------------------------------------------- */
-
-const ALLOWED_SORT_KEYS = ['name', 'email', 'role', 'createdAt'] as const
-
-/* -------------------------------------------------------------------------- */
-/*                                    Page                                    */
-/* -------------------------------------------------------------------------- */
-
-export default async function AdminUsersPage({ searchParams }: { searchParams?: Promise<Query> }) {
+/**
+ * Admin → Users management listing.
+ * Uniformly parses pagination, sort and search via `getTableParams`.
+ */
+export default async function AdminUsersPage({
+  searchParams,
+}: {
+  searchParams?: Promise<Query>
+}) {
   const params = await resolveSearchParams(searchParams)
 
+  /* ------------------------------ Auth --------------------------------- */
   const currentUser = await getUser()
   if (!currentUser) redirect('/connect-wallet')
   if (currentUser.role !== 'admin') redirect('/dashboard')
 
-  /* ---------------------- Pagination, sort, search ----------------------- */
-  const { page, pageSize } = parsePagination(params)
-  const { sort, order } = parseSort(params, ALLOWED_SORT_KEYS, 'createdAt')
-  const searchTerm = getSearchTerm(params)
+  /* -------------------------- Table helpers --------------------------- */
+  const { page, pageSize, sort, order, searchTerm, initialParams } = getTableParams(
+    params,
+    ['name', 'email', 'role', 'createdAt'] as const,
+    'createdAt',
+  )
 
-  /* ---------------------------- Data fetch ------------------------------- */
+  /* ----------------------------- Data --------------------------------- */
   const { users, hasNext } = await getAdminUsersPage(
     page,
     pageSize,
-    sort as (typeof ALLOWED_SORT_KEYS)[number],
+    sort as 'name' | 'email' | 'role' | 'createdAt',
     order,
     searchTerm,
   )
@@ -58,10 +52,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams?: 
     createdAt: new Date(u.createdAt as any).toISOString(),
   }))
 
-  /* ------------------------ Build initialParams -------------------------- */
-  const initialParams = pickParams(params, ['size', 'sort', 'order', 'q'])
-
-  /* ------------------------------ View ----------------------------------- */
+  /* ----------------------------- View --------------------------------- */
   return (
     <PageCard
       icon={Users}
