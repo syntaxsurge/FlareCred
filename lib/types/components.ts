@@ -387,6 +387,8 @@ export interface CandidateDetailedProfileViewProps {
   email: string
   avatarSrc?: string | null
   bio: string | null
+  /** Cached AI-generated 120-word summary (null until generated) */
+  summary?: string | null
   pipelineSummary?: string
   statusCounts: StatusCounts
   passes: {

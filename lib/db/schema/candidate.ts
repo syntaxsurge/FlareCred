@@ -24,6 +24,8 @@ export const candidates = pgTable(
     id: serial('id').primaryKey(),
     userId: integer('user_id').notNull(),
     bio: text('bio'),
+    /** AI-generated 120-word profile summary */
+    summary: text('summary'),
     /** Optional social links */
     twitterUrl: varchar('twitter_url', { length: 255 }),
     githubUrl: varchar('github_url', { length: 255 }),

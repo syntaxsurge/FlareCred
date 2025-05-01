@@ -284,6 +284,7 @@ export default async function PublicCandidateProfile({
       email={row.userRow?.email ?? ''}
       avatarSrc={(row.userRow as any)?.image ?? null}
       bio={row.cand.bio ?? null}
+      summary={row.cand.summary ?? null}
       pipelineSummary={pipelineSummary}
       statusCounts={statusCounts as StatusCounts}
       passes={{

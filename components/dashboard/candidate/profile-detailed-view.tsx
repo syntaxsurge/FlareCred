@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import StatusBadge from '@/components/ui/status-badge'
+import GenerateSummaryButton from '@/components/dashboard/candidate/generate-summary-button'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { SnapshotMetrics } from '@/lib/types/candidate'
@@ -110,6 +111,7 @@ export default function CandidateDetailedProfileView({
   email,
   avatarSrc,
   bio,
+  summary,
   pipelineSummary,
   statusCounts,
   passes,
@@ -225,6 +227,22 @@ export default function CandidateDetailedProfileView({
                 <p className='whitespace-pre-line'>{bio}</p>
               </CardContent>
             </Card>
+          )}
+
+          {/* Summary */}
+          {summary ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Summary</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className='whitespace-pre-line'>{summary}</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div>
+              <GenerateSummaryButton candidateId={candidateId} />
+            </div>
           )}
 
           {/* Experience & Projects */}
