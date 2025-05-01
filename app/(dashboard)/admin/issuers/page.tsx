@@ -8,26 +8,16 @@ import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getAdminIssuersPage } from '@/lib/db/queries/admin-issuers'
 import { getUser } from '@/lib/db/queries/queries'
 import type { AdminIssuerRow } from '@/lib/types/tables'
+import { getParam as first, type Query } from '@/lib/utils/query'
 
 export const revalidate = 0
-
-/* -------------------------------------------------------------------------- */
-/*                                   Helpers                                  */
-/* -------------------------------------------------------------------------- */
-
-type Query = Record<string, string | string[] | undefined>
-const first = (p: Query, k: string) => (Array.isArray(p[k]) ? p[k]?.[0] : p[k])
-
-/* -------------------------------------------------------------------------- */
-/*                                    Page                                    */
-/* -------------------------------------------------------------------------- */
 
 export default async function AdminIssuersPage({
   searchParams,
 }: {
   searchParams: Promise<Query> | Query
 }) {
-  const params = (await searchParams) as Query
+  const params = await (searchParams as Promise<Query> | Query)
 
   const currentUser = await getUser()
   if (!currentUser) redirect('/connect-wallet')
