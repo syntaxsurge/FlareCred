@@ -8,16 +8,21 @@ import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getAdminIssuersPage } from '@/lib/db/queries/admin-issuers'
 import { getUser } from '@/lib/db/queries/queries'
 import type { AdminIssuerRow } from '@/lib/types/tables'
-import { getParam as first, type Query } from '@/lib/utils/query'
+import {
+  getParam as first,
+  resolveSearchParams,
+  type Query,
+} from '@/lib/utils/query'
 
 export const revalidate = 0
 
 export default async function AdminIssuersPage({
   searchParams,
 }: {
-  searchParams: Promise<Query> | Query
+  searchParams?: Query
 }) {
-  const params = await (searchParams as Promise<Query> | Query)
+  /* Resolve synchronous or async `searchParams` supplied by Next.js 15 */
+  const params = await resolveSearchParams(searchParams)
 
   const currentUser = await getUser()
   if (!currentUser) redirect('/connect-wallet')
@@ -37,7 +42,14 @@ export default async function AdminIssuersPage({
   const { issuers, hasNext } = await getAdminIssuersPage(
     page,
     pageSize,
-    sort as 'name' | 'domain' | 'owner' | 'category' | 'industry' | 'status' | 'id',
+    sort as
+      | 'name'
+      | 'domain'
+      | 'owner'
+      | 'category'
+      | 'industry'
+      | 'status'
+      | 'id',
     order as 'asc' | 'desc',
     searchTerm,
   )
