@@ -10,7 +10,6 @@ import {
   parsePagination,
   parseSort,
   getSearchTerm,
-  getParam,
   pickParams,
   resolveSearchParams,
   type Query,

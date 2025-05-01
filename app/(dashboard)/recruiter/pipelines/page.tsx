@@ -27,11 +27,7 @@ const ALLOWED_SORT_KEYS = ['name', 'createdAt'] as const
 /*                                    Page                                    */
 /* -------------------------------------------------------------------------- */
 
-export default async function PipelinesPage({
-  searchParams,
-}: {
-  searchParams?: Promise<Query>
-}) {
+export default async function PipelinesPage({ searchParams }: { searchParams?: Promise<Query> }) {
   const params = await resolveSearchParams(searchParams)
 
   const user = await getUser()

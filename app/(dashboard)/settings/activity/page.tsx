@@ -29,11 +29,7 @@ const ALLOWED_SORT_KEYS = ['timestamp'] as const
 /*                                    Page                                    */
 /* -------------------------------------------------------------------------- */
 
-export default async function ActivityPage({
-  searchParams,
-}: {
-  searchParams?: Promise<Query>
-}) {
+export default async function ActivityPage({ searchParams }: { searchParams?: Promise<Query> }) {
   const params = await resolveSearchParams(searchParams)
 
   const user = await getUser()

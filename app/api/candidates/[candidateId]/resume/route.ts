@@ -8,10 +8,7 @@ import { ResumeRouteParams } from '@/lib/types/forms'
  *
  * Generates a résumé PDF for the specified candidate.
  */
-export async function GET(
-  _req: Request,
-  { params }: ResumeRouteParams,
-) {
+export async function GET(_req: Request, { params }: ResumeRouteParams) {
   const candidateId = Number(params.candidateId)
   if (Number.isNaN(candidateId)) {
     return NextResponse.json({ error: 'Invalid candidate id.' }, { status: 400 })

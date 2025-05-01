@@ -23,11 +23,7 @@ export const revalidate = 0
 /*                                    Page                                    */
 /* -------------------------------------------------------------------------- */
 
-export default async function InvitationsPage({
-  searchParams,
-}: {
-  searchParams?: Promise<Query>
-}) {
+export default async function InvitationsPage({ searchParams }: { searchParams?: Promise<Query> }) {
   const params = await resolveSearchParams(searchParams)
 
   const user = await getUser()

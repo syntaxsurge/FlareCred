@@ -18,11 +18,7 @@ import { issuers } from '@/lib/db/schema/issuer'
 import { recruiterPipelines } from '@/lib/db/schema/recruiter'
 import { recruiterCandidateFits } from '@/lib/db/schema/recruiter-fit'
 import type { StatusCounts } from '@/lib/types/candidate'
-import type {
-  PipelineEntryRow,
-  RecruiterCredentialRow,
-  SkillPassRow,
-} from '@/lib/types/tables'
+import type { PipelineEntryRow, RecruiterCredentialRow, SkillPassRow } from '@/lib/types/tables'
 import {
   parsePagination,
   parseSort,

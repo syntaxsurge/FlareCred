@@ -126,14 +126,7 @@ export default async function IssuerDirectoryPage({
   /* ---------------------------------------------------------------------- */
   /*                                initialParams                           */
   /* ---------------------------------------------------------------------- */
-  const initialParams = pickParams(params, [
-    'size',
-    'sort',
-    'order',
-    'q',
-    'category',
-    'industry',
-  ])
+  const initialParams = pickParams(params, ['size', 'sort', 'order', 'q', 'category', 'industry'])
 
   /* ---------------------------------------------------------------------- */
   /*                                View                                    */

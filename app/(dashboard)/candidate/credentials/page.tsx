@@ -27,24 +27,13 @@ export const revalidate = 0
 /*                               Config                                       */
 /* -------------------------------------------------------------------------- */
 
-const ALLOWED_SORT_KEYS = [
-  'status',
-  'title',
-  'issuer',
-  'category',
-  'type',
-  'id',
-] as const
+const ALLOWED_SORT_KEYS = ['status', 'title', 'issuer', 'category', 'type', 'id'] as const
 
 /* -------------------------------------------------------------------------- */
 /*                                   Page                                     */
 /* -------------------------------------------------------------------------- */
 
-export default async function CredentialsPage({
-  searchParams,
-}: {
-  searchParams?: Promise<Query>
-}) {
+export default async function CredentialsPage({ searchParams }: { searchParams?: Promise<Query> }) {
   /* Resolve Next.js `searchParams` (supports both object & Promise) */
   const params = await resolveSearchParams(searchParams)
 
