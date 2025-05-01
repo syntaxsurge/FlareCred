@@ -17,7 +17,7 @@ export const revalidate = 0
 
 type Query = Record<string, string | string[] | undefined>
 type SearchParams = Query
-type PageProps = { searchParams?: SearchParams }
+type PageProps = { searchParams?: Promise<SearchParams> }
 
 const first = (p: Query, k: string) => (Array.isArray(p[k]) ? p[k]?.[0] : p[k])
 
@@ -27,7 +27,7 @@ const first = (p: Query, k: string) => (Array.isArray(p[k]) ? p[k]?.[0] : p[k])
 
 export default async function AdminCredentialsPage({ searchParams }: PageProps) {
   /* Resolve synchronous or async searchParams shape supplied by Next.js 15 */
-  const params = (searchParams ?? {}) as Query
+  const params = (searchParams ? await searchParams : {}) as Query
 
   const currentUser = await getUser()
   if (!currentUser) redirect('/connect-wallet')
