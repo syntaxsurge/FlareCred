@@ -51,7 +51,7 @@ export default async function AdminUsersPage({
     name: u.name,
     email: u.email,
     role: u.role,
-    createdAt: u.createdAt.toISOString(),
+    createdAt: new Date(u.createdAt as any).toISOString(),
   }))
 
   /* ------------------------ Build initialParams -------------------------- */
