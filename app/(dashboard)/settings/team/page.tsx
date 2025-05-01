@@ -6,7 +6,7 @@ import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
 import { getTeamMembersPage } from '@/lib/db/queries/team-members'
 import { teamMembers, teams } from '@/lib/db/schema/core'
-import { getParam, resolveSearchParams, type Query } from '@/lib/utils/query'
+import { getParam, pickParams, resolveSearchParams, type Query } from '@/lib/utils/query'
 
 import { Settings } from './settings'
 
@@ -85,15 +85,7 @@ export default async function TeamSettingsPage({
   }))
 
   /* ------------------------ Build initialParams -------------------------- */
-  const initialParams: Record<string, string> = {}
-  const add = (k: string) => {
-    const val = getParam(params, k)
-    if (val) initialParams[k] = val
-  }
-  add('size')
-  add('sort')
-  add('order')
-  if (searchTerm) initialParams['q'] = searchTerm
+  const initialParams = pickParams(params, ['size', 'sort', 'order', 'q'])
 
   const isOwner = membership?.role === 'owner'
 

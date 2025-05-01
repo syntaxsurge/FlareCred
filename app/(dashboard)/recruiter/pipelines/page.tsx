@@ -8,7 +8,7 @@ import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getUser } from '@/lib/db/queries/queries'
 import { getRecruiterPipelinesPage } from '@/lib/db/queries/recruiter-pipelines'
 import type { PipelineRow } from '@/lib/types/tables'
-import { getParam, resolveSearchParams, type Query } from '@/lib/utils/query'
+import { getParam, pickParams, resolveSearchParams, type Query } from '@/lib/utils/query'
 
 import NewPipelineDialog from './new-pipeline-dialog'
 
@@ -59,15 +59,7 @@ export default async function PipelinesPage({
   }))
 
   /* ------------------------ Build initialParams -------------------------- */
-  const initialParams: Record<string, string> = {}
-  const add = (k: string) => {
-    const val = getParam(params, k)
-    if (val) initialParams[k] = val
-  }
-  add('size')
-  add('sort')
-  add('order')
-  if (searchTerm) initialParams['q'] = searchTerm
+  const initialParams = pickParams(params, ['size', 'sort', 'order', 'q'])
 
   /* ------------------------------- View ---------------------------------- */
   return (

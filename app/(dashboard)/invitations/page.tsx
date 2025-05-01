@@ -8,7 +8,7 @@ import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getInvitationsPage } from '@/lib/db/queries/invitations'
 import { getUser } from '@/lib/db/queries/queries'
 import type { InvitationRow } from '@/lib/types/tables'
-import { getParam, resolveSearchParams, type Query } from '@/lib/utils/query'
+import { getParam, pickParams, resolveSearchParams, type Query } from '@/lib/utils/query'
 
 export const revalidate = 0
 
@@ -50,15 +50,7 @@ export default async function InvitationsPage({
   }))
 
   /* ------------------------ Build initialParams -------------------------- */
-  const initialParams: Record<string, string> = {}
-  const copy = (k: string) => {
-    const v = getParam(params, k)
-    if (v) initialParams[k] = v
-  }
-  copy('size')
-  copy('sort')
-  copy('order')
-  if (searchTerm) initialParams['q'] = searchTerm
+  const initialParams = pickParams(params, ['size', 'sort', 'order', 'q'])
 
   /* ------------------------------ View ----------------------------------- */
   return (
