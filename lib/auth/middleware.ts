@@ -4,6 +4,7 @@ import { z } from 'zod'
 
 import { getTeamForUser, getUser } from '@/lib/db/queries/queries'
 import { TeamDataWithMembers, User } from '@/lib/db/schema'
+import { requireAuth } from './guards'
 
 /* -------------------------------------------------------------------------- */
 /*                               T Y P E S                                    */
@@ -61,8 +62,7 @@ export function validatedActionWithUser<S extends z.ZodTypeAny, T>(
   allowedRoles: readonly string[] = [],
 ) {
   return async (_prevState: ActionState, formData: FormData): Promise<T> => {
-    const user = await getUser()
-    if (!user) throw new Error('User is not authenticated')
+    const user = await requireAuth()
 
     if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
       return { error: 'Unauthorized.' } as T
@@ -85,8 +85,7 @@ type ActionWithTeamFunction<T> = (formData: FormData, team: TeamDataWithMembers)
 
 export function withTeam<T>(action: ActionWithTeamFunction<T>) {
   return async (formData: FormData): Promise<T> => {
-    const user = await getUser()
-    if (!user) redirect('/connect-wallet')
+    const user = await requireAuth()
 
     const team = await getTeamForUser(user.id)
     if (!team) throw new Error('Team not found')
