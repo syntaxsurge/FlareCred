@@ -22,7 +22,7 @@ export default async function ActivityPage({ searchParams }: { searchParams?: Pr
   /* ------------------------- Table parameters ---------------------------- */
   const { page, pageSize, sort, order, searchTerm, initialParams } = getTableParams(
     params,
-    ['timestamp'] as const,
+    ['timestamp', 'action'] as const,
     'timestamp',
   )
 
@@ -31,8 +31,8 @@ export default async function ActivityPage({ searchParams }: { searchParams?: Pr
     user.id,
     page,
     pageSize,
-    sort,
-    order,
+    sort as 'timestamp' | 'action' | undefined,
+    order as 'asc' | 'desc',
     searchTerm,
   )
 
