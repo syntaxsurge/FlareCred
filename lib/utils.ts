@@ -13,8 +13,8 @@ export function buildError(message: string) {
 export function copyToClipboard(text: string) {
   navigator.clipboard
     .writeText(text)
-    .then(() => toast.success('Seed copied to clipboard'))
-    .catch(() => toast.error('Failed to copy seed'))
+    .then(() => toast.success('Copied to clipboard'))
+    .catch(() => toast.error('Failed to copy text'))
 }
 
 export function shortenSeed(seed: string) {
@@ -38,7 +38,7 @@ export function buildLink(
 /**
  * Parses vcJson and returns proofTx if it exists.
  */
-export function getProofTx(vcJson: string | null | undefined): string | null {
+export function getProofTx(vcJson: string | null | undefined): string |null {
   if (!vcJson) return null
   try {
     const obj = JSON.parse(vcJson)
