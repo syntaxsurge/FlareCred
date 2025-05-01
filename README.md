@@ -140,7 +140,7 @@ FlareCred integrates OpenAI GPT-4o in three independent workflows:
 
 | Feature | File(s) / Entry Point | Model Interaction | Guard-rails & Caching |
 |---------|----------------------|-------------------|-----------------------|
-| **Strict Quiz Grader** – grades free-text answers and converts them to a 0-100 score used by candidate Skill Passes. | `lib/ai/openai.ts ➜ openAIAssess()`<br/>`lib/ai/prompts.ts ➜ strictGraderMessages()` | Single-shot chat completion (non-streaming). | Regex int-parsing fallback, random score stub when `OPENAI_API_KEY` is absent. |
+| **Strict Quiz Grader** – grades free-text answers and converts them to a 0-100 score used by candidate Skill Passes. | `lib/ai/openai.ts ➜ openAIAssess()`<br/>`lib/ai/prompts.ts ➜ strictGraderMessages()` | Single-shot chat completion (non-streaming). | Regex int-parsing validation; throws descriptive error when score is invalid. |
 | **Candidate Profile Summary** – produces a 120-word third-person bio shown on public profiles. | `lib/ai/openai.ts ➜ summariseCandidateProfile()`<br/>`lib/ai/prompts.ts ➜ summariseProfileMessages()` | Single-shot chat completion. | SHA-256 hash of bio + credential list prevents duplicate generations; server limits to **2 runs per UTC day**. |
 | **“Why Hire” Fit Summary** – recruiter-specific JSON with five selling bullets, best-pipeline recommendation, pros & cons. | `lib/ai/openai.ts ➜ generateCandidateFitSummary()`<br/>`lib/ai/prompts.ts ➜ candidateFitMessages()`<br/>`lib/ai/fit-summary.ts ➜ validateCandidateFitJson()` | Chat completion with **automatic schema validation + up-to-3 retries**. | Per-recruiter × candidate cache keyed by SHA-256 of profile & pipeline list (`recruiter_candidate_fits` table). |
 
