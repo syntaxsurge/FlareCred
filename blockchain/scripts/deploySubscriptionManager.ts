@@ -11,8 +11,17 @@ async function main(): Promise<void> {
   /* ------------------------------------------------------------------ */
   /*                  Plan prices configured via env vars               */
   /* ------------------------------------------------------------------ */
-  const basePrice = BigInt(process.env.SUBSCRIPTION_PRICE_WEI_BASE);
-  const plusPrice = BigInt(process.env.SUBSCRIPTION_PRICE_WEI_PLUS);
+  const basePriceEnv = process.env.SUBSCRIPTION_PRICE_WEI_BASE;
+  const plusPriceEnv = process.env.SUBSCRIPTION_PRICE_WEI_PLUS;
+
+  if (!basePriceEnv || !plusPriceEnv) {
+    throw new Error(
+      'Missing SUBSCRIPTION_PRICE_WEI_BASE or SUBSCRIPTION_PRICE_WEI_PLUS environment variables',
+    );
+  }
+
+  const basePrice = BigInt(basePriceEnv);
+  const plusPrice = BigInt(plusPriceEnv);
 
   const args: [string, bigint, bigint] = [adminAddress, basePrice, plusPrice];
   const mgr = await SubscriptionManager.new(...args);
