@@ -8,16 +8,9 @@ import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getActivityLogsPage } from '@/lib/db/queries/activity'
 import { getUser } from '@/lib/db/queries/queries'
 import type { ActivityLogRow } from '@/lib/types/tables'
+import { getParam, type Query } from '@/lib/utils/query'
 
 export const revalidate = 0
-
-type Query = Record<string, string | string[] | undefined>
-
-/** Safely return the first value of a query param. */
-function getParam(params: Query, key: string): string | undefined {
-  const v = params[key]
-  return Array.isArray(v) ? v[0] : v
-}
 
 export default async function ActivityPage({
   searchParams,

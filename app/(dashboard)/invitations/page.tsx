@@ -8,15 +8,9 @@ import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getInvitationsPage } from '@/lib/db/queries/invitations'
 import { getUser } from '@/lib/db/queries/queries'
 import type { InvitationRow } from '@/lib/types/tables'
+import { getParam, type Query } from '@/lib/utils/query'
 
 export const revalidate = 0
-
-/* -------------------------------------------------------------------------- */
-/*                                   Helpers                                  */
-/* -------------------------------------------------------------------------- */
-
-type Query = Record<string, string | string[] | undefined>
-const first = (p: Query, k: string) => (Array.isArray(p[k]) ? p[k]?.[0] : p[k])
 
 /* -------------------------------------------------------------------------- */
 /*                                    Page                                    */
@@ -33,12 +27,12 @@ export default async function InvitationsPage({
   if (!user) redirect('/connect-wallet')
 
   /* --------------------------- Query params ------------------------------ */
-  const page = Math.max(1, Number(first(params, 'page') ?? '1'))
-  const sizeRaw = Number(first(params, 'size') ?? '10')
+  const page = Math.max(1, Number(getParam(params, 'page') ?? '1'))
+  const sizeRaw = Number(getParam(params, 'size') ?? '10')
   const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
-  const sort = first(params, 'sort') ?? 'invitedAt'
-  const order = first(params, 'order') === 'asc' ? 'asc' : 'desc'
-  const searchTerm = (first(params, 'q') ?? '').trim()
+  const sort = getParam(params, 'sort') ?? 'invitedAt'
+  const order = getParam(params, 'order') === 'asc' ? 'asc' : 'desc'
+  const searchTerm = (getParam(params, 'q') ?? '').trim()
 
   /* -------------------------- Data fetching ------------------------------ */
   const { invitations, hasNext } = await getInvitationsPage(
@@ -58,7 +52,7 @@ export default async function InvitationsPage({
   /* ------------------------ Build initialParams -------------------------- */
   const initialParams: Record<string, string> = {}
   const copy = (k: string) => {
-    const v = first(params, k)
+    const v = getParam(params, k)
     if (v) initialParams[k] = v
   }
   copy('size')
