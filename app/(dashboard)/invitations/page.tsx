@@ -8,14 +8,7 @@ import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getInvitationsPage } from '@/lib/db/queries/invitations'
 import { getUser } from '@/lib/db/queries/queries'
 import type { InvitationRow } from '@/lib/types/tables'
-import {
-  parsePagination,
-  parseSort,
-  getSearchTerm,
-  pickParams,
-  resolveSearchParams,
-  type Query,
-} from '@/lib/utils/query'
+import { resolveSearchParams, getTableParams } from '@/lib/utils/query'
 
 export const revalidate = 0
 
@@ -23,22 +16,26 @@ export const revalidate = 0
 /*                                    Page                                    */
 /* -------------------------------------------------------------------------- */
 
-export default async function InvitationsPage({ searchParams }: { searchParams?: Promise<Query> }) {
+export default async function InvitationsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, any>>
+}) {
+  /* --------------------------- Resolve params ---------------------------- */
   const params = await resolveSearchParams(searchParams)
 
+  /* ------------------------------ Auth ----------------------------------- */
   const user = await getUser()
   if (!user) redirect('/connect-wallet')
 
-  /* --------------------------- Query params ------------------------------ */
-  const { page, pageSize } = parsePagination(params)
-  const { sort, order } = parseSort(
+  /* ------------------- Table parameters via helper ---------------------- */
+  const { page, pageSize, sort, order, searchTerm, initialParams } = getTableParams(
     params,
     ['team', 'role', 'inviter', 'status', 'invitedAt'] as const,
     'invitedAt',
   )
-  const searchTerm = getSearchTerm(params)
 
-  /* -------------------------- Data fetching ------------------------------ */
+  /* ------------------------------ Data ---------------------------------- */
   const { invitations, hasNext } = await getInvitationsPage(
     user.email,
     page,
@@ -53,10 +50,7 @@ export default async function InvitationsPage({ searchParams }: { searchParams?:
     invitedAt: new Date(inv.invitedAt),
   }))
 
-  /* ------------------------ Build initialParams -------------------------- */
-  const initialParams = pickParams(params, ['size', 'sort', 'order', 'q'])
-
-  /* ------------------------------ View ----------------------------------- */
+  /* ------------------------------ View ---------------------------------- */
   return (
     <PageCard
       icon={Mail}

@@ -8,36 +8,37 @@ import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getUser } from '@/lib/db/queries/queries'
 import { getRecruiterPipelinesPage } from '@/lib/db/queries/recruiter-pipelines'
 import type { PipelineRow } from '@/lib/types/tables'
-import {
-  parsePagination,
-  parseSort,
-  getSearchTerm,
-  pickParams,
-  resolveSearchParams,
-  type Query,
-} from '@/lib/utils/query'
+import { resolveSearchParams, getTableParams } from '@/lib/utils/query'
 
 import NewPipelineDialog from './new-pipeline-dialog'
 
 export const revalidate = 0
 
-const ALLOWED_SORT_KEYS = ['name', 'createdAt'] as const
-
 /* -------------------------------------------------------------------------- */
 /*                                    Page                                    */
 /* -------------------------------------------------------------------------- */
 
-export default async function PipelinesPage({ searchParams }: { searchParams?: Promise<Query> }) {
+export default async function PipelinesPage({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, any>>
+}) {
+  /* --------------------------- Resolve params ---------------------------- */
   const params = await resolveSearchParams(searchParams)
 
+  /* ------------------------------ Auth ----------------------------------- */
   const user = await getUser()
   if (!user) redirect('/connect-wallet')
   if (user.role !== 'recruiter') redirect('/')
 
-  const { page, pageSize } = parsePagination(params)
-  const { sort, order } = parseSort(params, ALLOWED_SORT_KEYS, 'createdAt')
-  const searchTerm = getSearchTerm(params)
+  /* ------------------- Table parameters via helper ---------------------- */
+  const { page, pageSize, sort, order, searchTerm, initialParams } = getTableParams(
+    params,
+    ['name', 'createdAt'] as const,
+    'createdAt',
+  )
 
+  /* ------------------------------ Data ---------------------------------- */
   const { pipelines, hasNext } = await getRecruiterPipelinesPage(
     user.id,
     page,
@@ -54,8 +55,7 @@ export default async function PipelinesPage({ searchParams }: { searchParams?: P
     createdAt: p.createdAt,
   }))
 
-  const initialParams = pickParams(params, ['size', 'sort', 'order', 'q'])
-
+  /* ------------------------------ View ---------------------------------- */
   return (
     <PageCard
       icon={KanbanSquare}

@@ -12,36 +12,27 @@ import { getCandidateCredentialsPage } from '@/lib/db/queries/candidate-credenti
 import { getUser } from '@/lib/db/queries/queries'
 import { teams, teamMembers } from '@/lib/db/schema/core'
 import type { CandidateCredentialRow } from '@/lib/types/tables'
-import {
-  parsePagination,
-  parseSort,
-  getSearchTerm,
-  pickParams,
-  resolveSearchParams,
-  type Query,
-} from '@/lib/utils/query'
+import { resolveSearchParams, getTableParams } from '@/lib/utils/query'
 
 export const revalidate = 0
 
 /* -------------------------------------------------------------------------- */
-/*                               Config                                       */
+/*                                    Page                                    */
 /* -------------------------------------------------------------------------- */
 
-const ALLOWED_SORT_KEYS = ['status', 'title', 'issuer', 'category', 'type', 'id'] as const
-
-/* -------------------------------------------------------------------------- */
-/*                                   Page                                     */
-/* -------------------------------------------------------------------------- */
-
-export default async function CredentialsPage({ searchParams }: { searchParams?: Promise<Query> }) {
-  /* Resolve Next.js `searchParams` (supports both object & Promise) */
+export default async function CredentialsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, any>>
+}) {
+  /* --------------------------- Resolve params ---------------------------- */
   const params = await resolveSearchParams(searchParams)
 
   /* ------------------------------ Auth ----------------------------------- */
   const user = await getUser()
   if (!user) redirect('/connect-wallet')
 
-  /* Determine whether the user’s team already minted a DID */
+  /* ----------------------- Team DID existence --------------------------- */
   const [{ did } = {}] = await db
     .select({ did: teams.did })
     .from(teamMembers)
@@ -56,22 +47,24 @@ export default async function CredentialsPage({ searchParams }: { searchParams?:
     return await (await import('./actions')).addCredential({}, formData)
   }
 
-  /* ----------------------- Query-string parsing -------------------------- */
-  const { page, pageSize } = parsePagination(params)
-  const { sort, order } = parseSort(params, ALLOWED_SORT_KEYS, 'status')
-  const searchTerm = getSearchTerm(params).toLowerCase()
+  /* ------------------- Table parameters via helper ---------------------- */
+  const { page, pageSize, sort, order, searchTerm, initialParams } = getTableParams(
+    params,
+    ['status', 'title', 'issuer', 'category', 'type', 'id'] as const,
+    'status',
+  )
 
-  /* ------------------------------ Data ----------------------------------- */
+  /* ------------------------------ Data ---------------------------------- */
   const { rows: credentialRows, hasNext } = await getCandidateCredentialsPage(
     user.id,
     page,
     pageSize,
     sort as any,
     order,
-    searchTerm,
+    searchTerm.toLowerCase(),
   )
 
-  const rows = credentialRows.map<CandidateCredentialRow>((c) => ({
+  const rows: CandidateCredentialRow[] = credentialRows.map((c) => ({
     id: c.id,
     title: c.title,
     category: c.category,
@@ -83,9 +76,7 @@ export default async function CredentialsPage({ searchParams }: { searchParams?:
     vcJson: c.vcJson ?? null,
   }))
 
-  const initialParams = pickParams(params, ['size', 'sort', 'order', 'q'])
-
-  /* ------------------------------ View ----------------------------------- */
+  /* ------------------------------ View ---------------------------------- */
   return (
     <PageCard
       icon={FileText}
