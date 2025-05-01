@@ -13,7 +13,6 @@ export const revalidate = 0
 /* -------------------------------------------------------------------------- */
 
 type Query = Record<string, string | string[] | undefined>
-const BASE_PATH = '/candidates'
 
 const ALLOWED_SORT_KEYS = ['name', 'email', 'verified'] as const
 type SortKey = (typeof ALLOWED_SORT_KEYS)[number]
@@ -84,7 +83,7 @@ export default async function CandidateDirectoryPage({
           rows={rows}
           sort={sort}
           order={order as 'asc' | 'desc'}
-          basePath={BASE_PATH}
+          basePath={'/candidates'}
           initialParams={initialParams}
           searchQuery={searchTerm}
         />
@@ -92,7 +91,7 @@ export default async function CandidateDirectoryPage({
         <TablePagination
           page={page}
           hasNext={hasNext}
-          basePath={BASE_PATH}
+          basePath={'/candidates'}
           initialParams={initialParams}
           pageSize={pageSize}
         />

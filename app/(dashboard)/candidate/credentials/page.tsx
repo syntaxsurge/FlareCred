@@ -12,19 +12,21 @@ import { getCandidateCredentialsPage } from '@/lib/db/queries/candidate-credenti
 import { getUser } from '@/lib/db/queries/queries'
 import { teams, teamMembers } from '@/lib/db/schema/core'
 import type { CandidateCredentialRow } from '@/lib/types/tables'
+import { getParam, resolveSearchParams, type Query } from '@/lib/utils/query'
 
 export const revalidate = 0
-
-type Query = Record<string, string | string[] | undefined>
-const first = (p: Query, k: string) => (Array.isArray(p[k]) ? p[k]?.[0] : p[k])
 
 export default async function CredentialsPage({
   searchParams,
 }: {
   searchParams: Promise<Query> | Query
 }) {
-  const params = (await searchParams) as Query
+  /* Resolve sync/async searchParams uniformly */
+  const params = await resolveSearchParams(searchParams)
 
+  /* ------------------------------------------------------------------ */
+  /* Auth & team DID lookup                                             */
+  /* ------------------------------------------------------------------ */
   const user = await getUser()
   if (!user) redirect('/connect-wallet')
 
@@ -41,13 +43,19 @@ export default async function CredentialsPage({
     return await (await import('./actions')).addCredential({}, formData)
   }
 
-  const page = Math.max(1, Number(first(params, 'page') ?? '1'))
-  const sizeRaw = Number(first(params, 'size') ?? '10')
+  /* ------------------------------------------------------------------ */
+  /* Query-param parsing                                                */
+  /* ------------------------------------------------------------------ */
+  const page = Math.max(1, Number(getParam(params, 'page') ?? '1'))
+  const sizeRaw = Number(getParam(params, 'size') ?? '10')
   const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
-  const sort = first(params, 'sort') ?? 'status'
-  const order = first(params, 'order') === 'asc' ? 'asc' : 'desc'
-  const searchTerm = (first(params, 'q') ?? '').trim().toLowerCase()
+  const sort = getParam(params, 'sort') ?? 'status'
+  const order = getParam(params, 'order') === 'asc' ? 'asc' : 'desc'
+  const searchTerm = (getParam(params, 'q') ?? '').trim().toLowerCase()
 
+  /* ------------------------------------------------------------------ */
+  /* Data fetch                                                         */
+  /* ------------------------------------------------------------------ */
   const { rows: credentialRows, hasNext } = await getCandidateCredentialsPage(
     user.id,
     page,
@@ -69,9 +77,12 @@ export default async function CredentialsPage({
     vcJson: c.vcJson ?? null,
   }))
 
+  /* ------------------------------------------------------------------ */
+  /* Preserve current query-string state                                */
+  /* ------------------------------------------------------------------ */
   const initialParams: Record<string, string> = {}
   const copy = (k: string) => {
-    const v = first(params, k)
+    const v = getParam(params, k)
     if (v) initialParams[k] = v
   }
   copy('size')
@@ -79,6 +90,9 @@ export default async function CredentialsPage({
   copy('order')
   if (searchTerm) initialParams.q = searchTerm
 
+  /* ------------------------------------------------------------------ */
+  /* View                                                               */
+  /* ------------------------------------------------------------------ */
   return (
     <PageCard
       icon={FileText}

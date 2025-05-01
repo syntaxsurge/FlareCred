@@ -20,7 +20,6 @@ export const revalidate = 0
 /* -------------------------------------------------------------------------- */
 
 type Query = Record<string, string | string[] | undefined>
-const BASE_PATH = '/issuer/requests'
 
 function first(params: Query, key: string): string | undefined {
   const v = params[key]
@@ -89,7 +88,7 @@ export default async function RequestsPage({
             rows={rows}
             sort={sort}
             order={order as 'asc' | 'desc'}
-            basePath={BASE_PATH}
+            basePath={'/issuer/requests'}
             initialParams={initialParams}
             searchQuery={searchTerm}
           />
@@ -97,7 +96,7 @@ export default async function RequestsPage({
           <TablePagination
             page={page}
             hasNext={hasNext}
-            basePath={BASE_PATH}
+            basePath={'/issuer/requests'}
             initialParams={initialParams}
             pageSize={pageSize}
           />

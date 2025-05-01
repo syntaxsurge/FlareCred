@@ -8,19 +8,9 @@ import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { db } from '@/lib/db/drizzle'
 import { issuers, IssuerStatus, IssuerCategory, IssuerIndustry } from '@/lib/db/schema/issuer'
 import type { IssuerDirectoryRow } from '@/lib/types/tables'
-
-/* -------------------------------------------------------------------------- */
-/*                               TYPE HELPERS                                 */
-/* -------------------------------------------------------------------------- */
-
-type IssuerCategoryType = (typeof IssuerCategory)[keyof typeof IssuerCategory]
-type IssuerIndustryType = (typeof IssuerIndustry)[keyof typeof IssuerIndustry]
+import { getParam, resolveSearchParams, type Query } from '@/lib/utils/query'
 
 export const revalidate = 0
-
-type Query = Record<string, string | string[] | undefined>
-const BASE_PATH = '/issuers'
-const first = (p: Query, k: string) => (Array.isArray(p[k]) ? p[k]?.[0] : p[k])
 
 /* -------------------------------------------------------------------------- */
 /*                                    PAGE                                    */
@@ -31,20 +21,23 @@ export default async function IssuerDirectoryPage({
 }: {
   searchParams: Promise<Query> | Query
 }) {
-  const params = (await searchParams) as Query
+  const params = await resolveSearchParams(searchParams)
 
-  const page = Math.max(1, Number(first(params, 'page') ?? '1'))
-  const sizeRaw = Number(first(params, 'size') ?? '10')
+  const page = Math.max(1, Number(getParam(params, 'page') ?? '1'))
+  const sizeRaw = Number(getParam(params, 'size') ?? '10')
   const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
-  const sort = first(params, 'sort') ?? 'name'
-  const order = first(params, 'order') === 'desc' ? 'desc' : 'asc'
-  const searchTerm = (first(params, 'q') ?? '').trim()
-  const categoryFilter = first(params, 'category')
-  const industryFilter = first(params, 'industry')
+  const sort = getParam(params, 'sort') ?? 'name'
+  const order = getParam(params, 'order') === 'desc' ? 'desc' : 'asc'
+  const searchTerm = (getParam(params, 'q') ?? '').trim()
+  const categoryFilter = getParam(params, 'category')
+  const industryFilter = getParam(params, 'industry')
 
   /* ---------------------------------------------------------------------- */
   /*                         Validate enum filters                          */
   /* ---------------------------------------------------------------------- */
+  type IssuerCategoryType = (typeof IssuerCategory)[keyof typeof IssuerCategory]
+  type IssuerIndustryType = (typeof IssuerIndustry)[keyof typeof IssuerIndustry]
+
   const validCategory: IssuerCategoryType | undefined =
     categoryFilter && (Object.values(IssuerCategory) as string[]).includes(categoryFilter)
       ? (categoryFilter as IssuerCategoryType)
@@ -122,11 +115,11 @@ export default async function IssuerDirectoryPage({
   }))
 
   /* ---------------------------------------------------------------------- */
-  /*                         Build initial params                           */
+  /*                                initialParams                           */
   /* ---------------------------------------------------------------------- */
   const initialParams: Record<string, string> = {}
   const add = (k: string) => {
-    const val = first(params, k)
+    const val = getParam(params, k)
     if (val) initialParams[k] = val
   }
   add('size')
@@ -147,7 +140,7 @@ export default async function IssuerDirectoryPage({
     >
       <div className='space-y-4 overflow-x-auto'>
         <IssuerFilters
-          basePath={BASE_PATH}
+          basePath={'/issuers'}
           initialParams={initialParams}
           categories={Object.values(IssuerCategory)}
           industries={Object.values(IssuerIndustry)}
@@ -159,7 +152,7 @@ export default async function IssuerDirectoryPage({
           rows={rows}
           sort={sort}
           order={order as 'asc' | 'desc'}
-          basePath={BASE_PATH}
+          basePath={'/issuers'}
           initialParams={initialParams}
           searchQuery={searchTerm}
         />
@@ -167,7 +160,7 @@ export default async function IssuerDirectoryPage({
         <TablePagination
           page={page}
           hasNext={hasNext}
-          basePath={BASE_PATH}
+          basePath={'/issuers'}
           initialParams={initialParams}
           pageSize={pageSize}
         />

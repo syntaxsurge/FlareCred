@@ -10,16 +10,9 @@ import { getUser } from '@/lib/db/queries/queries'
 import { candidates as candidatesTable } from '@/lib/db/schema/candidate'
 import { pipelineCandidates } from '@/lib/db/schema/recruiter'
 import type { JobRow } from '@/lib/types/tables'
+import { getParam, resolveSearchParams, type Query } from '@/lib/utils/query'
 
 export const revalidate = 0
-
-/* -------------------------------------------------------------------------- */
-/*                                   Helpers                                  */
-/* -------------------------------------------------------------------------- */
-
-type Query = Record<string, string | string[] | undefined>
-const BASE_PATH = '/jobs'
-const first = (p: Query, k: string) => (Array.isArray(p[k]) ? p[k]?.[0] : p[k])
 
 /* Allowed sort keys */
 const SORT_KEYS = ['name', 'recruiter', 'createdAt'] as const
@@ -34,17 +27,17 @@ export default async function JobsDirectoryPage({
 }: {
   searchParams: Query | Promise<Query>
 }) {
-  const params = (await searchParams) as Query
+  const params = await resolveSearchParams(searchParams)
 
   /* ----------------------------- Query params ---------------------------- */
-  const page = Math.max(1, Number(first(params, 'page') ?? '1'))
-  const sizeRaw = Number(first(params, 'size') ?? '10')
+  const page = Math.max(1, Number(getParam(params, 'page') ?? '1'))
+  const sizeRaw = Number(getParam(params, 'size') ?? '10')
   const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
 
-  const sortRaw = first(params, 'sort') ?? 'createdAt'
+  const sortRaw = getParam(params, 'sort') ?? 'createdAt'
   const sort: SortKey = SORT_KEYS.includes(sortRaw as SortKey) ? (sortRaw as SortKey) : 'createdAt'
-  const order = first(params, 'order') === 'asc' ? 'asc' : 'desc'
-  const searchTerm = (first(params, 'q') ?? '').trim().toLowerCase()
+  const order = getParam(params, 'order') === 'asc' ? 'asc' : 'desc'
+  const searchTerm = (getParam(params, 'q') ?? '').trim().toLowerCase()
 
   /* ------------------------------ Data fetch ----------------------------- */
   const { jobs, hasNext } = await getJobOpeningsPage(
@@ -91,13 +84,13 @@ export default async function JobsDirectoryPage({
 
   /* --------------------------- initialParams ----------------------------- */
   const initialParams: Record<string, string> = {}
-  const keep = (k: string) => {
-    const v = first(params, k)
+  const add = (k: string) => {
+    const v = getParam(params, k)
     if (v) initialParams[k] = v
   }
-  keep('size')
-  keep('sort')
-  keep('order')
+  add('size')
+  add('sort')
+  add('order')
   if (searchTerm) initialParams['q'] = searchTerm
 
   /* ------------------------------- View ---------------------------------- */
@@ -112,7 +105,7 @@ export default async function JobsDirectoryPage({
           rows={rows}
           sort={sort}
           order={order as 'asc' | 'desc'}
-          basePath={BASE_PATH}
+          basePath={'/jobs'}
           initialParams={initialParams}
           searchQuery={searchTerm}
           isCandidate={isCandidate}
@@ -121,7 +114,7 @@ export default async function JobsDirectoryPage({
         <TablePagination
           page={page}
           hasNext={hasNext}
-          basePath={BASE_PATH}
+          basePath={'/jobs'}
           initialParams={initialParams}
           pageSize={pageSize}
         />
