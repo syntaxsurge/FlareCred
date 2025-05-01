@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 
 import { Octokit } from '@octokit/rest'
 
-import { requireAuth } from '@/lib/auth/guards'
 import { GITHUB_TOKEN } from '@/lib/config'
 
 /**
@@ -11,9 +10,6 @@ import { GITHUB_TOKEN } from '@/lib/config'
  * Returns: { proof: IJsonApi.Proof }
  */
 export async function GET(req: NextRequest) {
-  /* ---------------------------- Auth guard ---------------------------- */
-  const user = await requireAuth(['candidate'])
-
   /* --------------------------- Param parse ---------------------------- */
   const repoParam = req.nextUrl.searchParams.get('repo')?.trim()
   if (!repoParam || !/^[\w.-]+\/[\w.-]+$/.test(repoParam)) {
