@@ -8,14 +8,7 @@ import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getAdminCredentialsPage } from '@/lib/db/queries/admin-credentials'
 import { getUser } from '@/lib/db/queries/queries'
 import type { AdminCredentialRow } from '@/lib/types/tables'
-import {
-  parsePagination,
-  parseSort,
-  getSearchTerm,
-  pickParams,
-  resolveSearchParams,
-  type Query,
-} from '@/lib/utils/query'
+import { getTableParams, resolveSearchParams, type Query } from '@/lib/utils/query'
 
 export const revalidate = 0
 
@@ -28,7 +21,7 @@ export default async function AdminCredentialsPage({
 }: {
   searchParams?: Promise<Query>
 }) {
-  /* Resolve synchronous or async `searchParams` supplied by Next.js 15 */
+  /* Resolve synchronous or async `searchParams` supplied by Next.js */
   const params = await resolveSearchParams(searchParams)
 
   const currentUser = await getUser()
@@ -36,13 +29,11 @@ export default async function AdminCredentialsPage({
   if (currentUser.role !== 'admin') redirect('/dashboard')
 
   /* ---------------------- Pagination, sort, search ----------------------- */
-  const { page, pageSize } = parsePagination(params)
-  const { sort, order } = parseSort(
+  const { page, pageSize, sort, order, searchTerm, initialParams } = getTableParams(
     params,
     ['title', 'candidate', 'issuer', 'status', 'id'] as const,
     'id',
   )
-  const searchTerm = getSearchTerm(params)
 
   /* ---------------------------- Data fetch ------------------------------- */
   const { credentials, hasNext } = await getAdminCredentialsPage(
@@ -62,9 +53,6 @@ export default async function AdminCredentialsPage({
     proofType: c.proofType,
     vcJson: c.vcJson,
   }))
-
-  /* ------------------------ Build initialParams -------------------------- */
-  const initialParams = pickParams(params, ['size', 'sort', 'order', 'q'])
 
   /* ------------------------------ View ----------------------------------- */
   return (

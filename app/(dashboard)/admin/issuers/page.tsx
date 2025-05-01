@@ -8,14 +8,7 @@ import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getAdminIssuersPage } from '@/lib/db/queries/admin-issuers'
 import { getUser } from '@/lib/db/queries/queries'
 import type { AdminIssuerRow } from '@/lib/types/tables'
-import {
-  parsePagination,
-  parseSort,
-  getSearchTerm,
-  pickParams,
-  resolveSearchParams,
-  type Query,
-} from '@/lib/utils/query'
+import { getTableParams, resolveSearchParams, type Query } from '@/lib/utils/query'
 
 export const revalidate = 0
 
@@ -33,13 +26,11 @@ export default async function AdminIssuersPage({
   if (currentUser.role !== 'admin') redirect('/dashboard')
 
   /* ---------------------- Pagination, sort, search ----------------------- */
-  const { page, pageSize } = parsePagination(params)
-  const { sort, order } = parseSort(
+  const { page, pageSize, sort, order, searchTerm, initialParams } = getTableParams(
     params,
     ['name', 'domain', 'owner', 'category', 'industry', 'status', 'id'] as const,
     'id',
   )
-  const searchTerm = getSearchTerm(params)
 
   /* ---------------------------- Data fetch ------------------------------- */
   const { issuers, hasNext } = await getAdminIssuersPage(
@@ -60,10 +51,7 @@ export default async function AdminIssuersPage({
     status: i.status,
   }))
 
-  /* ------------------------ Build initialParams -------------------------- */
-  const initialParams = pickParams(params, ['size', 'sort', 'order', 'q'])
-
-  /* ------------------------------- View ------------------------------- */
+  /* ------------------------------ View ----------------------------------- */
   return (
     <PageCard
       icon={Building}

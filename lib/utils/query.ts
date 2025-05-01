@@ -1,5 +1,5 @@
 /**
- * Shared helpers for pages that read Next.js `searchParams`.
+ * Shared helpers for pages that read Next.js <code>searchParams</code>.
  * Keeps all tiny utilities in one place to avoid repetition.
  */
 export type Query = Record<string, string | string[] | undefined>
@@ -18,7 +18,9 @@ export function getParam(params: Query, key: string): string | undefined {
  * Uniformly resolve the `searchParams` that Next.js can pass either as an
  * object or a `Promise` of that object (depending on framework version).
  */
-export async function resolveSearchParams(searchParams?: Query | Promise<Query>): Promise<Query> {
+export async function resolveSearchParams(
+  searchParams?: Query | Promise<Query>,
+): Promise<Query> {
   if (!searchParams) return {}
   return (searchParams as any).then
     ? await (searchParams as Promise<Query>)
@@ -78,7 +80,11 @@ export interface Sort {
  * Clamp <code>sort</code> to <code>allowed</code> keys and normalise
  * <code>order</code> to the canonical <code>'asc' | 'desc'</code> strings.
  */
-export function parseSort(params: Query, allowed: readonly string[], fallback: string): Sort {
+export function parseSort(
+  params: Query,
+  allowed: readonly string[],
+  fallback: string,
+): Sort {
   const sortRaw = getParam(params, 'sort') ?? fallback
   const sort = allowed.includes(sortRaw) ? sortRaw : fallback
   const order = getParam(params, 'order') === 'asc' ? 'asc' : 'desc'
@@ -88,4 +94,39 @@ export function parseSort(params: Query, allowed: readonly string[], fallback: s
 /** Extract and trim the <code>q</code> search term. */
 export function getSearchTerm(params: Query): string {
   return (getParam(params, 'q') ?? '').trim()
+}
+
+/* -------------------------------------------------------------------------- */
+/*                 Compound helper – table parameter bundle                  */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Consolidated table parameters returned by {@link getTableParams}, combining
+ * pagination, sort, search-term and pre-filtered initial query-string params.
+ */
+export interface TableParams extends Pagination, Sort {
+  searchTerm: string
+  initialParams: Record<string, string>
+}
+
+/**
+ * Convenience helper that reduces boilerplate in page components that render
+ * data tables. It applies the common trio of <em>pagination → sort → search</em>
+ * parsing steps and also prepares the <code>initialParams</code> object used to
+ * persist state across navigation.
+ *
+ * @param params       Raw (or already-resolved) <code>searchParams</code> object
+ * @param allowedSort  Whitelisted column keys accepted by <code>sort</code>
+ * @param defaultSort  Fallback column when <code>sort</code> is missing/invalid
+ */
+export function getTableParams(
+  params: Query,
+  allowedSort: readonly string[],
+  defaultSort: string,
+): TableParams {
+  const { page, pageSize } = parsePagination(params)
+  const { sort, order } = parseSort(params, allowedSort, defaultSort)
+  const searchTerm = getSearchTerm(params)
+  const initialParams = pickParams(params, ['size', 'sort', 'order', 'q'])
+  return { page, pageSize, sort, order, searchTerm, initialParams }
 }
