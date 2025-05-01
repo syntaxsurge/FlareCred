@@ -17,10 +17,6 @@ export function copyToClipboard(text: string) {
     .catch(() => toast.error('Failed to copy text'))
 }
 
-export function shortenSeed(seed: string) {
-  return seed.length <= 10 ? seed : `${seed.slice(0, 6)}…${seed.slice(-4)}`
-}
-
 export function buildLink(
   basePath: string,
   init: Record<string, string>,

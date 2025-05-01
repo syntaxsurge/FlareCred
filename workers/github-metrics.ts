@@ -23,8 +23,6 @@ import { createHelia } from 'helia'
 
 import { GITHUB_TOKEN, IPFS_PINATA_KEY, IPFS_PINATA_SECRET } from '@/lib/config.js'
 
-import { formatIso } from '../lib/utils/time.js'
-
 /* -------------------------------------------------------------------------- */
 /*                          C L I   &   E N V   P A R S E                     */
 /* -------------------------------------------------------------------------- */
@@ -109,7 +107,7 @@ const proof: JsonApiProof = {
     headers: { 'content-type': 'application/json' },
     body: metrics,
   },
-  timestamp: formatIso(new Date()),
+  timestamp: new Date().toISOString(),
   merkleProof: [], // ← Ensure component serialisation
 }
 

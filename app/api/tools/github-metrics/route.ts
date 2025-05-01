@@ -4,7 +4,6 @@ import { Octokit } from '@octokit/rest'
 
 import { GITHUB_TOKEN } from '@/lib/config'
 import { getUser } from '@/lib/db/queries/queries'
-import { formatIso } from '@/lib/utils/time'
 
 /**
  * GET /api/tools/github-metrics?repo={owner}/{repo}
@@ -59,7 +58,7 @@ export async function GET(req: NextRequest) {
         headers: { 'content-type': 'application/json' },
         body: metrics,
       },
-      timestamp: formatIso(new Date()),
+      timestamp: new Date().toISOString(),
     }
 
     return NextResponse.json({ proof })

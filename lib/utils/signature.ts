@@ -1,5 +1,3 @@
-/// <reference types="node" />
-
 import { ethers } from 'ethers'
 
 /**
