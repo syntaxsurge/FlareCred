@@ -22,26 +22,26 @@ const openAiClient = new OpenAI({
 /*                               C H A T   API                                */
 /* -------------------------------------------------------------------------- */
 
-export type ChatMessage = OpenAI.Chat.Completions.ChatCompletionMessageParam
-
 /**
- * Thin convenience wrapper around <code>chat.completions.create</code>.
+ * Generic wrapper around `openAiClient.chat.completions.create`.
  *
- * When <code>stream</code> is <code>true</code> the caller receives the
- * streamed completion iterator; otherwise the message content string is
- * returned directly.
+ * When `stream` is `true` the full `ChatCompletion` object is returned,
+ * otherwise the assistant message content string is returned.
  */
-export async function chatCompletion(
-  messages: ChatMessage[],
+export async function chatCompletion<Stream extends boolean = false>(
+  messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
   {
     model = 'gpt-4o',
-    stream = false,
+    stream = false as Stream,
     ...opts
-  }: Partial<OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming> & {
-    model?: string
-    stream?: boolean
-  } = {},
-) {
+  }: Partial<
+    OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming
+  > & { stream?: Stream } = {},
+): Promise<
+  Stream extends true
+    ? OpenAI.Chat.Completions.ChatCompletion
+    : string
+> {
   if (!OPENAI_API_KEY) {
     throw new Error('OPENAI_API_KEY is not configured.')
   }
@@ -53,8 +53,9 @@ export async function chatCompletion(
     ...opts,
   } as any)
 
-  if (stream) return completion
-  return completion.choices[0].message?.content ?? ''
+  return (stream
+    ? completion
+    : completion.choices[0].message?.content ?? '') as any
 }
 
 /* -------------------------------------------------------------------------- */
