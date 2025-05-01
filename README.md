@@ -18,7 +18,8 @@
     *   PENDING – user selects an issuer to review the credential.
     *   Issuer _Approve_ → VC hashed, `CredentialNFT.mintCredential()`, status → VERIFIED, Flarescan link and VC JSON exposed.
     *   Issuer _Reject_ → status → REJECTED, no on-chain record.
-*   **AI Skill-Check** – provably-random quiz whose question order is seeded by Flare RNG. After GPT-4o grades the answer, the backend _only_ returns an ECDSA signature from a PLATFORM\_ROLE account when the score ≥ 70. `CredentialNFT.mintCredential()` requires that signature, so any attempt to call the contract directly—without passing the quiz—reverts, eliminating “self-mint” cheating.
+*   **AI Skill-Check** – provably-random quiz whose question order is seeded by Flare RNG. After GPT-4o grades the answer, the backend _only_ returns an ECDSA signature from a PLATFORM\_ROLE account when the score ≥ 70. `CredentialNFT.mintCredential()` requires that signature, so any attempt to call the contract directly—without passing the quiz—reverts, eliminating "self-mint” cheating.
+*   **AI Profile Summary** – one-click GPT-4o service that produces a concise 120-word third-person overview; the result is cached via a SHA-256 hash of the bio + credential list and limited to two generations per UTC day.
 *   **Highlights** – drag up to 5 _Experience_ and 5 _Project_ credentials onto the public profile.
 *   **Activity Log** – DID creation, credential lifecycle, subscription events.
 
@@ -36,6 +37,7 @@
 *   Full-text talent search with verified-only toggle and skill-score sliders.
 *   Create Kanban-style pipelines; drag candidates through custom stages.
 *   Inline analytics: credential counts, average quiz scores, unique issuer tally.
+*   **Why Hire AI Fit Summary** – GPT-4o returns a structured JSON with five 12-word selling points, a best-pipeline recommendation, and balanced pros/cons; outputs are cached per recruiter × candidate using SHA-256 hashes of the profile and pipeline list, with automatic schema validation and up to three retries for compliance.
 *   Export pipeline snapshots or share read-only links with hiring managers.
 
 ### 🛠 Admin  (`/admin/*`)
