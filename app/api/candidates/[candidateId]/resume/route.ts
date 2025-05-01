@@ -10,9 +10,9 @@ import { ResumeRouteParams } from '@/lib/types/forms'
  */
 export async function GET(
   _req: Request,
-  context: ResumeRouteParams,
+  { params }: ResumeRouteParams,
 ) {
-  const candidateId = Number(context.params.candidateId)
+  const candidateId = Number(params.candidateId)
   if (Number.isNaN(candidateId)) {
     return NextResponse.json({ error: 'Invalid candidate id.' }, { status: 400 })
   }
@@ -29,8 +29,7 @@ export async function GET(
   /*                            Generate PDF                              */
   /* -------------------------------------------------------------------- */
   const pdfBytes = await generateResumePdf(data)
-  const fileName =
-    `${(data.name || 'resume').replace(/\s+/g, '_').toLowerCase()}.pdf`
+  const fileName = `${(data.name || 'resume').replace(/\s+/g, '_').toLowerCase()}.pdf`
 
   return new NextResponse(pdfBytes, {
     status: 200,
