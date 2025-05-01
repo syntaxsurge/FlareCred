@@ -23,7 +23,7 @@ export const revalidate = 0
 export default async function RequestsPage({
   searchParams,
 }: {
-  searchParams: Promise<Query> | Query
+  searchParams?: Promise<Query>
 }) {
   /* Resolve synchronous or async `searchParams` uniformly */
   const params = await resolveSearchParams(searchParams)
