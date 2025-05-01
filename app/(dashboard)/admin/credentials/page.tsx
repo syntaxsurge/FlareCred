@@ -9,7 +9,9 @@ import { getAdminCredentialsPage } from '@/lib/db/queries/admin-credentials'
 import { getUser } from '@/lib/db/queries/queries'
 import type { AdminCredentialRow } from '@/lib/types/tables'
 import {
-  getParam,
+  parsePagination,
+  parseSort,
+  getSearchTerm,
   pickParams,
   resolveSearchParams,
   type Query,
@@ -33,22 +35,21 @@ export default async function AdminCredentialsPage({
   if (!currentUser) redirect('/connect-wallet')
   if (currentUser.role !== 'admin') redirect('/dashboard')
 
-  /* --------------------------- Query params ------------------------------ */
-  const page = Math.max(1, Number(getParam(params, 'page') ?? '1'))
-
-  const sizeRaw = Number(getParam(params, 'size') ?? '10')
-  const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
-
-  const sort = getParam(params, 'sort') ?? 'id'
-  const order = getParam(params, 'order') === 'asc' ? 'asc' : 'desc'
-  const searchTerm = (getParam(params, 'q') ?? '').trim()
+  /* ---------------------- Pagination, sort, search ----------------------- */
+  const { page, pageSize } = parsePagination(params)
+  const { sort, order } = parseSort(
+    params,
+    ['title', 'candidate', 'issuer', 'status', 'id'] as const,
+    'id',
+  )
+  const searchTerm = getSearchTerm(params)
 
   /* ---------------------------- Data fetch ------------------------------- */
   const { credentials, hasNext } = await getAdminCredentialsPage(
     page,
     pageSize,
     sort as 'title' | 'candidate' | 'issuer' | 'status' | 'id',
-    order as 'asc' | 'desc',
+    order,
     searchTerm,
   )
 
@@ -76,7 +77,7 @@ export default async function AdminCredentialsPage({
         <AdminCredentialsTable
           rows={rows}
           sort={sort}
-          order={order as 'asc' | 'desc'}
+          order={order}
           basePath='/admin/credentials'
           initialParams={initialParams}
           searchQuery={searchTerm}

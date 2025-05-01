@@ -9,7 +9,9 @@ import { getAdminIssuersPage } from '@/lib/db/queries/admin-issuers'
 import { getUser } from '@/lib/db/queries/queries'
 import type { AdminIssuerRow } from '@/lib/types/tables'
 import {
-  getParam,
+  parsePagination,
+  parseSort,
+  getSearchTerm,
   pickParams,
   resolveSearchParams,
   type Query,
@@ -30,22 +32,21 @@ export default async function AdminIssuersPage({
   if (!currentUser) redirect('/connect-wallet')
   if (currentUser.role !== 'admin') redirect('/dashboard')
 
-  /* --------------------------- Query params --------------------------- */
-  const page = Math.max(1, Number(getParam(params, 'page') ?? '1'))
+  /* ---------------------- Pagination, sort, search ----------------------- */
+  const { page, pageSize } = parsePagination(params)
+  const { sort, order } = parseSort(
+    params,
+    ['name', 'domain', 'owner', 'category', 'industry', 'status', 'id'] as const,
+    'id',
+  )
+  const searchTerm = getSearchTerm(params)
 
-  const sizeRaw = Number(getParam(params, 'size') ?? '10')
-  const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
-
-  const sort = getParam(params, 'sort') ?? 'id'
-  const order = getParam(params, 'order') === 'asc' ? 'asc' : 'desc'
-  const searchTerm = (getParam(params, 'q') ?? '').trim()
-
-  /* ---------------------------- Data fetch ---------------------------- */
+  /* ---------------------------- Data fetch ------------------------------- */
   const { issuers, hasNext } = await getAdminIssuersPage(
     page,
     pageSize,
     sort as 'name' | 'domain' | 'owner' | 'category' | 'industry' | 'status' | 'id',
-    order as 'asc' | 'desc',
+    order,
     searchTerm,
   )
 
@@ -59,7 +60,7 @@ export default async function AdminIssuersPage({
     status: i.status,
   }))
 
-  /* ------------------------ Build initialParams ----------------------- */
+  /* ------------------------ Build initialParams -------------------------- */
   const initialParams = pickParams(params, ['size', 'sort', 'order', 'q'])
 
   /* ------------------------------- View ------------------------------- */
@@ -73,7 +74,7 @@ export default async function AdminIssuersPage({
         <AdminIssuersTable
           rows={rows}
           sort={sort}
-          order={order as 'asc' | 'desc'}
+          order={order}
           basePath='/admin/issuers'
           initialParams={initialParams}
           searchQuery={searchTerm}
