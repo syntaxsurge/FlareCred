@@ -133,6 +133,69 @@ Contract compilation, testing and deployment are handled by a self-contained Har
 #### Subscription & Pricing Pipeline  
 ![Subscription & Pricing Architecture](public/images/architecture/FlareCred-Pricing-Architecture.jpg)
 
-## 🙏 Need Help?
+## 🧠 AI Usage, Prompts & Final Output
+
+### 1. How AI Tools Were Used
+FlareCred integrates OpenAI GPT-4o in three independent workflows:
+
+| Feature | File(s) / Entry Point | Model Interaction | Guard-rails & Caching |
+|---------|----------------------|-------------------|-----------------------|
+| **Strict Quiz Grader** – grades free-text answers and converts them to a 0-100 score used by candidate Skill Passes. | `lib/ai/openai.ts ➜ openAIAssess()`<br/>`lib/ai/prompts.ts ➜ strictGraderMessages()` | Single-shot chat completion (non-streaming). | Regex int-parsing fallback, random score stub when `OPENAI_API_KEY` is absent. |
+| **Candidate Profile Summary** – produces a 120-word third-person bio shown on public profiles. | `lib/ai/openai.ts ➜ summariseCandidateProfile()`<br/>`lib/ai/prompts.ts ➜ summariseProfileMessages()` | Single-shot chat completion. | SHA-256 hash of bio + credential list prevents duplicate generations; server limits to **2 runs per UTC day**. |
+| **“Why Hire” Fit Summary** – recruiter-specific JSON with five selling bullets, best-pipeline recommendation, pros & cons. | `lib/ai/openai.ts ➜ generateCandidateFitSummary()`<br/>`lib/ai/prompts.ts ➜ candidateFitMessages()`<br/>`lib/ai/fit-summary.ts ➜ validateCandidateFitJson()` | Chat completion with **automatic schema validation + up-to-3 retries**. | Per-recruiter × candidate cache keyed by SHA-256 of profile & pipeline list (`recruiter_candidate_fits` table). |
+
+### 2. AI Prompt & Usage Summary
+#### 2.1 Exact Prompts  
+<pre>
+— Strict Grader (system) —
+You are a strict exam grader. Respond ONLY with an integer 0-100.
+
+— Strict Grader (user) —
+Quiz topic: {{quizTitle}}
+Candidate answer: {{answer}}
+Grade (0-100):
+
+— Profile Summary (system) —
+Summarise the following candidate profile in approximately {{words}} words. Write in third-person professional tone without using personal pronouns.
+
+— Profile Summary (user) —
+{{rawCandidateProfile}}
+
+— Recruiter Fit (system) —
+You are an elite technical recruiter assistant with deep knowledge of skill
+match-making, talent branding and concise executive communication.  Follow ALL rules
+strictly:
+• Think step-by-step but output *only* the final JSON (no markdown, no commentary).
+• Each "bullets" item MUST contain exactly 12 words; start with an action verb.
+• Use the recruiter’s pipelines to choose "bestPipeline"; if none fit, return "NONE".
+• Focus on evidence from credentials/bio; do not invent facts.
+• Obey the output schema below verbatim.
+
+— Recruiter Fit (user) —
+=== Recruiter Pipelines (max 20) ===
+{{numberedPipelineList}}
+
+=== Candidate Profile ===
+{{candidateProfile}}
+
+Return the JSON now:
+</pre>
+
+#### 2.2 Iterative Prompt Improvements
+* **Strict Grader** – started as an open-ended “grade the answer” prompt; tightened to a *single-integer* response after early experiments returned explanations.  
+* **Profile Summary** – word-budget parameter lowered from 150 → 120 and switched to third-person to avoid “I have…” phrasing.  
+* **Fit Summary** – several iterations added: JSON schema surfaced inside the system message, 12-word bullet constraint, and a validation-with-retry loop to guarantee compliant output.
+
+### 3. Final Output
+| Deliverable | Path / Location | Notes |
+|-------------|-----------------|-------|
+| **Demo URL** | https://flarecred.com | Hosted deployment |
+| **Video Demo** | https://flarecred.com/demo-video | 3-min product walkthrough (public) |
+| **Pitch Deck** | https://flarecred.com/pitch-deck | Presentation slides covering problem, solution, architecture & traction |
+| **Codebase** | https://github.com/syntaxsurge/FlareCred | Open-source repository (Next.js app + Hardhat contracts) |
+
+---
+
+## 🙏 Need Help?
 
 Open an issue or start a discussion on GitHub — we welcome questions, feedback and PRs.
