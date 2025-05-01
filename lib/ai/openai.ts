@@ -83,7 +83,7 @@ export async function chatCompletion<Stream extends boolean = false>(
 
   throw new Error(
     `OpenAI returned an invalid response after ${attempts} attempts. ` +
-      `Last validation error: ${lastError}`,
+    `Last validation error: ${lastError}`,
   )
 }
 
@@ -95,11 +95,14 @@ export async function openAIAssess(
   answer: string,
   quizTitle: string,
 ): Promise<{ aiScore: number }> {
-  if (!OPENAI_API_KEY) return { aiScore: Math.floor(Math.random() * 101) }
-
   const raw = await chatCompletion(strictGraderMessages(quizTitle, answer))
   const parsed = parseInt(raw.replace(/[^0-9]/g, ''), 10)
-  return { aiScore: Number.isNaN(parsed) ? Math.floor(Math.random() * 101) : parsed }
+
+  if (Number.isNaN(parsed)) {
+    throw new Error(`Invalid score returned from OpenAI: "${raw}"`)
+  }
+
+  return { aiScore: parsed }
 }
 
 /* -------------------------------------------------------------------------- */
@@ -125,9 +128,6 @@ export async function generateCandidateFitSummary(
   pipelinesStr: string,
   profileStr: string,
 ): Promise<string> {
-  if (!OPENAI_API_KEY)
-    throw new Error('OPENAI features disabled – no API key.')
-
   return await chatCompletion(candidateFitMessages(pipelinesStr, profileStr), {
     maxRetries: 3,
     validate: (raw) => {
