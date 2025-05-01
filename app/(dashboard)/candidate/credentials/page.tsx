@@ -1,5 +1,3 @@
-import { redirect } from 'next/navigation'
-
 import { eq } from 'drizzle-orm'
 import { FileText } from 'lucide-react'
 
@@ -7,30 +5,24 @@ import AddCredentialDialog from '@/components/dashboard/candidate/add-credential
 import CandidateCredentialsTable from '@/components/dashboard/candidate/credentials-table'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
+import { requireAuth } from '@/lib/auth/guards'
 import { db } from '@/lib/db/drizzle'
 import { getCandidateCredentialsPage } from '@/lib/db/queries/candidate-credentials'
-import { getUser } from '@/lib/db/queries/queries'
 import { teams, teamMembers } from '@/lib/db/schema/core'
 import type { CandidateCredentialRow } from '@/lib/types/tables'
-import { resolveSearchParams, getTableParams } from '@/lib/utils/query'
+import { getTableParams, resolveSearchParams } from '@/lib/utils/query'
 
 export const revalidate = 0
-
-/* -------------------------------------------------------------------------- */
-/*                                    Page                                    */
-/* -------------------------------------------------------------------------- */
 
 export default async function CredentialsPage({
   searchParams,
 }: {
   searchParams?: Promise<Record<string, any>>
 }) {
-  /* --------------------------- Resolve params ---------------------------- */
   const params = await resolveSearchParams(searchParams)
 
-  /* ------------------------------ Auth ----------------------------------- */
-  const user = await getUser()
-  if (!user) redirect('/connect-wallet')
+  /* -------------------------- Auth & role guard ------------------------- */
+  const user = await requireAuth(['candidate'])
 
   /* ----------------------- Team DID existence --------------------------- */
   const [{ did } = {}] = await db
@@ -41,7 +33,7 @@ export default async function CredentialsPage({
     .limit(1)
   const hasDid = !!did
 
-  /* Server action wrapper injected into the client-side dialog */
+  /* ----------------------- Server-action wrapper ------------------------ */
   const addCredentialAction = async (formData: FormData): Promise<{ error?: string } | void> => {
     'use server'
     return await (await import('./actions')).addCredential({}, formData)

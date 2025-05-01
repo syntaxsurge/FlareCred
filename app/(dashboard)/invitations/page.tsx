@@ -1,32 +1,24 @@
-import { redirect } from 'next/navigation'
-
 import { Mail } from 'lucide-react'
 
 import InvitationsTable from '@/components/dashboard/invitations-table'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
+import { requireAuth } from '@/lib/auth/guards'
 import { getInvitationsPage } from '@/lib/db/queries/invitations'
-import { getUser } from '@/lib/db/queries/queries'
 import type { InvitationRow } from '@/lib/types/tables'
-import { resolveSearchParams, getTableParams } from '@/lib/utils/query'
+import { getTableParams, resolveSearchParams } from '@/lib/utils/query'
 
 export const revalidate = 0
-
-/* -------------------------------------------------------------------------- */
-/*                                    Page                                    */
-/* -------------------------------------------------------------------------- */
 
 export default async function InvitationsPage({
   searchParams,
 }: {
   searchParams?: Promise<Record<string, any>>
 }) {
-  /* --------------------------- Resolve params ---------------------------- */
   const params = await resolveSearchParams(searchParams)
 
-  /* ------------------------------ Auth ----------------------------------- */
-  const user = await getUser()
-  if (!user) redirect('/connect-wallet')
+  /* -------------------------- Auth guard -------------------------- */
+  const user = await requireAuth()
 
   /* ------------------- Table parameters via helper ---------------------- */
   const { page, pageSize, sort, order, searchTerm, initialParams } = getTableParams(

@@ -1,35 +1,26 @@
-import { redirect } from 'next/navigation'
-
 import { KanbanSquare } from 'lucide-react'
 
 import PipelinesTable from '@/components/dashboard/recruiter/pipelines-table'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
-import { getUser } from '@/lib/db/queries/queries'
+import { requireAuth } from '@/lib/auth/guards'
 import { getRecruiterPipelinesPage } from '@/lib/db/queries/recruiter-pipelines'
 import type { PipelineRow } from '@/lib/types/tables'
-import { resolveSearchParams, getTableParams } from '@/lib/utils/query'
+import { getTableParams, resolveSearchParams } from '@/lib/utils/query'
 
 import NewPipelineDialog from './new-pipeline-dialog'
 
 export const revalidate = 0
-
-/* -------------------------------------------------------------------------- */
-/*                                    Page                                    */
-/* -------------------------------------------------------------------------- */
 
 export default async function PipelinesPage({
   searchParams,
 }: {
   searchParams?: Promise<Record<string, any>>
 }) {
-  /* --------------------------- Resolve params ---------------------------- */
   const params = await resolveSearchParams(searchParams)
 
-  /* ------------------------------ Auth ----------------------------------- */
-  const user = await getUser()
-  if (!user) redirect('/connect-wallet')
-  if (user.role !== 'recruiter') redirect('/')
+  /* ------------------------- Auth & role guard -------------------------- */
+  const user = await requireAuth(['recruiter'])
 
   /* ------------------- Table parameters via helper ---------------------- */
   const { page, pageSize, sort, order, searchTerm, initialParams } = getTableParams(
