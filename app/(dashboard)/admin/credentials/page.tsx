@@ -3,7 +3,6 @@ import { FileText } from 'lucide-react'
 import AdminCredentialsTable from '@/components/dashboard/admin/credentials-table'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
-import { requireAuth } from '@/lib/auth/guards'
 import { getAdminCredentialsPage } from '@/lib/db/queries/admin-credentials'
 import type { AdminCredentialRow } from '@/lib/types/tables'
 import { getTableParams, resolveSearchParams, type Query } from '@/lib/utils/query'
@@ -21,8 +20,6 @@ export default async function AdminCredentialsPage({
 }) {
   /* Resolve synchronous or async `searchParams` supplied by Next.js */
   const params = await resolveSearchParams(searchParams)
-
-  await requireAuth(['admin'])
 
   /* ---------------------- Pagination, sort, search ----------------------- */
   const { page, pageSize, sort, order, searchTerm, initialParams } = getTableParams(

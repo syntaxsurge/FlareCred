@@ -19,7 +19,6 @@ export default async function PipelinesPage({
 }) {
   const params = await resolveSearchParams(searchParams)
 
-  /* ------------------------- Auth & role guard -------------------------- */
   const user = await requireAuth(['recruiter'])
 
   /* ------------------- Table parameters via helper ---------------------- */

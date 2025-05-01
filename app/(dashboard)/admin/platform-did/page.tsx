@@ -1,20 +1,13 @@
-import { redirect } from 'next/navigation'
-
 import { KeyRound } from 'lucide-react'
 
 import PageCard from '@/components/ui/page-card'
 import { PLATFORM_ISSUER_DID } from '@/lib/config'
-import { getUser } from '@/lib/db/queries/queries'
 
 import UpdateDidForm from './update-did-form'
 
 export const revalidate = 0
 
 export default async function PlatformDidPage() {
-  const user = await getUser()
-  if (!user) redirect('/connect-wallet')
-  if (user.role !== 'admin') redirect('/dashboard')
-
   return (
     <PageCard
       icon={KeyRound}

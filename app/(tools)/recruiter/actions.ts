@@ -5,8 +5,8 @@ import { createHash } from 'crypto'
 import { and, eq } from 'drizzle-orm'
 
 import { generateCandidateFitSummary } from '@/lib/ai/openai'
+import { requireAuth } from '@/lib/auth/guards'
 import { db } from '@/lib/db/drizzle'
-import { getUser } from '@/lib/db/queries/queries'
 import { getRecruiterPipelinesPage } from '@/lib/db/queries/recruiter-pipelines'
 import { candidates, candidateCredentials } from '@/lib/db/schema/candidate'
 import { issuers } from '@/lib/db/schema/issuer'
@@ -22,7 +22,7 @@ import { recruiterCandidateFits } from '@/lib/db/schema/recruiter-fit'
  */
 export async function generateCandidateFit(candidateId: number): Promise<string> {
   /* ----------------------------- Auth guard ----------------------------- */
-  const user = await getUser()
+  const user = await requireAuth()
   if (!user) {
     throw new Error(
       'You must be signed in with a recruiter account to generate a Why Hire summary. ' +

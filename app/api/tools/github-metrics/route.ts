@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 
 import { Octokit } from '@octokit/rest'
 
+import { requireAuth } from '@/lib/auth/guards'
 import { GITHUB_TOKEN } from '@/lib/config'
-import { getUser } from '@/lib/db/queries/queries'
 
 /**
  * GET /api/tools/github-metrics?repo={owner}/{repo}
@@ -12,10 +12,7 @@ import { getUser } from '@/lib/db/queries/queries'
  */
 export async function GET(req: NextRequest) {
   /* ---------------------------- Auth guard ---------------------------- */
-  const user = await getUser()
-  if (!user || user.role !== 'candidate') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
+  const user = await requireAuth(['candidate'])
 
   /* --------------------------- Param parse ---------------------------- */
   const repoParam = req.nextUrl.searchParams.get('repo')?.trim()

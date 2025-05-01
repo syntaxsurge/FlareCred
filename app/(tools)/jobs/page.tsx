@@ -4,9 +4,9 @@ import { Briefcase } from 'lucide-react'
 import JobsTable from '@/components/job-directory/jobs-table'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
+import { requireAuth } from '@/lib/auth/guards'
 import { db } from '@/lib/db/drizzle'
 import { getJobOpeningsPage } from '@/lib/db/queries/job-openings'
-import { getUser } from '@/lib/db/queries/queries'
 import { candidates as candidatesTable } from '@/lib/db/schema/candidate'
 import { pipelineCandidates } from '@/lib/db/schema/recruiter'
 import type { JobRow } from '@/lib/types/tables'
@@ -38,7 +38,7 @@ export default async function JobsDirectoryPage({
   )
 
   /* -------------- Enrich with candidate-specific state ------------------ */
-  const user = await getUser()
+  const user = await requireAuth()
   const isCandidate = user?.role === 'candidate'
 
   let appliedSet = new Set<number>()

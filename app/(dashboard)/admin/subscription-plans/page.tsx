@@ -1,12 +1,9 @@
-import { redirect } from 'next/navigation'
-
 import { asc, eq } from 'drizzle-orm'
 import { Tag } from 'lucide-react'
 
 import PageCard from '@/components/ui/page-card'
 import { subscriptionManager } from '@/lib/contracts'
 import { db } from '@/lib/db/drizzle'
-import { getUser } from '@/lib/db/queries/queries'
 import { planFeatures } from '@/lib/db/schema/pricing'
 
 import UpdatePlanFeaturesForm from './update-plan-features-form'
@@ -19,10 +16,6 @@ export const revalidate = 0
  * Lets an admin edit on-chain prices and database-driven feature lists.
  */
 export default async function AdminPlanPricesPage() {
-  const user = await getUser()
-  if (!user) redirect('/connect-wallet')
-  if (user.role !== 'admin') redirect('/dashboard')
-
   /* -------------------------- Prices (on-chain) ------------------------- */
   const baseWei: bigint = await subscriptionManager.planPriceWei(1)
   const plusWei: bigint = await subscriptionManager.planPriceWei(2)

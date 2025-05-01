@@ -1,11 +1,10 @@
-import { redirect } from 'next/navigation'
 import type { ReactNode } from 'react'
 
 import { eq } from 'drizzle-orm'
 
 import { AppModal } from '@/components/ui/app-modal'
+import { requireAuth } from '@/lib/auth/guards'
 import { db } from '@/lib/db/drizzle'
-import { getUser } from '@/lib/db/queries/queries'
 import { teamMembers, teams } from '@/lib/db/schema/core'
 
 type Props = {
@@ -32,9 +31,7 @@ type Props = {
  * ```
  */
 export default async function RequireDidGate({ children, createPath }: Props) {
-  /* Resolve authenticated user */
-  const user = await getUser()
-  if (!user) redirect('/connect-wallet')
+  const user = await requireAuth()
 
   /* Lookup team DID (shared across all roles) */
   const [{ did } = {}] = await db

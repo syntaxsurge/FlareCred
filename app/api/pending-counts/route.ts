@@ -2,21 +2,14 @@ import { NextResponse } from 'next/server'
 
 import { and, eq } from 'drizzle-orm'
 
+import { requireAuth } from '@/lib/auth/guards'
 import { db } from '@/lib/db/drizzle'
-import { getUser } from '@/lib/db/queries/queries'
 import { invitations } from '@/lib/db/schema'
 import { candidateCredentials, CredentialStatus } from '@/lib/db/schema/candidate'
 import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
 
 export async function GET() {
-  const user = await getUser()
-  if (!user) {
-    return NextResponse.json({
-      invitations: 0,
-      issuerRequests: 0,
-      adminPendingIssuers: 0,
-    })
-  }
+  const user = await requireAuth()
 
   /* ------------------------- Invitations ------------------------- */
   const invitationsCount = (

@@ -3,17 +3,16 @@
 import { eq } from 'drizzle-orm'
 
 import { openAIAssess } from '@/lib/ai/openai' /* ← centralised helper */
+import { requireAuth } from '@/lib/auth/guards'
 import { PLATFORM_ISSUER_DID } from '@/lib/config'
 import { db } from '@/lib/db/drizzle'
-import { getUser } from '@/lib/db/queries/queries'
 import { candidates, skillQuizzes } from '@/lib/db/schema/candidate'
 import { teams, teamMembers } from '@/lib/db/schema/core'
 import { extractAddressFromDid, toBytes32 } from '@/lib/utils/address'
 import { signCredentialMint } from '@/lib/utils/signature'
 
 export async function startQuizAction(formData: FormData) {
-  const user = await getUser()
-  if (!user) return { score: 0, message: 'Not logged in.' }
+  const user = await requireAuth(['candidate'])
 
   /* ------------------------------------------------------------------ */
   /*                           Payload parse                            */

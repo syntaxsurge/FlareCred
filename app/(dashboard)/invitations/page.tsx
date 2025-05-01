@@ -17,7 +17,6 @@ export default async function InvitationsPage({
 }) {
   const params = await resolveSearchParams(searchParams)
 
-  /* -------------------------- Auth guard -------------------------- */
   const user = await requireAuth()
 
   /* ------------------- Table parameters via helper ---------------------- */

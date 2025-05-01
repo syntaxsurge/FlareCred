@@ -1,5 +1,4 @@
 import Image from 'next/image'
-import { redirect } from 'next/navigation'
 
 import { eq } from 'drizzle-orm'
 import { Building2, AtSign, Tag, BriefcaseBusiness, Link, Wrench } from 'lucide-react'
@@ -9,8 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import DetailItem from '@/components/ui/detail-item'
 import PageCard from '@/components/ui/page-card'
 import StatusBadge from '@/components/ui/status-badge'
+import { requireAuth } from '@/lib/auth/guards'
 import { db } from '@/lib/db/drizzle'
-import { getUser } from '@/lib/db/queries/queries'
 import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
 import { prettify } from '@/lib/utils'
 
@@ -21,8 +20,7 @@ import { LinkDidForm } from './link-did-form'
 export const revalidate = 0
 
 export default async function IssuerOnboardPage() {
-  const user = await getUser()
-  if (!user) redirect('/connect-wallet')
+  const user = await requireAuth(['issuer'])
 
   const [issuer] = await db.select().from(issuers).where(eq(issuers.ownerUserId, user.id)).limit(1)
 

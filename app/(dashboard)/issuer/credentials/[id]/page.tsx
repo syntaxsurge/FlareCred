@@ -10,9 +10,9 @@ import RequireDidGate from '@/components/dashboard/require-did-gate'
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import PageCard from '@/components/ui/page-card'
 import StatusBadge from '@/components/ui/status-badge'
+import { requireAuth } from '@/lib/auth/guards'
 import { isGithubRepoCredential } from '@/lib/constants/credential'
 import { db } from '@/lib/db/drizzle'
-import { getUser } from '@/lib/db/queries/queries'
 import { candidateCredentials, CredentialStatus, candidates } from '@/lib/db/schema/candidate'
 import { users } from '@/lib/db/schema/core'
 import { issuers } from '@/lib/db/schema/issuer'
@@ -27,9 +27,7 @@ export default async function CredentialDetailPage({
   const { id } = await params
   const credentialId = Number(id)
 
-  /* --------------------------- Auth & issuer ---------------------------- */
-  const user = await getUser()
-  if (!user) redirect('/connect-wallet')
+  const user = await requireAuth(['issuer'])
 
   const [issuer] = await db.select().from(issuers).where(eq(issuers.ownerUserId, user.id)).limit(1)
   if (!issuer) redirect('/issuer/onboard')

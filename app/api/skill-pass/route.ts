@@ -3,8 +3,8 @@ import { NextResponse } from 'next/server'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 
+import { requireAuth } from '@/lib/auth/guards'
 import { db } from '@/lib/db/drizzle'
-import { getUser } from '@/lib/db/queries/queries'
 import { quizAttempts, candidates } from '@/lib/db/schema/candidate'
 
 /* -------------------------------------------------------------------------- */
@@ -21,10 +21,7 @@ const Payload = z.object({
 
 export async function POST(req: Request) {
   try {
-    const user = await getUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
-    }
+    const user = await requireAuth(['candidate'])
 
     const body = await req.json()
     const parsed = Payload.parse(body)

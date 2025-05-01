@@ -1,12 +1,9 @@
-import { redirect } from 'next/navigation'
-
 import { Users } from 'lucide-react'
 
 import TalentFilters from '@/components/dashboard/recruiter/talent-filters'
 import TalentTable from '@/components/dashboard/recruiter/talent-table'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
-import { getUser } from '@/lib/db/queries/queries'
 import { getTalentSearchPage } from '@/lib/db/queries/recruiter-talent'
 import type { TalentRow } from '@/lib/types/tables'
 import { getTableParams, getParam, resolveSearchParams, type Query } from '@/lib/utils/query'
@@ -23,11 +20,6 @@ export default async function TalentSearchPage({
   searchParams?: Promise<Query>
 }) {
   const params = await resolveSearchParams(searchParams)
-
-  /* ------------------------------ Auth --------------------------------- */
-  const user = await getUser()
-  if (!user) redirect('/connect-wallet')
-  if (user.role !== 'recruiter') redirect('/')
 
   /* -------------------------- Table helpers --------------------------- */
   const { page, pageSize, sort, order, searchTerm, initialParams } = getTableParams(

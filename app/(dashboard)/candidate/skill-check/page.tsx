@@ -5,7 +5,6 @@ import RequireDidGate from '@/components/dashboard/require-did-gate'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import PageCard from '@/components/ui/page-card'
 import { db } from '@/lib/db/drizzle'
-import { getUser } from '@/lib/db/queries/queries'
 import { skillQuizzes, skillQuizQuestions } from '@/lib/db/schema/candidate'
 
 import StartQuizForm from './start-quiz-form'
@@ -13,10 +12,6 @@ import StartQuizForm from './start-quiz-form'
 export const revalidate = 0
 
 export default async function SkillCheckPage() {
-  /* Auth */
-  const user = await getUser()
-  if (!user) return <div>Please sign in</div>
-
   /* Quizzes + questions */
   const quizzes = await db.select().from(skillQuizzes)
   const ids = quizzes.map((q) => q.id)

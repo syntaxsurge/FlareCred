@@ -5,9 +5,9 @@ import { KanbanSquare } from 'lucide-react'
 
 import PipelineBoard from '@/components/dashboard/recruiter/pipeline-board'
 import PageCard from '@/components/ui/page-card'
+import { requireAuth } from '@/lib/auth/guards'
 import { STAGES } from '@/lib/constants/recruiter'
 import { db } from '@/lib/db/drizzle'
-import { getUser } from '@/lib/db/queries/queries'
 import { candidates } from '@/lib/db/schema/candidate'
 import { users } from '@/lib/db/schema/core'
 import { recruiterPipelines, pipelineCandidates } from '@/lib/db/schema/recruiter'
@@ -24,10 +24,7 @@ export default async function PipelineBoardPage({ params }: { params: Promise<{ 
   const { id } = await params
   const pipelineId = Number(id)
 
-  /* --------------------------- auth guard --------------------------- */
-  const user = await getUser()
-  if (!user) redirect('/connect-wallet')
-  if (user.role !== 'recruiter') redirect('/')
+  const user = await requireAuth(['recruiter'])
 
   /* --------------------- load pipeline & verify --------------------- */
   const [pipeline] = await db

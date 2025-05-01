@@ -1,9 +1,7 @@
-import { redirect } from 'next/navigation'
-
 import { eq } from 'drizzle-orm'
 
+import { requireAuth } from '@/lib/auth/guards'
 import { db } from '@/lib/db/drizzle'
-import { getUser } from '@/lib/db/queries/queries'
 import { getTeamMembersPage } from '@/lib/db/queries/team-members'
 import { teamMembers, teams } from '@/lib/db/schema/core'
 import { getTableParams, resolveSearchParams, type Query } from '@/lib/utils/query'
@@ -23,9 +21,7 @@ export default async function TeamSettingsPage({
 }) {
   const params = await resolveSearchParams(searchParams)
 
-  /* ------------------------------ Auth ----------------------------------- */
-  const user = await getUser()
-  if (!user) redirect('/connect-wallet')
+  const user = await requireAuth()
 
   /* --------------------------- Locate team ------------------------------- */
   const [membership] = await db

@@ -1,12 +1,10 @@
-import { redirect } from 'next/navigation'
-
 import { Activity as ActivityIcon } from 'lucide-react'
 
 import ActivityLogsTable from '@/components/dashboard/settings/activity-logs-table'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
+import { requireAuth } from '@/lib/auth/guards'
 import { getActivityLogsPage } from '@/lib/db/queries/activity'
-import { getUser } from '@/lib/db/queries/queries'
 import type { ActivityLogRow } from '@/lib/types/tables'
 import { getTableParams, resolveSearchParams, type Query } from '@/lib/utils/query'
 
@@ -15,9 +13,7 @@ export const revalidate = 0
 export default async function ActivityPage({ searchParams }: { searchParams?: Promise<Query> }) {
   const params = await resolveSearchParams(searchParams)
 
-  /* ------------------------------ Auth ----------------------------------- */
-  const user = await getUser()
-  if (!user) redirect('/connect-wallet')
+  const user = await requireAuth()
 
   /* ------------------------- Table parameters ---------------------------- */
   const { page, pageSize, sort, order, searchTerm, initialParams } = getTableParams(

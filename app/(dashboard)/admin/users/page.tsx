@@ -3,7 +3,6 @@ import { Users } from 'lucide-react'
 import AdminUsersTable from '@/components/dashboard/admin/users-table'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
-import { requireAuth } from '@/lib/auth/guards'
 import { getAdminUsersPage } from '@/lib/db/queries/admin-users'
 import type { AdminUserRow } from '@/lib/types/tables'
 import { getTableParams, resolveSearchParams, type Query } from '@/lib/utils/query'
@@ -16,9 +15,6 @@ export const revalidate = 0
  */
 export default async function AdminUsersPage({ searchParams }: { searchParams?: Promise<Query> }) {
   const params = await resolveSearchParams(searchParams)
-
-  /* ------------------------------ Auth --------------------------------- */
-  await requireAuth(['admin'])
 
   /* -------------------------- Table helpers --------------------------- */
   const { page, pageSize, sort, order, searchTerm, initialParams } = getTableParams(

@@ -7,9 +7,9 @@ import IssuerRequestsTable from '@/components/dashboard/issuer/requests-table'
 import RequireDidGate from '@/components/dashboard/require-did-gate'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
+import { requireAuth } from '@/lib/auth/guards'
 import { db } from '@/lib/db/drizzle'
 import { getIssuerRequestsPage } from '@/lib/db/queries/issuer-requests'
-import { getUser } from '@/lib/db/queries/queries'
 import { issuers } from '@/lib/db/schema/issuer'
 import type { IssuerRequestRow } from '@/lib/types/tables'
 import { getTableParams, resolveSearchParams, type Query } from '@/lib/utils/query'
@@ -24,9 +24,7 @@ export default async function RequestsPage({ searchParams }: { searchParams?: Pr
   /* Resolve synchronous or async `searchParams` uniformly */
   const params = await resolveSearchParams(searchParams)
 
-  /* --------------------------- Auth & issuer ---------------------------- */
-  const user = await getUser()
-  if (!user) redirect('/connect-wallet')
+  const user = await requireAuth(['issuer'])
 
   const [issuer] = await db.select().from(issuers).where(eq(issuers.ownerUserId, user.id)).limit(1)
   if (!issuer) redirect('/issuer/onboard')

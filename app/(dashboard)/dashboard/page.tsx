@@ -1,5 +1,3 @@
-import { redirect } from 'next/navigation'
-
 import { and, eq, desc } from 'drizzle-orm'
 import {
   BadgeCheck,
@@ -19,8 +17,8 @@ import IssuerCharts from '@/components/dashboard/issuer/charts'
 import RecruiterCharts from '@/components/dashboard/recruiter/charts'
 import { RoleBadge } from '@/components/dashboard/role-badge'
 import { Card, CardContent } from '@/components/ui/card'
+import { requireAuth } from '@/lib/auth/guards'
 import { db } from '@/lib/db/drizzle'
-import { getUser } from '@/lib/db/queries/queries'
 import {
   candidates,
   candidateCredentials,
@@ -39,8 +37,7 @@ export const revalidate = 0
 /* -------------------------------------------------------------------------- */
 
 export default async function DashboardPage() {
-  const user = await getUser()
-  if (!user) redirect('/connect-wallet')
+  const user = await requireAuth()
 
   /* ------------------------------------------------------------------ */
   /* Candidate metrics & datasets                                       */

@@ -3,9 +3,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { inArray, eq } from 'drizzle-orm'
 import { z } from 'zod'
 
+import { requireAuth } from '@/lib/auth/guards'
 import { checkSubscription } from '@/lib/contracts/flare'
 import { db } from '@/lib/db/drizzle'
-import { getUser } from '@/lib/db/queries/queries'
 import { teams, teamMembers } from '@/lib/db/schema/core'
 
 /* -------------------------------------------------------------------------- */
@@ -23,10 +23,7 @@ const BodySchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await getUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const user = await requireAuth()
 
     const body = await req.json()
     const { planKey } = BodySchema.parse(body)

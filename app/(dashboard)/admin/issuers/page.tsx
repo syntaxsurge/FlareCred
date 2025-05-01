@@ -3,7 +3,6 @@ import { Building } from 'lucide-react'
 import AdminIssuersTable from '@/components/dashboard/admin/issuers-table'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
-import { requireAuth } from '@/lib/auth/guards'
 import { getAdminIssuersPage } from '@/lib/db/queries/admin-issuers'
 import type { AdminIssuerRow } from '@/lib/types/tables'
 import { getTableParams, resolveSearchParams, type Query } from '@/lib/utils/query'
@@ -17,9 +16,6 @@ export default async function AdminIssuersPage({
 }) {
   /* Resolve synchronous or async `searchParams` supplied by Next.js */
   const params = await resolveSearchParams(searchParams)
-
-  /* Auth guard */
-  await requireAuth(['admin'])
 
   /* ---------------------- Pagination, sort, search ----------------------- */
   const { page, pageSize, sort, order, searchTerm, initialParams } = getTableParams(

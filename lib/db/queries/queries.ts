@@ -2,6 +2,7 @@ import { cookies } from 'next/headers'
 
 import { desc, and, eq, isNull } from 'drizzle-orm'
 
+import { requireAuth } from '@/lib/auth/guards'
 import { verifyToken } from '@/lib/auth/session'
 
 import { db } from '../drizzle'
@@ -81,8 +82,7 @@ export async function getUserWithTeam(userId: number) {
 }
 
 export async function getActivityLogs() {
-  const user = await getUser()
-  if (!user) throw new Error('User not authenticated')
+  const user = await requireAuth()
 
   return await db
     .select({

@@ -20,8 +20,6 @@ export default async function CredentialsPage({
   searchParams?: Promise<Record<string, any>>
 }) {
   const params = await resolveSearchParams(searchParams)
-
-  /* -------------------------- Auth & role guard ------------------------- */
   const user = await requireAuth(['candidate'])
 
   /* ----------------------- Team DID existence --------------------------- */

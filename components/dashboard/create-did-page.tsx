@@ -8,8 +8,8 @@ import { AppModal } from '@/components/ui/app-modal'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
 import PageCard from '@/components/ui/page-card'
 import { UserAvatar } from '@/components/ui/user-avatar'
+import { requireAuth } from '@/lib/auth/guards'
 import { db } from '@/lib/db/drizzle'
-import { getUser } from '@/lib/db/queries/queries'
 import { teamMembers, users as usersT, teams } from '@/lib/db/schema/core'
 
 export const revalidate = 0
@@ -28,8 +28,7 @@ const MAX_DISPLAY = 5
  * dashboards to enforce a single, consistent flow.
  */
 export default async function CreateDidPage() {
-  const user = await getUser()
-  if (!user) redirect('/connect-wallet')
+  const user = await requireAuth()
 
   /* ------------------------------------------------------------ */
   /*                        T E A M   C H E C K                   */

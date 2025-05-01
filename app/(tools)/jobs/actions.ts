@@ -3,9 +3,9 @@
 import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
 
+import { requireAuth } from '@/lib/auth/guards'
 import { STAGES } from '@/lib/constants/recruiter'
 import { db } from '@/lib/db/drizzle'
-import { getUser } from '@/lib/db/queries/queries'
 import { candidates } from '@/lib/db/schema/candidate'
 import { recruiterPipelines, pipelineCandidates } from '@/lib/db/schema/recruiter'
 
@@ -35,7 +35,7 @@ export async function applyToJobAction(
   const { pipelineId } = parse.data
 
   /* -------------------------- Auth & role guard ------------------------- */
-  const user = await getUser()
+  const user = await requireAuth()
   if (!user || user.role !== 'candidate') {
     return { error: 'Only logged in candidates could apply to these job openings.' }
   }

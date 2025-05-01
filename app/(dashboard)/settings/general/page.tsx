@@ -1,17 +1,14 @@
-import { redirect } from 'next/navigation'
-
 import { Settings as SettingsIcon } from 'lucide-react'
 
 import PageCard from '@/components/ui/page-card'
-import { getUser } from '@/lib/db/queries/queries'
+import { requireAuth } from '@/lib/auth/guards'
 
 import GeneralForm from './general-form'
 
 export const revalidate = 0
 
 export default async function GeneralSettingsPage() {
-  const user = await getUser()
-  if (!user) redirect('/connect-wallet')
+  const user = await requireAuth()
 
   return (
     <PageCard

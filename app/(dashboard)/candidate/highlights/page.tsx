@@ -1,5 +1,3 @@
-import { redirect } from 'next/navigation'
-
 import { asc, eq } from 'drizzle-orm'
 import { Star } from 'lucide-react'
 
@@ -7,8 +5,8 @@ import HighlightsBoard from '@/components/dashboard/candidate/highlights-board'
 import ProfileHeader from '@/components/dashboard/candidate/profile-header'
 import { AppModal } from '@/components/ui/app-modal'
 import PageCard from '@/components/ui/page-card'
+import { requireAuth } from '@/lib/auth/guards'
 import { db } from '@/lib/db/drizzle'
-import { getUser } from '@/lib/db/queries/queries'
 import {
   candidateCredentials,
   CredentialCategory,
@@ -21,9 +19,7 @@ import { HighlightCredential } from '@/lib/types/components'
 export const revalidate = 0
 
 export default async function CandidateHighlightsSettings() {
-  /* ------------------------- Auth ------------------------- */
-  const user = await getUser()
-  if (!user) redirect('/connect-wallet')
+  const user = await requireAuth(['candidate'])
 
   const [candRow] = await db
     .select({ id: candidates.id, bio: candidates.bio })

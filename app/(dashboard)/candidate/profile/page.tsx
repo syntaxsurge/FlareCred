@@ -1,12 +1,10 @@
-import { redirect } from 'next/navigation'
-
 import { eq } from 'drizzle-orm'
 import { User } from 'lucide-react'
 
 import ProfileHeader from '@/components/dashboard/candidate/profile-header'
 import PageCard from '@/components/ui/page-card'
+import { requireAuth } from '@/lib/auth/guards'
 import { db } from '@/lib/db/drizzle'
-import { getUser } from '@/lib/db/queries/queries'
 import { candidates } from '@/lib/db/schema/candidate'
 
 import ProfileForm from './profile-form'
@@ -14,8 +12,7 @@ import ProfileForm from './profile-form'
 export const revalidate = 0
 
 export default async function ProfilePage() {
-  const user = await getUser()
-  if (!user) redirect('/connect-wallet')
+  const user = await requireAuth(['candidate'])
 
   const [candidate] = await db
     .select()

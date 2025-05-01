@@ -2,10 +2,10 @@ import { eq, asc, and } from 'drizzle-orm'
 
 import CandidateDetailedProfileView from '@/components/dashboard/candidate/profile-detailed-view'
 import AddToPipelineForm from '@/components/recruiter/add-to-pipeline-form'
+import { requireAuth } from '@/lib/auth/guards'
 import { db } from '@/lib/db/drizzle'
 import { getCandidateCredentialsSection } from '@/lib/db/queries/candidate-credentials-core'
 import { getCandidateSkillPassesSection } from '@/lib/db/queries/candidate-skill-passes'
-import { getUser } from '@/lib/db/queries/queries'
 import { getCandidatePipelineEntriesPage } from '@/lib/db/queries/recruiter-pipeline-entries'
 import { candidates, users } from '@/lib/db/schema'
 import {
@@ -59,7 +59,7 @@ export default async function PublicCandidateProfile({
   if (!row) return <div>Candidate not found.</div>
 
   /* -------------------------- Logged-in user ----------------------------- */
-  const user = await getUser()
+  const user = await requireAuth()
   const isRecruiter = user?.role === 'recruiter'
 
   /* ---------------------------------------------------------------------- */
