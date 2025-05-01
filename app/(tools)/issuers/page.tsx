@@ -9,9 +9,7 @@ import { db } from '@/lib/db/drizzle'
 import { issuers, IssuerStatus, IssuerCategory, IssuerIndustry } from '@/lib/db/schema/issuer'
 import type { IssuerDirectoryRow } from '@/lib/types/tables'
 import {
-  parsePagination,
-  parseSort,
-  getSearchTerm,
+  getTableParams,
   getParam,
   resolveSearchParams,
   pickParams,
@@ -20,10 +18,6 @@ import {
 
 export const revalidate = 0
 
-/* -------------------------------------------------------------------------- */
-/*                                    PAGE                                    */
-/* -------------------------------------------------------------------------- */
-
 export default async function IssuerDirectoryPage({
   searchParams,
 }: {
@@ -31,19 +25,17 @@ export default async function IssuerDirectoryPage({
 }) {
   const params = await resolveSearchParams(searchParams)
 
-  const { page, pageSize } = parsePagination(params)
-  const { sort, order } = parseSort(
+  /* ------------------------- Table parameters --------------------------- */
+  const { page, pageSize, sort, order, searchTerm, initialParams } = getTableParams(
     params,
     ['name', 'domain', 'category', 'industry', 'createdAt'] as const,
     'name',
   )
-  const searchTerm = getSearchTerm(params)
+
+  /* -------------------------- Filter params ----------------------------- */
   const categoryFilter = getParam(params, 'category')
   const industryFilter = getParam(params, 'industry')
 
-  /* ---------------------------------------------------------------------- */
-  /*                         Validate enum filters                          */
-  /* ---------------------------------------------------------------------- */
   type IssuerCategoryType = (typeof IssuerCategory)[keyof typeof IssuerCategory]
   type IssuerIndustryType = (typeof IssuerIndustry)[keyof typeof IssuerIndustry]
 
@@ -57,9 +49,7 @@ export default async function IssuerDirectoryPage({
       ? (industryFilter as IssuerIndustryType)
       : undefined
 
-  /* ---------------------------------------------------------------------- */
-  /*                              Sort mapping                              */
-  /* ---------------------------------------------------------------------- */
+  /* ------------------------------ Sort ---------------------------------- */
   const sortMap = {
     name: issuers.name,
     domain: issuers.domain,
@@ -73,20 +63,13 @@ export default async function IssuerDirectoryPage({
       ? asc(sortMap[sort as keyof typeof sortMap])
       : desc(sortMap[sort as keyof typeof sortMap])
 
-  /* ---------------------------------------------------------------------- */
-  /*                               Where clause                             */
-  /* ---------------------------------------------------------------------- */
+  /* ------------------------------ Where --------------------------------- */
   let whereExpr: any = eq(issuers.status, IssuerStatus.ACTIVE)
 
-  if (validCategory) {
-    whereExpr = and(whereExpr, eq(issuers.category, validCategory as any))
-  }
+  if (validCategory) whereExpr = and(whereExpr, eq(issuers.category, validCategory as any))
+  if (validIndustry) whereExpr = and(whereExpr, eq(issuers.industry, validIndustry as any))
 
-  if (validIndustry) {
-    whereExpr = and(whereExpr, eq(issuers.industry, validIndustry as any))
-  }
-
-  if (searchTerm.length > 0) {
+  if (searchTerm) {
     const searchCond = or(
       ilike(issuers.name, `%${searchTerm}%`),
       ilike(issuers.domain, `%${searchTerm}%`),
@@ -96,9 +79,7 @@ export default async function IssuerDirectoryPage({
     whereExpr = and(whereExpr, searchCond)
   }
 
-  /* ---------------------------------------------------------------------- */
-  /*                              Query rows                                */
-  /* ---------------------------------------------------------------------- */
+  /* ------------------------------ Query --------------------------------- */
   const offset = (page - 1) * pageSize
   const rowsRaw = await db
     .select()
@@ -123,14 +104,7 @@ export default async function IssuerDirectoryPage({
     createdAt: i.createdAt?.toISOString() ?? '',
   }))
 
-  /* ---------------------------------------------------------------------- */
-  /*                                initialParams                           */
-  /* ---------------------------------------------------------------------- */
-  const initialParams = pickParams(params, ['size', 'sort', 'order', 'q', 'category', 'industry'])
-
-  /* ---------------------------------------------------------------------- */
-  /*                                View                                    */
-  /* ---------------------------------------------------------------------- */
+  /* ------------------------------ View ---------------------------------- */
   return (
     <PageCard
       icon={ShieldCheck}
@@ -139,7 +113,7 @@ export default async function IssuerDirectoryPage({
     >
       <div className='space-y-4 overflow-x-auto'>
         <IssuerFilters
-          basePath={'/issuers'}
+          basePath='/issuers'
           initialParams={initialParams}
           categories={Object.values(IssuerCategory)}
           industries={Object.values(IssuerIndustry)}
@@ -150,8 +124,8 @@ export default async function IssuerDirectoryPage({
         <IssuersTable
           rows={rows}
           sort={sort}
-          order={order as 'asc' | 'desc'}
-          basePath={'/issuers'}
+          order={order}
+          basePath='/issuers'
           initialParams={initialParams}
           searchQuery={searchTerm}
         />
@@ -159,7 +133,7 @@ export default async function IssuerDirectoryPage({
         <TablePagination
           page={page}
           hasNext={hasNext}
-          basePath={'/issuers'}
+          basePath='/issuers'
           initialParams={initialParams}
           pageSize={pageSize}
         />
