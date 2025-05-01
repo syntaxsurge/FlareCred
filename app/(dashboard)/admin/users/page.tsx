@@ -16,11 +16,7 @@ export const revalidate = 0
 /*                                    Page                                    */
 /* -------------------------------------------------------------------------- */
 
-export default async function AdminUsersPage({
-  searchParams,
-}: {
-  searchParams?: Promise<Query>
-}) {
+export default async function AdminUsersPage({ searchParams }: { searchParams?: Promise<Query> }) {
   const params = await resolveSearchParams(searchParams)
 
   const currentUser = await getUser()

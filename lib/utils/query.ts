@@ -14,10 +14,10 @@ export function getParam(params: Query, key: string): string | undefined {
  * Uniformly resolve the `searchParams` that Next.js 15 can pass
  * either as an object or a `Promise` of that object.
  */
-export async function resolveSearchParams(
-  searchParams?: Query | Promise<Query>,
-): Promise<Query> {
+export async function resolveSearchParams(searchParams?: Query | Promise<Query>): Promise<Query> {
   if (!searchParams) return {}
   // If it's already an object just return it, otherwise await the promise.
-  return (searchParams as any).then ? await (searchParams as Promise<Query>) : (searchParams as Query)
+  return (searchParams as any).then
+    ? await (searchParams as Promise<Query>)
+    : (searchParams as Query)
 }

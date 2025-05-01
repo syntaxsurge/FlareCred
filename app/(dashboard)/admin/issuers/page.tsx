@@ -38,14 +38,7 @@ export default async function AdminIssuersPage({
   const { issuers, hasNext } = await getAdminIssuersPage(
     page,
     pageSize,
-    sort as
-      | 'name'
-      | 'domain'
-      | 'owner'
-      | 'category'
-      | 'industry'
-      | 'status'
-      | 'id',
+    sort as 'name' | 'domain' | 'owner' | 'category' | 'industry' | 'status' | 'id',
     order as 'asc' | 'desc',
     searchTerm,
   )

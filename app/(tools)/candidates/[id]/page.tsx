@@ -1,7 +1,5 @@
 import { eq, asc, and } from 'drizzle-orm'
 
-import { getParam, type Query } from '@/lib/utils/query'
-
 import CandidateDetailedProfileView from '@/components/dashboard/candidate/profile-detailed-view'
 import AddToPipelineForm from '@/components/recruiter/add-to-pipeline-form'
 import { db } from '@/lib/db/drizzle'
@@ -21,6 +19,7 @@ import { recruiterPipelines } from '@/lib/db/schema/recruiter'
 import { recruiterCandidateFits } from '@/lib/db/schema/recruiter-fit'
 import type { StatusCounts } from '@/lib/types/candidate'
 import type { PipelineEntryRow, RecruiterCredentialRow, SkillPassRow } from '@/lib/types/tables'
+import { getParam, type Query } from '@/lib/utils/query'
 
 export const revalidate = 0
 
