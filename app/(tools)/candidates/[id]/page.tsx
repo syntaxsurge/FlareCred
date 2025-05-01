@@ -18,8 +18,12 @@ import { issuers } from '@/lib/db/schema/issuer'
 import { recruiterPipelines } from '@/lib/db/schema/recruiter'
 import { recruiterCandidateFits } from '@/lib/db/schema/recruiter-fit'
 import type { StatusCounts } from '@/lib/types/candidate'
-import type { PipelineEntryRow, RecruiterCredentialRow, SkillPassRow } from '@/lib/types/tables'
-import { getParam, type Query } from '@/lib/utils/query'
+import type {
+  PipelineEntryRow,
+  RecruiterCredentialRow,
+  SkillPassRow,
+} from '@/lib/types/tables'
+import { getParam, resolveSearchParams, type Query } from '@/lib/utils/query'
 
 export const revalidate = 0
 
@@ -40,9 +44,12 @@ export default async function PublicCandidateProfile({
   params: Params | Promise<Params>
   searchParams: Query | Promise<Query>
 }) {
+  /* ------------------------ Dynamic route param ------------------------- */
   const { id } = await params
   const candidateId = Number(id)
-  const q = (await searchParams) as Query
+
+  /* ------------ Uniformly resolve sync/async Next.js searchParams -------- */
+  const q = await resolveSearchParams(searchParams)
 
   /* ----------------------------- Candidate row --------------------------- */
   const [row] = await db
@@ -77,7 +84,7 @@ export default async function PublicCandidateProfile({
   }
 
   /* ---------------------------------------------------------------------- */
-  /*                    Experiences & Projects ( Highlights )               */
+  /*                    Experiences & Projects (Highlights)                 */
   /* ---------------------------------------------------------------------- */
   const highlightRows = await db
     .select({
@@ -161,7 +168,7 @@ export default async function PublicCandidateProfile({
   keep('size')
   keep('sort')
   keep('order')
-  if (searchTerm) credInitialParams['q'] = searchTerm
+  if (searchTerm) credInitialParams.q = searchTerm
 
   /* ---------------------------------------------------------------------- */
   /*                     Skill Passes (shared helper)                       */
@@ -193,7 +200,7 @@ export default async function PublicCandidateProfile({
     if (v) passInitialParams[k] = v
   }
   ;['passSize', 'passSort', 'passOrder'].forEach(keepPass)
-  if (passSearch) passInitialParams['passQ'] = passSearch
+  if (passSearch) passInitialParams.passQ = passSearch
 
   /* ---------------------------------------------------------------------- */
   /*                   Recruiter-only Pipeline Entries                      */
@@ -254,7 +261,7 @@ export default async function PublicCandidateProfile({
     keepPipe('pipeSize')
     keepPipe('pipeSort')
     keepPipe('pipeOrder')
-    if (pipeSearchTerm) pipeInitialParams['pipeQ'] = pipeSearchTerm
+    if (pipeSearchTerm) pipeInitialParams.pipeQ = pipeSearchTerm
 
     /* Build summary (e.g. "In X Pipelines”) */
     const uniquePipelines = new Set(entries.map((e) => e.pipelineName))

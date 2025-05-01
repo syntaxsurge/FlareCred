@@ -8,23 +8,27 @@ import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getActivityLogsPage } from '@/lib/db/queries/activity'
 import { getUser } from '@/lib/db/queries/queries'
 import type { ActivityLogRow } from '@/lib/types/tables'
-import { getParam, type Query } from '@/lib/utils/query'
+import { getParam, resolveSearchParams, type Query } from '@/lib/utils/query'
 
 export const revalidate = 0
+
+/* -------------------------------------------------------------------------- */
+/*                                    Page                                    */
+/* -------------------------------------------------------------------------- */
 
 export default async function ActivityPage({
   searchParams,
 }: {
   searchParams: Promise<Query> | Query
 }) {
-  const params = (await searchParams) as Query
+  /* Normalise Next.js `searchParams` (object or Promise) */
+  const params = await resolveSearchParams(searchParams)
 
   const user = await getUser()
   if (!user) redirect('/connect-wallet')
 
   /* ---------------------- Query parameters ---------------------- */
   const page = Math.max(1, Number(getParam(params, 'page') ?? '1'))
-
   const sizeRaw = Number(getParam(params, 'size') ?? '10')
   const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
 
@@ -53,7 +57,7 @@ export default async function ActivityPage({
   }
   add('size')
   add('order')
-  if (searchTerm) initialParams['q'] = searchTerm
+  if (searchTerm) initialParams.q = searchTerm
 
   /* ---------------------------- View ---------------------------- */
   return (

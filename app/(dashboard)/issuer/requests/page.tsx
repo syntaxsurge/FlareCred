@@ -12,7 +12,7 @@ import { getIssuerRequestsPage } from '@/lib/db/queries/issuer-requests'
 import { getUser } from '@/lib/db/queries/queries'
 import { issuers } from '@/lib/db/schema/issuer'
 import type { IssuerRequestRow } from '@/lib/types/tables'
-import { getParam as first, type Query } from '@/lib/utils/query'
+import { getParam as first, resolveSearchParams, type Query } from '@/lib/utils/query'
 
 export const revalidate = 0
 
@@ -25,7 +25,8 @@ export default async function RequestsPage({
 }: {
   searchParams: Promise<Query> | Query
 }) {
-  const params = (await searchParams) as Query
+  /* Resolve synchronous or async `searchParams` uniformly */
+  const params = await resolveSearchParams(searchParams)
 
   const user = await getUser()
   if (!user) redirect('/connect-wallet')
@@ -78,7 +79,7 @@ export default async function RequestsPage({
             rows={rows}
             sort={sort}
             order={order as 'asc' | 'desc'}
-            basePath={'/issuer/requests'}
+            basePath='/issuer/requests'
             initialParams={initialParams}
             searchQuery={searchTerm}
           />
@@ -86,7 +87,7 @@ export default async function RequestsPage({
           <TablePagination
             page={page}
             hasNext={hasNext}
-            basePath={'/issuer/requests'}
+            basePath='/issuer/requests'
             initialParams={initialParams}
             pageSize={pageSize}
           />
