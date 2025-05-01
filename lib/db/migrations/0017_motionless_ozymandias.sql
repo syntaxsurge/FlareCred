@@ -1,1 +1,0 @@
-ALTER TABLE "quiz_attempts" ADD COLUMN "vc_json" text;

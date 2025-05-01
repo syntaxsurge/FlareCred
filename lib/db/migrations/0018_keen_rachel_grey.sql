@@ -1,1 +1,0 @@
-ALTER TABLE "candidate_credentials" ADD COLUMN "tx_hash" text;

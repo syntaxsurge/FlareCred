@@ -1,1 +1,0 @@
-ALTER TABLE "issuers" ADD COLUMN "rejection_reason" text;
