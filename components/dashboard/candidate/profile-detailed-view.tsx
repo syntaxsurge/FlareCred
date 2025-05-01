@@ -233,7 +233,7 @@ export default function CandidateDetailedProfileView({
           {summary ? (
             <Card>
               <CardHeader>
-                <CardTitle>Summary</CardTitle>
+                <CardTitle>AI Summary</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className='whitespace-pre-line'>{summary}</p>

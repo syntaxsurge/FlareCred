@@ -26,6 +26,12 @@ export const candidates = pgTable(
     bio: text('bio'),
     /** AI-generated 120-word profile summary */
     summary: text('summary'),
+    /** SHA-256 hash of profile content used for the last summary */
+    summaryHash: varchar('summary_hash', { length: 64 }),
+    /** Timestamp when the last AI summary was generated */
+    summaryGeneratedAt: timestamp('summary_generated_at'),
+    /** How many AI summaries were generated on the generation date */
+    summaryDailyCount: integer('summary_daily_count').notNull().default(0),
     /** Optional social links */
     twitterUrl: varchar('twitter_url', { length: 255 }),
     githubUrl: varchar('github_url', { length: 255 }),
