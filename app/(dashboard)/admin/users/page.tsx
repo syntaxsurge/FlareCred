@@ -8,7 +8,7 @@ import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getAdminUsersPage } from '@/lib/db/queries/admin-users'
 import { getUser } from '@/lib/db/queries/queries'
 import type { AdminUserRow } from '@/lib/types/tables'
-import { getParam, type Query } from '@/lib/utils/query'
+import { getParam, resolveSearchParams, type Query } from '@/lib/utils/query'
 
 export const revalidate = 0
 
@@ -19,9 +19,9 @@ export const revalidate = 0
 export default async function AdminUsersPage({
   searchParams,
 }: {
-  searchParams: Promise<Query> | Query
+  searchParams?: Promise<Query>
 }) {
-  const params = (await searchParams) as Query
+  const params = await resolveSearchParams(searchParams)
 
   const currentUser = await getUser()
   if (!currentUser) redirect('/connect-wallet')
