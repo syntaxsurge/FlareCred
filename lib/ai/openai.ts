@@ -19,9 +19,9 @@ export const openAiClient = new OpenAI({
 /**
  * Wrapper around <code>openAiClient.chat.completions.create</code>.
  *
- * When <code>stream</code> is <code>true</code> the full
- * <code>ChatCompletion</code> object is returned, otherwise the assistant
- * message content string is returned.
+ * When `stream` is `true` the raw
+ * `ChatCompletion` object is returned; otherwise the helper
+ * extracts and returns the assistant-message `content` string.
  */
 export async function chatCompletion<Stream extends boolean = false>(
   messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
@@ -41,8 +41,6 @@ export async function chatCompletion<Stream extends boolean = false>(
     throw new Error('OPENAI_API_KEY is not configured.')
   }
 
-  /* The cast below unifies the streaming / non-streaming variants while
-     preserving strict type-safety for call-sites. */
   const completion = await openAiClient.chat.completions.create(
     {
       model,
@@ -52,9 +50,17 @@ export async function chatCompletion<Stream extends boolean = false>(
     } as OpenAI.Chat.Completions.ChatCompletionCreateParams,
   )
 
-  return (stream
-    ? completion
-    : completion.choices[0].message?.content ?? '') as any
+  /* Narrow the return value based on the compile-time <Stream> boolean. */
+  if (stream) {
+    return completion as Stream extends true
+      ? OpenAI.Chat.Completions.ChatCompletion
+      : never
+  }
+
+  const message =
+    (completion as OpenAI.Chat.Completions.ChatCompletion).choices[0]?.message?.content ?? ''
+
+  return message as Stream extends true ? never : string
 }
 
 /* -------------------------------------------------------------------------- */
