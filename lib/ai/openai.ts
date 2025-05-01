@@ -5,7 +5,7 @@ import {
   summariseProfileMessages,
   candidateFitMessages,
 } from '@/lib/ai/prompts'
-import { validateCandidateFitJson } from '@/lib/ai/fit-summary'
+import { validateCandidateFitJson, validateQuizScoreResponse } from '@/lib/ai/validators'
 
 /* -------------------------------------------------------------------------- */
 /*                           S I N G L E T O N   C L I E N T                  */
@@ -95,13 +95,14 @@ export async function openAIAssess(
   answer: string,
   quizTitle: string,
 ): Promise<{ aiScore: number }> {
-  const raw = await chatCompletion(strictGraderMessages(quizTitle, answer))
+  /* Strict grader with auto-validation & up to 3 retries */
+  const raw = await chatCompletion(strictGraderMessages(quizTitle, answer), {
+    maxRetries: 3,
+    validate: validateQuizScoreResponse,
+  })
+
+  /* Safe parse (should always succeed after validation) */
   const parsed = parseInt(raw.replace(/[^0-9]/g, ''), 10)
-
-  if (Number.isNaN(parsed)) {
-    throw new Error(`Invalid score returned from OpenAI: "${raw}"`)
-  }
-
   return { aiScore: parsed }
 }
 
