@@ -8,7 +8,7 @@ import { z } from 'zod'
 import { validatedActionWithUser } from '@/lib/auth/middleware'
 import { provider, didRegistry } from '@/lib/contracts'
 import { createFlareDID } from '@/lib/contracts/flare'
-import { upsertEnv } from '@/lib/utils/env'
+import { upsertEnv } from '@/lib/utils/env.server'
 
 /* -------------------------------------------------------------------------- */
 /*                                V A L I D A T I O N                         */
