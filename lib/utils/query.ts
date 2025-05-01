@@ -160,12 +160,3 @@ export function getSectionParams(
 
   return { page, pageSize, sort, order, searchTerm, initialParams }
 }
-
-/* -------------------------------------------------------------------------- */
-/*                             Misc convenience                               */
-/* -------------------------------------------------------------------------- */
-
-/** Lower-case variant of {@link getSearchTerm}. */
-export function getSearchTermLower(params: Query): string {
-  return getSearchTerm(params).toLowerCase()
-}
