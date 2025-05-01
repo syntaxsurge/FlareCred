@@ -25,6 +25,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import StatusBadge from '@/components/ui/status-badge'
 import GenerateSummaryButton from '@/components/dashboard/candidate/generate-summary-button'
+import GenerateFitButton from '@/components/dashboard/recruiter/generate-fit-button'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { SnapshotMetrics } from '@/lib/types/candidate'
@@ -235,7 +236,10 @@ export default function CandidateDetailedProfileView({
               <div>
                 <CardTitle>AI Summary</CardTitle>
               </div>
-              <GenerateSummaryButton candidateId={candidateId} />
+              <div className='flex gap-2'>
+                <GenerateSummaryButton candidateId={candidateId} />
+                <GenerateFitButton candidateId={candidateId} />
+              </div>
             </CardHeader>
             <CardContent>
               {summary ? (

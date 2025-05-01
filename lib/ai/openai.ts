@@ -1,20 +1,30 @@
 import OpenAI from 'openai'
 
 import { OPENAI_API_KEY } from '@/lib/config'
-import { strictGraderMessages, summariseProfileMessages } from '@/lib/ai/prompts'
+import {
+  strictGraderMessages,
+  summariseProfileMessages,
+  candidateFitMessages,
+} from '@/lib/ai/prompts'
 
+/* -------------------------------------------------------------------------- */
+/*                           S I N G L E T O N   C L I E N T                  */
+/* -------------------------------------------------------------------------- */
 
-/** Singleton OpenAI client reused across the application. */
 export const openAiClient = new OpenAI({
   apiKey: OPENAI_API_KEY,
 })
 
+/* -------------------------------------------------------------------------- */
+/*                       G E N E R I C   C H A T   W R A P P E R              */
+/* -------------------------------------------------------------------------- */
+
 /**
  * Wrapper around <code>openAiClient.chat.completions.create</code>.
  *
- * When `stream` is `true` the raw
- * `ChatCompletion` object is returned; otherwise the helper
- * extracts and returns the assistant-message `content` string.
+ * When <code>stream</code> is <code>true</code> the raw
+ * <code>ChatCompletion</code> object is returned; otherwise the helper
+ * extracts and returns the assistant-message <code>content</code> string.
  */
 export async function chatCompletion<Stream extends boolean = false>(
   messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
@@ -30,63 +40,63 @@ export async function chatCompletion<Stream extends boolean = false>(
     ? OpenAI.Chat.Completions.ChatCompletion
     : string
 > {
-  if (!OPENAI_API_KEY) {
-    throw new Error('OPENAI_API_KEY is not configured.')
-  }
+  if (!OPENAI_API_KEY) throw new Error('OPENAI_API_KEY is not configured.')
 
   const completion = await openAiClient.chat.completions.create(
-    {
-      model,
-      messages,
-      stream,
-      ...opts,
-    } as OpenAI.Chat.Completions.ChatCompletionCreateParams,
+    { model, messages, stream, ...opts } as OpenAI.Chat.Completions.ChatCompletionCreateParams,
   )
 
-  /* Narrow the return value based on the compile-time <Stream> boolean. */
-  if (stream) {
-    return completion as Stream extends true
-      ? OpenAI.Chat.Completions.ChatCompletion
-      : never
-  }
+  if (stream) return completion as any
 
   const message =
     (completion as OpenAI.Chat.Completions.ChatCompletion).choices[0]?.message?.content ?? ''
 
-  return message as Stream extends true ? never : string
+  return message.trim() as any
 }
 
-/**
- * Grade a free-text quiz answer (0-100) using GPT-4o.
- * Falls back to a pseudo-random score when no API key is set.
- */
+/* -------------------------------------------------------------------------- */
+/*                       Q U I Z   A S S E S S M E N T                        */
+/* -------------------------------------------------------------------------- */
+
 export async function openAIAssess(
   answer: string,
   quizTitle: string,
 ): Promise<{ aiScore: number }> {
-  if (!OPENAI_API_KEY) {
-    return { aiScore: Math.floor(Math.random() * 101) }
-  }
+  if (!OPENAI_API_KEY) return { aiScore: Math.floor(Math.random() * 101) }
 
-  const raw = await chatCompletion(strictGraderMessages(quizTitle, answer), {
-    model: 'gpt-4o',
-  })
-
-  const parsed = parseInt(String(raw).replace(/[^0-9]/g, ''), 10)
+  const raw = await chatCompletion(strictGraderMessages(quizTitle, answer))
+  const parsed = parseInt(raw.replace(/[^0-9]/g, ''), 10)
   return { aiScore: Number.isNaN(parsed) ? Math.floor(Math.random() * 101) : parsed }
 }
 
-/**
- * Produce an ≈N-word professional summary of a raw candidate profile.
- */
+/* -------------------------------------------------------------------------- */
+/*                      C A N D I D A T E   P R O F I L E                     */
+/* -------------------------------------------------------------------------- */
+
 export async function summariseCandidateProfile(
   profile: string,
   words = 120,
 ): Promise<string> {
-  const summary = await chatCompletion(
-    summariseProfileMessages(profile, words),
-    { model: 'gpt-4o' },
-  )
+  const summary = await chatCompletion(summariseProfileMessages(profile, words))
+  return summary
+}
 
-  return summary.trim()
+/* -------------------------------------------------------------------------- */
+/*                     R E C R U I T E R   F I T   S U M M A R Y              */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Generate a structured "Why hire this candidate” summary tailored to a
+ * recruiter’s pipelines.  Returns the raw JSON string produced by the LLM.
+ *
+ * @param pipelinesStr  Concatenated recruiter pipeline descriptions (<=20)
+ * @param profileStr    Candidate profile text (bio + credentials)
+ */
+export async function generateCandidateFitSummary(
+  pipelinesStr: string,
+  profileStr: string,
+): Promise<string> {
+  if (!OPENAI_API_KEY) throw new Error('OPENAI features disabled – no API key.')
+
+  return await chatCompletion(candidateFitMessages(pipelinesStr, profileStr))
 }
