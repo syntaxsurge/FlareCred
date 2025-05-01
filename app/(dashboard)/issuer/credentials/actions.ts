@@ -12,7 +12,6 @@ import { db } from '@/lib/db/drizzle'
 import { candidateCredentials, CredentialStatus, candidates } from '@/lib/db/schema/candidate'
 import { users, teams, teamMembers } from '@/lib/db/schema/core'
 import { issuers } from '@/lib/db/schema/issuer'
-import { buildError } from '@/lib/utils'
 import { extractAddressFromDid, toBytes32 } from '@/lib/utils/address'
 import { signCredentialMint } from '@/lib/utils/signature'
 
@@ -28,8 +27,8 @@ export const approveCredentialAction = validatedActionWithUser(
       .from(issuers)
       .where(eq(issuers.ownerUserId, user.id))
       .limit(1)
-    if (!issuer) return buildError('Issuer not found.')
-    if (!issuer.did) return buildError('Link a DID before approving credentials.')
+    if (!issuer) return { error: 'Issuer not found.' }
+    if (!issuer.did) return { error: 'Link a DID before approving credentials.' }
 
     const [cred] = await db
       .select()
@@ -41,8 +40,9 @@ export const approveCredentialAction = validatedActionWithUser(
         ),
       )
       .limit(1)
-    if (!cred) return buildError('Credential not found for this issuer.')
-    if (cred.status === CredentialStatus.VERIFIED) return buildError('Credential already verified.')
+    if (!cred) return { error: 'Credential not found for this issuer.' }
+    if (cred.status === CredentialStatus.VERIFIED)
+      return { error: 'Credential already verified.' }
 
     let parsedProof: unknown = cred.proofData
     try {
@@ -59,9 +59,10 @@ export const approveCredentialAction = validatedActionWithUser(
 
       await verifyFdcProof(cred.proofType, parsedProof)
     } catch (err: any) {
-      return buildError(`FDC verification failed: ${err?.message ?? String(err)}`)
+      return { error: `FDC verification failed: ${err?.message ?? String(err)}` }
     }
 
+    /* ------------------------- optional tx parsing ------------------------ */
     let proofTx: string | undefined
     try {
       if (cred.proofType === 'EVM' || cred.proofType === 'PAYMENT') {
@@ -80,13 +81,14 @@ export const approveCredentialAction = validatedActionWithUser(
       /* ignore */
     }
 
+    /* ----------------------- candidate + subject DID ---------------------- */
     const [candRow] = await db
       .select({ cand: candidates, candUser: users })
       .from(candidates)
       .leftJoin(users, eq(candidates.userId, users.id))
       .where(eq(candidates.id, cred.candidateId))
       .limit(1)
-    if (!candRow?.candUser) return buildError('Candidate user not found.')
+    if (!candRow?.candUser) return { error: 'Candidate user not found.' }
 
     const [teamRow] = await db
       .select({ did: teams.did })
@@ -96,8 +98,9 @@ export const approveCredentialAction = validatedActionWithUser(
       .limit(1)
     const subjectDid = teamRow?.did
     if (!subjectDid)
-      return buildError('Candidate has no DID – ask them to create one before verification.')
+      return { error: 'Candidate has no DID – ask them to create one before verification.' }
 
+    /* ---------------------- VC creation & anchoring ----------------------- */
     let vcJsonText: string | undefined = cred.vcJson ?? undefined
     let tokenId: string | undefined
     let txHash: string | undefined
@@ -132,17 +135,19 @@ export const approveCredentialAction = validatedActionWithUser(
       const vcHash = toBytes32(vcJsonText)
 
       const to = extractAddressFromDid(subjectDid)
-      if (!to) return buildError('Malformed subject DID.')
+      if (!to) return { error: 'Malformed subject DID.' }
 
       const PK = process.env.PLATFORM_SIGNER_PRIVATE_KEY
-      if (!PK) return buildError('Platform signer private key not configured.')
+      if (!PK) return { error: 'Platform signer private key not configured.' }
       const platformSigner = new ethers.Wallet(PK, provider)
 
       let sig: string
       try {
         sig = await signCredentialMint(to, vcHash, '')
       } catch (err: any) {
-        return buildError(`Failed to create platform signature: ${err?.message || String(err)}`)
+        return {
+          error: `Failed to create platform signature: ${err?.message || String(err)}`,
+        }
       }
 
       try {
@@ -156,10 +161,11 @@ export const approveCredentialAction = validatedActionWithUser(
         tokenId = res.tokenId.toString()
         txHash = res.txHash
       } catch (err: any) {
-        return buildError(`Failed to anchor credential: ${err?.message || String(err)}`)
+        return { error: `Failed to anchor credential: ${err?.message || String(err)}` }
       }
     }
 
+    /* ---------------------- merge / construct vcJson ---------------------- */
     let newVcJson: string
     try {
       const baseVcObj =
@@ -209,7 +215,7 @@ export const rejectCredentialAction = validatedActionWithUser(
       .from(issuers)
       .where(eq(issuers.ownerUserId, user.id))
       .limit(1)
-    if (!issuer) return buildError('Issuer not found.')
+    if (!issuer) return { error: 'Issuer not found.' }
 
     await db
       .update(candidateCredentials)
@@ -241,7 +247,7 @@ export const unverifyCredentialAction = validatedActionWithUser(
       .from(issuers)
       .where(eq(issuers.ownerUserId, user.id))
       .limit(1)
-    if (!issuer) return buildError('Issuer not found.')
+    if (!issuer) return { error: 'Issuer not found.' }
 
     const [cred] = await db
       .select()
@@ -253,9 +259,9 @@ export const unverifyCredentialAction = validatedActionWithUser(
         ),
       )
       .limit(1)
-    if (!cred) return buildError('Credential not found for this issuer.')
+    if (!cred) return { error: 'Credential not found for this issuer.' }
     if (cred.status !== CredentialStatus.VERIFIED)
-      return buildError('Only verified credentials can be unverified.')
+      return { error: 'Only verified credentials can be unverified.' }
 
     await db
       .update(candidateCredentials)

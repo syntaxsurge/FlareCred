@@ -6,10 +6,6 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function buildError(message: string) {
-  return { error: message }
-}
-
 export function copyToClipboard(text: string) {
   navigator.clipboard
     .writeText(text)
