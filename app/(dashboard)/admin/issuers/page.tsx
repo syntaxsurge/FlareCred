@@ -1,12 +1,10 @@
-import { redirect } from 'next/navigation'
-
 import { Building } from 'lucide-react'
 
 import AdminIssuersTable from '@/components/dashboard/admin/issuers-table'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
+import { requireAuth } from '@/lib/auth/guards'
 import { getAdminIssuersPage } from '@/lib/db/queries/admin-issuers'
-import { getUser } from '@/lib/db/queries/queries'
 import type { AdminIssuerRow } from '@/lib/types/tables'
 import { getTableParams, resolveSearchParams, type Query } from '@/lib/utils/query'
 
@@ -21,9 +19,7 @@ export default async function AdminIssuersPage({
   const params = await resolveSearchParams(searchParams)
 
   /* Auth guard */
-  const currentUser = await getUser()
-  if (!currentUser) redirect('/connect-wallet')
-  if (currentUser.role !== 'admin') redirect('/dashboard')
+  await requireAuth(['admin'])
 
   /* ---------------------- Pagination, sort, search ----------------------- */
   const { page, pageSize, sort, order, searchTerm, initialParams } = getTableParams(

@@ -1,12 +1,10 @@
-import { redirect } from 'next/navigation'
-
 import { Users } from 'lucide-react'
 
 import AdminUsersTable from '@/components/dashboard/admin/users-table'
 import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
+import { requireAuth } from '@/lib/auth/guards'
 import { getAdminUsersPage } from '@/lib/db/queries/admin-users'
-import { getUser } from '@/lib/db/queries/queries'
 import type { AdminUserRow } from '@/lib/types/tables'
 import { getTableParams, resolveSearchParams, type Query } from '@/lib/utils/query'
 
@@ -20,9 +18,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams?: 
   const params = await resolveSearchParams(searchParams)
 
   /* ------------------------------ Auth --------------------------------- */
-  const currentUser = await getUser()
-  if (!currentUser) redirect('/connect-wallet')
-  if (currentUser.role !== 'admin') redirect('/dashboard')
+  await requireAuth(['admin'])
 
   /* -------------------------- Table helpers --------------------------- */
   const { page, pageSize, sort, order, searchTerm, initialParams } = getTableParams(
