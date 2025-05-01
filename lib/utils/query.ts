@@ -143,9 +143,7 @@ export function getSectionParams(
   const page = Math.max(1, Number(getParam(params, `${prefix}Page`) ?? '1'))
 
   const sizeRaw = Number(getParam(params, `${prefix}Size`) ?? '10')
-  const pageSize = (PAGE_SIZES as readonly number[]).includes(sizeRaw)
-    ? (sizeRaw as PageSize)
-    : 10
+  const pageSize = (PAGE_SIZES as readonly number[]).includes(sizeRaw) ? (sizeRaw as PageSize) : 10
 
   const sortRaw = getParam(params, `${prefix}Sort`) ?? defaultSort
   const sort = allowedSort.includes(sortRaw) ? sortRaw : defaultSort

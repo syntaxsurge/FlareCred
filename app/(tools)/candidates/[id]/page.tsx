@@ -17,10 +17,8 @@ import {
 import { issuers } from '@/lib/db/schema/issuer'
 import { recruiterPipelines } from '@/lib/db/schema/recruiter'
 import { recruiterCandidateFits } from '@/lib/db/schema/recruiter-fit'
-import { STAGES } from '@/lib/constants/recruiter'
 import type { StatusCounts } from '@/lib/types/candidate'
 import type { PipelineEntryRow, RecruiterCredentialRow, SkillPassRow } from '@/lib/types/tables'
-import { Stage } from '@/lib/types/recruiter'
 import {
   getTableParams,
   getSectionParams,

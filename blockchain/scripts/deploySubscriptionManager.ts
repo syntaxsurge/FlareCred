@@ -15,9 +15,7 @@ async function main(): Promise<void> {
   const plusPriceEnv = process.env.SUBSCRIPTION_PRICE_WEI_PLUS;
 
   if (!basePriceEnv || !plusPriceEnv) {
-    throw new Error(
-      'Missing SUBSCRIPTION_PRICE_WEI_BASE or SUBSCRIPTION_PRICE_WEI_PLUS environment variables',
-    );
+    throw new Error("Missing SUBSCRIPTION_PRICE_WEI_BASE or SUBSCRIPTION_PRICE_WEI_PLUS environment variables");
   }
 
   const basePrice = BigInt(basePriceEnv);
