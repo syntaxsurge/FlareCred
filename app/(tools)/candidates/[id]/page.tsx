@@ -20,9 +20,7 @@ import { recruiterCandidateFits } from '@/lib/db/schema/recruiter-fit'
 import type { StatusCounts } from '@/lib/types/candidate'
 import type { PipelineEntryRow, RecruiterCredentialRow, SkillPassRow } from '@/lib/types/tables'
 import {
-  parsePagination,
-  parseSort,
-  getSearchTerm,
+  getTableParams,
   getParam,
   pickParams,
   resolveSearchParams,
@@ -133,13 +131,14 @@ export default async function PublicCandidateProfile({
   /* ---------------------------------------------------------------------- */
   /*                 Credentials (shared core helper)                       */
   /* ---------------------------------------------------------------------- */
-  const { page, pageSize } = parsePagination(q)
-  const { sort, order } = parseSort(
-    q,
-    ['status', 'title', 'issuer', 'category', 'type', 'id'] as const,
-    'status',
-  )
-  const searchTerm = getSearchTerm(q)
+  const {
+    page,
+    pageSize,
+    sort,
+    order,
+    searchTerm,
+    initialParams: credInitialParams,
+  } = getTableParams(q, ['status', 'title', 'issuer', 'category', 'type', 'id'] as const, 'status')
 
   const {
     rows: rawCredRows,
@@ -165,7 +164,7 @@ export default async function PublicCandidateProfile({
     vcJson: c.vcJson ?? null,
   }))
 
-  const credInitialParams = pickParams(q, ['size', 'sort', 'order', 'q'])
+  /* credInitialParams provided by getTableParams */
 
   /* ---------------------------------------------------------------------- */
   /*                     Skill Passes (shared helper)                       */

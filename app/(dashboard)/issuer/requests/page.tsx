@@ -12,38 +12,33 @@ import { getIssuerRequestsPage } from '@/lib/db/queries/issuer-requests'
 import { getUser } from '@/lib/db/queries/queries'
 import { issuers } from '@/lib/db/schema/issuer'
 import type { IssuerRequestRow } from '@/lib/types/tables'
-import {
-  parsePagination,
-  parseSort,
-  getSearchTerm,
-  pickParams,
-  resolveSearchParams,
-  type Query,
-} from '@/lib/utils/query'
+import { getTableParams, resolveSearchParams, type Query } from '@/lib/utils/query'
 
 export const revalidate = 0
 
+/* -------------------------------------------------------------------------- */
+/*                                   Page                                     */
+/* -------------------------------------------------------------------------- */
+
 export default async function RequestsPage({ searchParams }: { searchParams?: Promise<Query> }) {
-  /* Resolve sync/async `searchParams` uniformly */
+  /* Resolve synchronous or async `searchParams` uniformly */
   const params = await resolveSearchParams(searchParams)
 
-  /* Auth & issuer ownership */
+  /* --------------------------- Auth & issuer ---------------------------- */
   const user = await getUser()
   if (!user) redirect('/connect-wallet')
 
   const [issuer] = await db.select().from(issuers).where(eq(issuers.ownerUserId, user.id)).limit(1)
   if (!issuer) redirect('/issuer/onboard')
 
-  /* --------------------------- Query params --------------------------- */
-  const { page, pageSize } = parsePagination(params)
-  const { sort, order } = parseSort(
+  /* -------------------- Pagination / sort / search ---------------------- */
+  const { page, pageSize, sort, order, searchTerm, initialParams } = getTableParams(
     params,
     ['title', 'type', 'status', 'candidate'] as const,
     'status',
   )
-  const searchTerm = getSearchTerm(params)
 
-  /* ------------------------------ Data -------------------------------- */
+  /* ------------------------------ Data ---------------------------------- */
   const { requests, hasNext } = await getIssuerRequestsPage(
     issuer.id,
     page,
@@ -55,10 +50,7 @@ export default async function RequestsPage({ searchParams }: { searchParams?: Pr
 
   const rows: IssuerRequestRow[] = requests
 
-  /* ----------------------- Preserve query params ---------------------- */
-  const initialParams = pickParams(params, ['size', 'sort', 'order', 'q'])
-
-  /* ------------------------------ View -------------------------------- */
+  /* ------------------------------ View ---------------------------------- */
   return (
     <RequireDidGate createPath='/issuer/create-did'>
       <PageCard

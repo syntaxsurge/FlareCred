@@ -6,9 +6,9 @@ import * as React from 'react'
 import { ActionButton } from '@/components/ui/action-button'
 import { STAGES } from '@/lib/constants/recruiter'
 import type { UpdateStageFormProps } from '@/lib/types/forms'
+import { Stage } from '@/lib/types/recruiter'
 
 import { updateCandidateStageAction } from './actions'
-import { Stage } from '@/lib/types/recruiter'
 
 export default function UpdateStageForm({
   pipelineCandidateId,

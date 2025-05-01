@@ -6,14 +6,7 @@ import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
 import { getTeamMembersPage } from '@/lib/db/queries/team-members'
 import { teamMembers, teams } from '@/lib/db/schema/core'
-import {
-  parsePagination,
-  parseSort,
-  getSearchTerm,
-  pickParams,
-  resolveSearchParams,
-  type Query,
-} from '@/lib/utils/query'
+import { getTableParams, resolveSearchParams, type Query } from '@/lib/utils/query'
 
 import { Settings } from './settings'
 
@@ -30,10 +23,11 @@ export default async function TeamSettingsPage({
 }) {
   const params = await resolveSearchParams(searchParams)
 
+  /* ------------------------------ Auth ----------------------------------- */
   const user = await getUser()
   if (!user) redirect('/connect-wallet')
 
-  /* --------------------------- Locate team -------------------------------- */
+  /* --------------------------- Locate team ------------------------------- */
   const [membership] = await db
     .select({ teamId: teamMembers.teamId, role: teamMembers.role })
     .from(teamMembers)
@@ -62,16 +56,14 @@ export default async function TeamSettingsPage({
     .where(eq(teams.id, teamId))
     .limit(1)
 
-  /* --------------------------- Query params ------------------------------ */
-  const { page, pageSize } = parsePagination(params)
-  const { sort, order } = parseSort(
+  /* -------------------- Pagination / sort / search ---------------------- */
+  const { page, pageSize, sort, order, searchTerm, initialParams } = getTableParams(
     params,
     ['name', 'email', 'role', 'joinedAt'] as const,
     'joinedAt',
   )
-  const searchTerm = getSearchTerm(params)
 
-  /* ---------------------------- Data fetch -------------------------------- */
+  /* ------------------------------ Data ---------------------------------- */
   const { members, hasNext } = await getTeamMembersPage(
     teamId,
     page,
@@ -90,12 +82,9 @@ export default async function TeamSettingsPage({
     joinedAt: new Date(m.joinedAt).toISOString(),
   }))
 
-  /* ------------------------ Build initialParams -------------------------- */
-  const initialParams = pickParams(params, ['size', 'sort', 'order', 'q'])
-
   const isOwner = membership?.role === 'owner'
 
-  /* ------------------------------ View ----------------------------------- */
+  /* ------------------------------ View ---------------------------------- */
   return (
     <Settings
       team={team}
