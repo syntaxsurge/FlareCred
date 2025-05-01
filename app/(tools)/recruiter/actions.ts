@@ -1,8 +1,6 @@
 'use server'
 
-import { format } from 'date-fns'
 import { eq } from 'drizzle-orm'
-import { createHash } from 'crypto'
 
 import { getUser } from '@/lib/db/queries/queries'
 import { getRecruiterPipelinesPage } from '@/lib/db/queries/recruiter-pipelines'
@@ -13,16 +11,20 @@ import {
 } from '@/lib/db/schema/candidate'
 import { issuers } from '@/lib/db/schema/issuer'
 import { generateCandidateFitSummary } from '@/lib/ai/openai'
+import { validateCandidateFitJson } from '@/lib/ai/fit-summary'
+
+/* -------------------------------------------------------------------------- */
+/*               R E C R U I T E R   " W H Y   H I R E ”  A C T I O N        */
+/* -------------------------------------------------------------------------- */
 
 /**
- * Generate a recruiter-specific fit summary for a candidate and return it
- * directly (no persistence – the caller handles display or caching).
+ * Generate a recruiter-specific fit summary for a candidate.
+ * Retries up to 3 times when OpenAI returns malformed JSON.
  *
- * Guards:
- * • User must be an authenticated recruiter.
- * • Limits pipelines to 20 most-recent entries to control token cost.
+ * @throws Error with detailed reason when validation fails after 3 attempts.
  */
 export async function generateCandidateFit(candidateId: number): Promise<string> {
+  /* ----------------------------- Auth guard ----------------------------- */
   const user = await getUser()
   if (!user) {
     throw new Error(
@@ -37,9 +39,7 @@ export async function generateCandidateFit(candidateId: number): Promise<string>
     )
   }
 
-  /* ------------------------------------------------------------ */
-  /*                  Fetch up-to-20 recruiter pipelines           */
-  /* ------------------------------------------------------------ */
+  /* ------------------ Fetch up-to-20 recruiter pipelines ---------------- */
   const { pipelines } = await getRecruiterPipelinesPage(
     user.id,
     1,
@@ -59,9 +59,7 @@ export async function generateCandidateFit(candidateId: number): Promise<string>
           )
           .join('\n')
 
-  /* ------------------------------------------------------------ */
-  /*                    Build candidate profile text              */
-  /* ------------------------------------------------------------ */
+  /* ---------------------- Build candidate profile text ------------------ */
   const [cand] = await db
     .select({
       bio: candidates.bio,
@@ -87,11 +85,33 @@ export async function generateCandidateFit(candidateId: number): Promise<string>
     'Credentials:',
     ...creds.map((c) => `• ${c.title}${c.issuer ? ` – ${c.issuer}` : ''}`),
   ]
-
   const profileStr = profileLines.join('\n').trim()
 
-  /* ------------------------------------------------------------ */
-  /*              Call OpenAI and return raw JSON string          */
-  /* ------------------------------------------------------------ */
-  return await generateCandidateFitSummary(pipelineText, profileStr)
+  /* -------------------- Call OpenAI with validation & retry ------------- */
+  const MAX_RETRIES = 3
+  let lastError = 'Unknown error'
+
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    const raw = await generateCandidateFitSummary(pipelineText, profileStr)
+
+    try {
+      const parsed = JSON.parse(raw)
+      const validationMessage = validateCandidateFitJson(parsed)
+      if (!validationMessage) {
+        /* Success – return the raw JSON string as generated */
+        return raw.trim()
+      }
+      lastError = validationMessage
+    } catch (err: any) {
+      lastError = `Unable to parse JSON (${err?.message ?? 'unknown parse error'}).`
+    }
+    /* On failure, loop to retry */
+  }
+
+  /* All retries failed – throw detailed error for frontend toast */
+  throw new Error(
+    'OpenAI returned invalid JSON three times in a row. ' +
+    `Last validation error: ${lastError} ` +
+    'Please click "Why Hire” again to retry.',
+  )
 }
