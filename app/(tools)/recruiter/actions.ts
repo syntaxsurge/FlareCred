@@ -24,7 +24,18 @@ import { generateCandidateFitSummary } from '@/lib/ai/openai'
  */
 export async function generateCandidateFit(candidateId: number): Promise<string> {
   const user = await getUser()
-  if (!user || user.role !== 'recruiter') throw new Error('Not authorised.')
+  if (!user) {
+    throw new Error(
+      'You must be signed in with a recruiter account to generate a Why Hire summary. ' +
+      'Please connect your recruiter wallet and try again.',
+    )
+  }
+  if (user.role !== 'recruiter') {
+    throw new Error(
+      `Access denied – your current role "${user.role}" cannot generate Why Hire summaries. ` +
+      'Recruiter privileges are required.',
+    )
+  }
 
   /* ------------------------------------------------------------ */
   /*                  Fetch up-to-20 recruiter pipelines           */
