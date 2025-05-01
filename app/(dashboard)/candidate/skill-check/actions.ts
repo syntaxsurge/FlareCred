@@ -10,13 +10,8 @@ import { teams, teamMembers } from '@/lib/db/schema/core'
 import { extractAddressFromDid, toBytes32 } from '@/lib/utils/address'
 import { signCredentialMint } from '@/lib/utils/signature'
 
-import { openAIAssess } from './openai'
+import { openAIAssess } from '@/lib/ai/openai'          /* ← centralised helper */
 
-/**
- * Runs the AI assessment and returns signing payloads _without_
- * writing anything to the database – the quiz attempt will be
- * inserted only after the user mints the credential.
- */
 export async function startQuizAction(formData: FormData) {
   const user = await getUser()
   if (!user) return { score: 0, message: 'Not logged in.' }
