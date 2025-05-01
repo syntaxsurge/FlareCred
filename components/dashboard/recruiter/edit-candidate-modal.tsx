@@ -13,8 +13,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { STAGES, type Stage } from '@/lib/constants/recruiter'
+import { STAGES } from '@/lib/constants/recruiter'
 import type { EditCandidateModalProps } from '@/lib/types/components'
+import { Stage } from '@/lib/types/recruiter'
 
 /**
  * Reusable modal wrapper around updateCandidateStageAction.
