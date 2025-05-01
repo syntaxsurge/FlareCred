@@ -16,7 +16,8 @@
     "db:studio": "drizzle-kit studio",
     "db:push": "drizzle-kit generate && drizzle-kit push",
     "db:reset": "npx tsx lib/db/reset.ts",
-    "worker:github": "ts-node workers/githubMetrics.ts"
+    "worker:github": "ts-node workers/githubMetrics.ts",
+    "contracts:copy-abis": "tsx scripts/sync-abis.ts"
   },
   "dependencies": {
     "@esbuild-kit/core-utils": "^3.3.2",
