@@ -19,7 +19,7 @@ export const revalidate = 0
 export default async function ActivityPage({
   searchParams,
 }: {
-  searchParams: Promise<Query> | Query
+  searchParams?: Promise<Query>
 }) {
   /* Normalise Next.js `searchParams` (object or Promise) */
   const params = await resolveSearchParams(searchParams)

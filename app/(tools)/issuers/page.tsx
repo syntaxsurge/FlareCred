@@ -19,7 +19,7 @@ export const revalidate = 0
 export default async function IssuerDirectoryPage({
   searchParams,
 }: {
-  searchParams: Promise<Query> | Query
+  searchParams?: Promise<Query>
 }) {
   const params = await resolveSearchParams(searchParams)
 

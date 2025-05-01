@@ -20,7 +20,7 @@ export const revalidate = 0
 export default async function TalentSearchPage({
   searchParams,
 }: {
-  searchParams: Promise<Query> | Query
+  searchParams?: Promise<Query>
 }) {
   const params = await resolveSearchParams(searchParams)
 
