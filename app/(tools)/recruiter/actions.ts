@@ -1,5 +1,6 @@
 'use server'
 
+import { createHash } from 'crypto'
 import { and, eq } from 'drizzle-orm'
 
 import { getUser } from '@/lib/db/queries/queries'
@@ -10,20 +11,18 @@ import {
   candidateCredentials,
 } from '@/lib/db/schema/candidate'
 import { issuers } from '@/lib/db/schema/issuer'
+import {
+  recruiterCandidateFits,
+} from '@/lib/db/schema/recruiter-fit'
 import { generateCandidateFitSummary } from '@/lib/ai/openai'
-import { validateCandidateFitJson } from '@/lib/ai/fit-summary'
-import { createHash } from 'crypto'
-import { recruiterCandidateFits } from '@/lib/db/schema/recruiter-fit'
 
 /* -------------------------------------------------------------------------- */
-/*               R E C R U I T E R   " W H Y   H I R E ”  A C T I O N        */
+/*          R E C R U I T E R   " W H Y   H I R E ”  A C T I O N             */
 /* -------------------------------------------------------------------------- */
 
 /**
- * Generate a recruiter-specific fit summary for a candidate.
- * Retries up to 3 times when OpenAI returns malformed JSON.
- *
- * @throws Error with detailed reason when validation fails after 3 attempts.
+ * Generate (or fetch cached) recruiter-specific fit summary JSON for a candidate.
+ * Centralised validation lives inside <generateCandidateFitSummary/>.
  */
 export async function generateCandidateFit(candidateId: number): Promise<string> {
   /* ----------------------------- Auth guard ----------------------------- */
@@ -42,15 +41,21 @@ export async function generateCandidateFit(candidateId: number): Promise<string>
   }
 
   /* ------------------ Fetch up-to-20 recruiter pipelines ---------------- */
-  const { pipelines } = await getRecruiterPipelinesPage(user.id, 1, 20, 'createdAt', 'desc', '')
+  const { pipelines } = await getRecruiterPipelinesPage(
+    user.id,
+    1,
+    20,
+    'createdAt',
+    'desc',
+    '',
+  )
 
   const pipelineText =
     pipelines.length === 0
       ? 'NONE'
       : pipelines
           .map(
-            (p, i) =>
-              `${i + 1}. ${p.name}${p.description ? ` – ${p.description}` : ''}`,
+            (p, i) => `${i + 1}. ${p.name}${p.description ? ` – ${p.description}` : ''}`,
           )
           .join('\n')
 
@@ -69,19 +74,18 @@ export async function generateCandidateFit(candidateId: number): Promise<string>
     .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
     .where(eq(candidateCredentials.candidateId, candidateId))
 
-  const profileLines = [
-    cand.bio ?? '',
-    '',
-    'Credentials:',
-    ...creds.map((c) => `• ${c.title}${c.issuer ? ` – ${c.issuer}` : ''}`),
-  ]
-  const profileStr = profileLines.join('\n').trim()
+  const profileStr =
+    [
+      cand.bio ?? '',
+      '',
+      'Credentials:',
+      ...creds.map((c) => `• ${c.title}${c.issuer ? ` – ${c.issuer}` : ''}`),
+    ].join('\n').trim()
 
-  /* ----------------------------- Hash inputs ---------------------------- */
-  const profileHash = createHash('sha256').update(profileStr).digest('hex')
+  /* -------------------------- Cache look-up ----------------------------- */
+  const profileHash   = createHash('sha256').update(profileStr).digest('hex')
   const pipelinesHash = createHash('sha256').update(pipelineText).digest('hex')
 
-  /* -------------------------- Check cache first ------------------------- */
   const [cache] = await db
     .select()
     .from(recruiterCandidateFits)
@@ -97,140 +101,29 @@ export async function generateCandidateFit(candidateId: number): Promise<string>
     return cache.summaryJson
   }
 
-  /* -------------------- Call OpenAI with validation & retry ------------- */
-  const MAX_RETRIES = 3
-  let lastError = 'Unknown error'
+  /* -------------------- OpenAI call (with validation) ------------------- */
+  const summaryJson = await generateCandidateFitSummary(pipelineText, profileStr)
 
-  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-    const raw = await generateCandidateFitSummary(pipelineText, profileStr)
-
-    try {
-      const parsed = JSON.parse(raw)
-      const validationMessage = validateCandidateFitJson(parsed)
-      if (!validationMessage) {
-        /* ----------------- Persist (insert or update) -------------------- */
-        if (cache) {
-          await db
-            .update(recruiterCandidateFits)
-            .set({
-              summaryJson: raw.trim(),
-              profileHash,
-              pipelinesHash,
-              generatedAt: new Date(),
-            })
-            .where(eq(recruiterCandidateFits.id, cache.id))
-        } else {
-          await db.insert(recruiterCandidateFits).values({
-            recruiterId: user.id,
-            candidateId,
-            summaryJson: raw.trim(),
-            profileHash,
-            pipelinesHash,
-          })
-        }
-        return raw.trim()
-      }
-      lastError = validationMessage
-    } catch (err: any) {
-      lastError = `Unable to parse JSON (${err?.message ?? 'unknown parse error'}).`
-    }
-    /* Retry on failure */
-  }
-
-  throw new Error(
-    'OpenAI returned invalid JSON three times in a row. ' +
-      `Last validation error: ${lastError} ` +
-      'Please click "Why Hire” again to retry.',
-  )
-}
-  /* ----------------------------- Auth guard ----------------------------- */
-  const user = await getUser()
-  if (!user) {
-    throw new Error(
-      'You must be signed in with a recruiter account to generate a Why Hire summary. ' +
-      'Please connect your recruiter wallet and try again.',
-    )
-  }
-  if (user.role !== 'recruiter') {
-    throw new Error(
-      `Access denied – your current role "${user.role}" cannot generate Why Hire summaries. ` +
-      'Recruiter privileges are required.',
-    )
-  }
-
-  /* ------------------ Fetch up-to-20 recruiter pipelines ---------------- */
-  const { pipelines } = await getRecruiterPipelinesPage(
-    user.id,
-    1,
-    20,
-    'createdAt',
-    'desc',
-    '',
-  )
-
-  const pipelineText =
-    pipelines.length === 0
-      ? 'NONE'
-      : pipelines
-          .map(
-            (p, i) =>
-              `${i + 1}. ${p.name}${p.description ? ` – ${p.description}` : ''}`,
-          )
-          .join('\n')
-
-  /* ---------------------- Build candidate profile text ------------------ */
-  const [cand] = await db
-    .select({
-      bio: candidates.bio,
+  /* --------------------------- Persist cache ---------------------------- */
+  if (cache) {
+    await db
+      .update(recruiterCandidateFits)
+      .set({
+        summaryJson,
+        profileHash,
+        pipelinesHash,
+        generatedAt: new Date(),
+      })
+      .where(eq(recruiterCandidateFits.id, cache.id))
+  } else {
+    await db.insert(recruiterCandidateFits).values({
+      recruiterId: user.id,
+      candidateId,
+      summaryJson,
+      profileHash,
+      pipelinesHash,
     })
-    .from(candidates)
-    .where(eq(candidates.id, candidateId))
-    .limit(1)
-
-  if (!cand) throw new Error('Candidate not found.')
-
-  const creds = await db
-    .select({
-      title: candidateCredentials.title,
-      issuer: issuers.name,
-    })
-    .from(candidateCredentials)
-    .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
-    .where(eq(candidateCredentials.candidateId, candidateId))
-
-  const profileLines = [
-    cand.bio ?? '',
-    '',
-    'Credentials:',
-    ...creds.map((c) => `• ${c.title}${c.issuer ? ` – ${c.issuer}` : ''}`),
-  ]
-  const profileStr = profileLines.join('\n').trim()
-
-  /* -------------------- Call OpenAI with validation & retry ------------- */
-  const MAX_RETRIES = 3
-  let lastError = 'Unknown error'
-
-  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-    const raw = await generateCandidateFitSummary(pipelineText, profileStr)
-
-    try {
-      const parsed = JSON.parse(raw)
-      const validationMessage = validateCandidateFitJson(parsed)
-      if (!validationMessage) {
-        /* Success – return the raw JSON string as generated */
-        return raw.trim()
-      }
-      lastError = validationMessage
-    } catch (err: any) {
-      lastError = `Unable to parse JSON (${err?.message ?? 'unknown parse error'}).`
-    }
-    /* On failure, loop to retry */
   }
 
-  /* All retries failed – throw detailed error for frontend toast */
-  throw new Error(
-    'OpenAI returned invalid JSON three times in a row. ' +
-    `Last validation error: ${lastError} ` +
-    'Please click "Why Hire” again to retry.',
-  )
+  return summaryJson
 }

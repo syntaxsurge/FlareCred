@@ -1,11 +1,11 @@
 import OpenAI from 'openai'
-
 import { OPENAI_API_KEY } from '@/lib/config'
 import {
   strictGraderMessages,
   summariseProfileMessages,
   candidateFitMessages,
 } from '@/lib/ai/prompts'
+import { validateCandidateFitJson } from '@/lib/ai/fit-summary'
 
 /* -------------------------------------------------------------------------- */
 /*                           S I N G L E T O N   C L I E N T                  */
@@ -20,38 +20,71 @@ export const openAiClient = new OpenAI({
 /* -------------------------------------------------------------------------- */
 
 /**
- * Wrapper around <code>openAiClient.chat.completions.create</code>.
+ * Thin wrapper around <code>openAiClient.chat.completions.create</code> with
+ * built-in **validation & automatic retry** for non-streaming requests.
  *
  * When <code>stream</code> is <code>true</code> the raw
- * <code>ChatCompletion</code> object is returned; otherwise the helper
- * extracts and returns the assistant-message <code>content</code> string.
+ * <code>ChatCompletion</code> object is returned untouched.  Otherwise the
+ * helper extracts <code>assistant.content</code>, optionally validates it via
+ * <code>validate(raw) → string \| null</code> (null = valid) and retries up to
+ * <code>maxRetries</code> times before throwing a descriptive error.
  */
 export async function chatCompletion<Stream extends boolean = false>(
   messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
   {
     model = 'gpt-4o',
     stream = false as Stream,
+    validate,
+    maxRetries = 1,
     ...opts
   }: Partial<OpenAI.Chat.Completions.ChatCompletionCreateParams> & {
     stream?: Stream
+    /** Return <code>null</code> when valid; otherwise error message. */
+    validate?: (raw: string) => string | null
+    /** Attempts before giving up (only when <code>validate</code> supplied). */
+    maxRetries?: number
   } = {},
-): Promise<
-  Stream extends true
-    ? OpenAI.Chat.Completions.ChatCompletion
-    : string
-> {
-  if (!OPENAI_API_KEY) throw new Error('OPENAI_API_KEY is not configured.')
+): Promise<Stream extends true ? OpenAI.Chat.Completions.ChatCompletion : string> {
+  if (!OPENAI_API_KEY)
+    throw new Error('OPENAI_API_KEY is not configured or missing.')
 
-  const completion = await openAiClient.chat.completions.create(
-    { model, messages, stream, ...opts } as OpenAI.Chat.Completions.ChatCompletionCreateParams,
+  /* --------------------------- Stream: passthrough --------------------------- */
+  if (stream) {
+    return (await openAiClient.chat.completions.create(
+      { model, messages, stream: true, ...opts } as OpenAI.Chat.Completions.ChatCompletionCreateParams,
+    )) as any
+  }
+
+  /* -------------------- Non-stream: validation + retry ---------------------- */
+  let lastError = 'Unknown error'
+  const attempts = Math.max(1, maxRetries)
+
+  for (let i = 1; i <= attempts; i++) {
+    const completion = (await openAiClient.chat.completions.create(
+      { model, messages, ...opts } as OpenAI.Chat.Completions.ChatCompletionCreateParams,
+    )) as OpenAI.Chat.Completions.ChatCompletion
+
+    const raw = (completion.choices[0]?.message?.content ?? '').trim()
+
+    if (!validate) {
+      // No validation requested – return immediately
+      return raw as any
+    }
+
+    try {
+      const msg = validate(raw)
+      if (!msg) return raw as any
+      lastError = msg
+    } catch (err: any) {
+      lastError = err?.message ?? 'Validator threw an exception.'
+    }
+    /* retry */
+  }
+
+  throw new Error(
+    `OpenAI returned an invalid response after ${attempts} attempts. ` +
+      `Last validation error: ${lastError}`,
   )
-
-  if (stream) return completion as any
-
-  const message =
-    (completion as OpenAI.Chat.Completions.ChatCompletion).choices[0]?.message?.content ?? ''
-
-  return message.trim() as any
 }
 
 /* -------------------------------------------------------------------------- */
@@ -77,8 +110,7 @@ export async function summariseCandidateProfile(
   profile: string,
   words = 120,
 ): Promise<string> {
-  const summary = await chatCompletion(summariseProfileMessages(profile, words))
-  return summary
+  return await chatCompletion(summariseProfileMessages(profile, words))
 }
 
 /* -------------------------------------------------------------------------- */
@@ -86,17 +118,26 @@ export async function summariseCandidateProfile(
 /* -------------------------------------------------------------------------- */
 
 /**
- * Generate a structured "Why hire this candidate” summary tailored to a
- * recruiter’s pipelines.  Returns the raw JSON string produced by the LLM.
- *
- * @param pipelinesStr  Concatenated recruiter pipeline descriptions (<=20)
- * @param profileStr    Candidate profile text (bio + credentials)
+ * Generate a structured "Why Hire this candidate" summary.
+ * Validation & retry is delegated to <chatCompletion/>.
  */
 export async function generateCandidateFitSummary(
   pipelinesStr: string,
   profileStr: string,
 ): Promise<string> {
-  if (!OPENAI_API_KEY) throw new Error('OPENAI features disabled – no API key.')
+  if (!OPENAI_API_KEY)
+    throw new Error('OPENAI features disabled – no API key.')
 
-  return await chatCompletion(candidateFitMessages(pipelinesStr, profileStr))
+  return await chatCompletion(candidateFitMessages(pipelinesStr, profileStr), {
+    maxRetries: 3,
+    validate: (raw) => {
+      let parsed: any
+      try {
+        parsed = JSON.parse(raw)
+      } catch (err: any) {
+        return `Unable to parse JSON (${err?.message ?? 'unknown parse error'}).`
+      }
+      return validateCandidateFitJson(parsed)
+    },
+  })
 }
