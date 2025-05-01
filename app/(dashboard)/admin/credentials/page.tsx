@@ -25,9 +25,9 @@ const first = (p: Query, k: string) => (Array.isArray(p[k]) ? p[k]?.[0] : p[k])
 export default async function AdminCredentialsPage({
   searchParams,
 }: {
-  searchParams: Promise<Query> | Query
+  searchParams?: Query
 }) {
-  const params = (await searchParams) as Query
+  const params = (searchParams ?? {}) as Query
 
   const currentUser = await getUser()
   if (!currentUser) redirect('/connect-wallet')
