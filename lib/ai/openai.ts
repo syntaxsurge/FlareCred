@@ -1,6 +1,10 @@
 import OpenAI from 'openai'
 
 import { OPENAI_API_KEY } from '@/lib/config'
+import {
+  strictGraderMessages,
+  summariseProfileMessages,
+} from '@/lib/ai/prompts'
 
 /* -------------------------------------------------------------------------- */
 /*                           S H A R E D   O P E N A I                        */
@@ -69,19 +73,9 @@ export async function openAIAssess(
     return { aiScore: Math.floor(Math.random() * 101) }
   }
 
-  const raw = await chatCompletion(
-    [
-      {
-        role: 'system',
-        content: 'You are a strict exam grader. Respond ONLY with an integer 0-100.',
-      },
-      {
-        role: 'user',
-        content: `Quiz topic: ${quizTitle}\nCandidate answer: ${answer}\nGrade (0-100):`,
-      },
-    ],
-    { model: 'gpt-4o' },
-  )
+  const raw = await chatCompletion(strictGraderMessages(quizTitle, answer), {
+    model: 'gpt-4o',
+  })
 
   const parsed = parseInt(String(raw).replace(/[^0-9]/g, ''), 10)
   return { aiScore: isNaN(parsed) ? Math.floor(Math.random() * 101) : parsed }
@@ -94,17 +88,12 @@ export async function openAIAssess(
 /**
  * Produce an ~N-word professional summary of a raw candidate profile.
  */
-export async function summariseCandidateProfile(profile: string, words = 120): Promise<string> {
+export async function summariseCandidateProfile(
+  profile: string,
+  words = 120,
+): Promise<string> {
   const summary = await chatCompletion(
-    [
-      {
-        role: 'system',
-        content:
-          `Summarise the following candidate profile in approximately ${words} words. ` +
-          `Write in third-person professional tone without using personal pronouns.`,
-      },
-      { role: 'user', content: profile },
-    ],
+    summariseProfileMessages(profile, words),
     { model: 'gpt-4o' },
   )
 
