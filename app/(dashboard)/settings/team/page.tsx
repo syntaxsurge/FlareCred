@@ -6,7 +6,15 @@ import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
 import { getTeamMembersPage } from '@/lib/db/queries/team-members'
 import { teamMembers, teams } from '@/lib/db/schema/core'
-import { getParam, pickParams, resolveSearchParams, type Query } from '@/lib/utils/query'
+import {
+  parsePagination,
+  parseSort,
+  getSearchTerm,
+  getParam,
+  pickParams,
+  resolveSearchParams,
+  type Query,
+} from '@/lib/utils/query'
 
 import { Settings } from './settings'
 
@@ -56,14 +64,13 @@ export default async function TeamSettingsPage({
     .limit(1)
 
   /* --------------------------- Query params ------------------------------ */
-  const page = Math.max(1, Number(getParam(params, 'page') ?? '1'))
-
-  const sizeRaw = Number(getParam(params, 'size') ?? '10')
-  const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
-
-  const sort = getParam(params, 'sort') ?? 'joinedAt'
-  const order = getParam(params, 'order') === 'asc' ? 'asc' : 'desc'
-  const searchTerm = (getParam(params, 'q') ?? '').trim()
+  const { page, pageSize } = parsePagination(params)
+  const { sort, order } = parseSort(
+    params,
+    ['name', 'email', 'role', 'joinedAt'] as const,
+    'joinedAt',
+  )
+  const searchTerm = getSearchTerm(params)
 
   /* ---------------------------- Data fetch -------------------------------- */
   const { members, hasNext } = await getTeamMembersPage(

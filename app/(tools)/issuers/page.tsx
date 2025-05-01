@@ -9,6 +9,9 @@ import { db } from '@/lib/db/drizzle'
 import { issuers, IssuerStatus, IssuerCategory, IssuerIndustry } from '@/lib/db/schema/issuer'
 import type { IssuerDirectoryRow } from '@/lib/types/tables'
 import {
+  parsePagination,
+  parseSort,
+  getSearchTerm,
   getParam,
   resolveSearchParams,
   pickParams,
@@ -28,12 +31,13 @@ export default async function IssuerDirectoryPage({
 }) {
   const params = await resolveSearchParams(searchParams)
 
-  const page = Math.max(1, Number(getParam(params, 'page') ?? '1'))
-  const sizeRaw = Number(getParam(params, 'size') ?? '10')
-  const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
-  const sort = getParam(params, 'sort') ?? 'name'
-  const order = getParam(params, 'order') === 'desc' ? 'desc' : 'asc'
-  const searchTerm = (getParam(params, 'q') ?? '').trim()
+  const { page, pageSize } = parsePagination(params)
+  const { sort, order } = parseSort(
+    params,
+    ['name', 'domain', 'category', 'industry', 'createdAt'] as const,
+    'name',
+  )
+  const searchTerm = getSearchTerm(params)
   const categoryFilter = getParam(params, 'category')
   const industryFilter = getParam(params, 'industry')
 

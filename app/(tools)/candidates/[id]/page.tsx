@@ -23,7 +23,15 @@ import type {
   RecruiterCredentialRow,
   SkillPassRow,
 } from '@/lib/types/tables'
-import { getParam, pickParams, resolveSearchParams, type Query } from '@/lib/utils/query'
+import {
+  parsePagination,
+  parseSort,
+  getSearchTerm,
+  getParam,
+  pickParams,
+  resolveSearchParams,
+  type Query,
+} from '@/lib/utils/query'
 
 export const revalidate = 0
 
@@ -129,12 +137,13 @@ export default async function PublicCandidateProfile({
   /* ---------------------------------------------------------------------- */
   /*                 Credentials (shared core helper)                       */
   /* ---------------------------------------------------------------------- */
-  const page = Math.max(1, Number(getParam(q, 'page') ?? '1'))
-  const sizeRaw = Number(getParam(q, 'size') ?? '10')
-  const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
-  const sort = getParam(q, 'sort') ?? 'status'
-  const order = getParam(q, 'order') === 'asc' ? 'asc' : 'desc'
-  const searchTerm = (getParam(q, 'q') ?? '').trim()
+  const { page, pageSize } = parsePagination(q)
+  const { sort, order } = parseSort(
+    q,
+    ['status', 'title', 'issuer', 'category', 'type', 'id'] as const,
+    'status',
+  )
+  const searchTerm = getSearchTerm(q)
 
   const {
     rows: rawCredRows,
