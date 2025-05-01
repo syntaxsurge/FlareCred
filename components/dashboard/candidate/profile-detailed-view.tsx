@@ -230,20 +230,23 @@ export default function CandidateDetailedProfileView({
           )}
 
           {/* Summary */}
-          {summary ? (
-            <Card>
-              <CardHeader>
+          <Card>
+            <CardHeader className='flex flex-row items-start justify-between gap-2'>
+              <div>
                 <CardTitle>AI Summary</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className='whitespace-pre-line'>{summary}</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div>
+              </div>
               <GenerateSummaryButton candidateId={candidateId} />
-            </div>
-          )}
+            </CardHeader>
+            <CardContent>
+              {summary ? (
+                <p className='whitespace-pre-line'>{summary}</p>
+              ) : (
+                <p className='text-muted-foreground italic'>
+                  No AI summary generated yet — click the button above to create one.
+                </p>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Experience & Projects */}
           <Tabs defaultValue='experience' className='space-y-6'>
