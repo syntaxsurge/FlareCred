@@ -6,7 +6,7 @@ import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
 import { getTeamMembersPage } from '@/lib/db/queries/team-members'
 import { teamMembers, teams } from '@/lib/db/schema/core'
-import { getParam, type Query } from '@/lib/utils/query'
+import { getParam, resolveSearchParams, type Query } from '@/lib/utils/query'
 
 import { Settings } from './settings'
 
@@ -21,7 +21,7 @@ export default async function TeamSettingsPage({
 }: {
   searchParams: Promise<Query> | Query
 }) {
-  const params = (await searchParams) as Query
+  const params = await resolveSearchParams(searchParams)
 
   const user = await getUser()
   if (!user) redirect('/connect-wallet')

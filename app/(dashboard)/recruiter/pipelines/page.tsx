@@ -8,7 +8,7 @@ import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getUser } from '@/lib/db/queries/queries'
 import { getRecruiterPipelinesPage } from '@/lib/db/queries/recruiter-pipelines'
 import type { PipelineRow } from '@/lib/types/tables'
-import { getParam, type Query } from '@/lib/utils/query'
+import { getParam, resolveSearchParams, type Query } from '@/lib/utils/query'
 
 import NewPipelineDialog from './new-pipeline-dialog'
 
@@ -23,7 +23,8 @@ export default async function PipelinesPage({
 }: {
   searchParams: Query | Promise<Query>
 }) {
-  const params = (await searchParams) as Query
+  /* Normalise Next.js searchParams (supports object or Promise) */
+  const params = await resolveSearchParams(searchParams)
 
   /* ----------------------------- Auth guard ------------------------------ */
   const user = await getUser()
