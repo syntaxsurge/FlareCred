@@ -13,27 +13,40 @@ import { issuers } from '@/lib/db/schema/issuer'
 import { recruiterCandidateFits } from '@/lib/db/schema/recruiter-fit'
 
 /* -------------------------------------------------------------------------- */
+/*                             R E T U R N  T Y P E                           */
+/* -------------------------------------------------------------------------- */
+
+export interface GenerateCandidateFitResult {
+  /** Populated on success */
+  summaryJson?: string
+  /** Populated when the operation cannot proceed */
+  error?: string
+}
+
+/* -------------------------------------------------------------------------- */
 /*          R E C R U I T E R   " W H Y   H I R E ”  A C T I O N             */
 /* -------------------------------------------------------------------------- */
 
 /**
- * Generate (or fetch cached) recruiter-specific fit summary JSON for a candidate.
- * Centralised validation lives inside <generateCandidateFitSummary/>.
+ * Generate (or fetch cached) recruiter-specific fit-summary JSON for a candidate.
+ * When authentication fails or the user lacks recruiter privileges,
+ * the function returns <code>{ error }</code> instead of throwing.
  */
-export async function generateCandidateFit(candidateId: number): Promise<string> {
+export async function generateCandidateFit(
+  candidateId: number,
+): Promise<GenerateCandidateFitResult> {
   /* ----------------------------- Auth guard ----------------------------- */
   const user = await requireAuth()
   if (!user) {
-    throw new Error(
-      'You must be signed in with a recruiter account to generate a Why Hire summary. ' +
-        'Please connect your recruiter wallet and try again.',
-    )
+    return {
+      error:
+        'You must be signed in with a recruiter account to generate a Why Hire summary. Please connect your recruiter wallet and try again.',
+    }
   }
   if (user.role !== 'recruiter') {
-    throw new Error(
-      `Access denied – your current role "${user.role}" cannot generate Why Hire summaries. ` +
-        'Recruiter privileges are required.',
-    )
+    return {
+      error: `Access denied – your current role "${user.role}" cannot generate Why Hire summaries. Recruiter privileges are required.`,
+    }
   }
 
   /* ------------------ Fetch up-to-20 recruiter pipelines ---------------- */
@@ -53,7 +66,9 @@ export async function generateCandidateFit(candidateId: number): Promise<string>
     .where(eq(candidates.id, candidateId))
     .limit(1)
 
-  if (!cand) throw new Error('Candidate not found.')
+  if (!cand) {
+    return { error: 'Candidate not found.' }
+  }
 
   const creds = await db
     .select({ title: candidateCredentials.title, issuer: issuers.name })
@@ -86,7 +101,7 @@ export async function generateCandidateFit(candidateId: number): Promise<string>
     .limit(1)
 
   if (cache && cache.profileHash === profileHash && cache.pipelinesHash === pipelinesHash) {
-    return cache.summaryJson
+    return { summaryJson: cache.summaryJson }
   }
 
   /* -------------------- OpenAI call (with validation) ------------------- */
@@ -113,5 +128,5 @@ export async function generateCandidateFit(candidateId: number): Promise<string>
     })
   }
 
-  return summaryJson
+  return { summaryJson }
 }

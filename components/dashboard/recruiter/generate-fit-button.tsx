@@ -26,8 +26,11 @@ export default function GenerateFitButton({ candidateId, onGenerated }: Generate
     const toastId = toast.loading('Analysing fit…')
     startTransition(async () => {
       try {
-        const result = await generateCandidateFit(candidateId)
-        onGenerated?.(result)
+        const res = await generateCandidateFit(candidateId)
+        if ('error' in res && res.error) {
+          throw new Error(res.error)
+        }
+        onGenerated?.(res.summaryJson ?? '')
         toast.success('Fit summary generated.', { id: toastId, icon: <Sparkles /> })
         router.refresh()
       } catch (err: any) {
