@@ -25,7 +25,7 @@ const first = (p: Query, k: string) => (Array.isArray(p[k]) ? p[k]?.[0] : p[k])
 export default async function AdminCredentialsPage({
   searchParams,
 }: {
-  searchParams?: Query
+  searchParams?: Record<string, string | string[] | undefined>
 }) {
   const params = (searchParams ?? {}) as Query
 
