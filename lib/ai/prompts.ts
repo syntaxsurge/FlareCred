@@ -1,7 +1,3 @@
-/* -------------------------------------------------------------------------- */
-/*                       C E N T R A L I S E D   P R O M P T S                */
-/* -------------------------------------------------------------------------- */
-
 /**
  * Lightweight message object shape accepted by the OpenAI chat API.
  * (Avoids importing OpenAI types here to prevent circular dependencies.)
@@ -10,10 +6,6 @@ export type PromptMessage = {
   role: 'system' | 'user' | 'assistant'
   content: string
 }
-
-/* -------------------------------------------------------------------------- */
-/*                          S T R I C T   G R A D E R                         */
-/* -------------------------------------------------------------------------- */
 
 /**
  * Build the message array used by the AI quiz-grader.
@@ -33,10 +25,6 @@ export function strictGraderMessages(quizTitle: string, answer: string): PromptM
     },
   ]
 }
-
-/* -------------------------------------------------------------------------- */
-/*                        P R O F I L E   S U M M A R Y                       */
-/* -------------------------------------------------------------------------- */
 
 /**
  * Build the message array used to summarise a raw candidate profile.
