@@ -8,7 +8,7 @@ import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getAdminIssuersPage } from '@/lib/db/queries/admin-issuers'
 import { getUser } from '@/lib/db/queries/queries'
 import type { AdminIssuerRow } from '@/lib/types/tables'
-import { getParam as first, resolveSearchParams, type Query } from '@/lib/utils/query'
+import { getParam, resolveSearchParams, type Query } from '@/lib/utils/query'
 
 export const revalidate = 0
 
@@ -25,14 +25,14 @@ export default async function AdminIssuersPage({
   if (currentUser.role !== 'admin') redirect('/dashboard')
 
   /* --------------------------- Query params ------------------------------ */
-  const page = Math.max(1, Number(first(params, 'page') ?? '1'))
+  const page = Math.max(1, Number(getParam(params, 'page') ?? '1'))
 
-  const sizeRaw = Number(first(params, 'size') ?? '10')
+  const sizeRaw = Number(getParam(params, 'size') ?? '10')
   const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
 
-  const sort = first(params, 'sort') ?? 'id'
-  const order = first(params, 'order') === 'asc' ? 'asc' : 'desc'
-  const searchTerm = (first(params, 'q') ?? '').trim()
+  const sort = getParam(params, 'sort') ?? 'id'
+  const order = getParam(params, 'order') === 'asc' ? 'asc' : 'desc'
+  const searchTerm = (getParam(params, 'q') ?? '').trim()
 
   /* ---------------------------- Data fetch ------------------------------- */
   const { issuers, hasNext } = await getAdminIssuersPage(
@@ -56,7 +56,7 @@ export default async function AdminIssuersPage({
   /* ------------------------ Build initialParams -------------------------- */
   const initialParams: Record<string, string> = {}
   const keep = (k: string) => {
-    const v = first(params, k)
+    const v = getParam(params, k)
     if (v) initialParams[k] = v
   }
   keep('size')
