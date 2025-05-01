@@ -1,5 +1,7 @@
 import { eq, asc, and } from 'drizzle-orm'
 
+import { getParam, type Query } from '@/lib/utils/query'
+
 import CandidateDetailedProfileView from '@/components/dashboard/candidate/profile-detailed-view'
 import AddToPipelineForm from '@/components/recruiter/add-to-pipeline-form'
 import { db } from '@/lib/db/drizzle'
@@ -27,8 +29,6 @@ export const revalidate = 0
 /* -------------------------------------------------------------------------- */
 
 type Params = { id: string }
-type Query = Record<string, string | string[] | undefined>
-const first = (p: Query, k: string) => (Array.isArray(p[k]) ? p[k]?.[0] : p[k])
 
 /* -------------------------------------------------------------------------- */
 /*                                   Page                                     */
@@ -123,12 +123,12 @@ export default async function PublicCandidateProfile({
   /* ---------------------------------------------------------------------- */
   /*                 Credentials (shared core helper)                       */
   /* ---------------------------------------------------------------------- */
-  const page = Math.max(1, Number(first(q, 'page') ?? '1'))
-  const sizeRaw = Number(first(q, 'size') ?? '10')
+  const page = Math.max(1, Number(getParam(q, 'page') ?? '1'))
+  const sizeRaw = Number(getParam(q, 'size') ?? '10')
   const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
-  const sort = first(q, 'sort') ?? 'status'
-  const order = first(q, 'order') === 'asc' ? 'asc' : 'desc'
-  const searchTerm = (first(q, 'q') ?? '').trim()
+  const sort = getParam(q, 'sort') ?? 'status'
+  const order = getParam(q, 'order') === 'asc' ? 'asc' : 'desc'
+  const searchTerm = (getParam(q, 'q') ?? '').trim()
 
   const {
     rows: rawCredRows,
@@ -156,7 +156,7 @@ export default async function PublicCandidateProfile({
 
   const credInitialParams: Record<string, string> = {}
   const keep = (k: string) => {
-    const v = first(q, k)
+    const v = getParam(q, k)
     if (v) credInitialParams[k] = v
   }
   keep('size')
@@ -167,17 +167,17 @@ export default async function PublicCandidateProfile({
   /* ---------------------------------------------------------------------- */
   /*                     Skill Passes (shared helper)                       */
   /* ---------------------------------------------------------------------- */
-  const passPage = Math.max(1, Number(first(q, 'passPage') ?? '1'))
-  const passSizeRaw = Number(first(q, 'passSize') ?? '10')
+  const passPage = Math.max(1, Number(getParam(q, 'passPage') ?? '1'))
+  const passSizeRaw = Number(getParam(q, 'passSize') ?? '10')
   const passPageSize = [10, 20, 50].includes(passSizeRaw) ? passSizeRaw : 10
   const passAllowedSort = ['quizTitle', 'score', 'createdAt'] as const
   type PassSortKey = (typeof passAllowedSort)[number]
-  const passSortRaw = (first(q, 'passSort') ?? 'createdAt') as string
+  const passSortRaw = (getParam(q, 'passSort') ?? 'createdAt') as string
   const passSort: PassSortKey = passAllowedSort.includes(passSortRaw as PassSortKey)
     ? (passSortRaw as PassSortKey)
     : 'createdAt'
-  const passOrder = first(q, 'passOrder') === 'asc' ? 'asc' : 'desc'
-  const passSearch = (first(q, 'passQ') ?? '').trim()
+  const passOrder = getParam(q, 'passOrder') === 'asc' ? 'asc' : 'desc'
+  const passSearch = (getParam(q, 'passQ') ?? '').trim()
 
   const { rows: passRows, hasNext: passHasNext } = await getCandidateSkillPassesSection(
     candidateId,
@@ -190,7 +190,7 @@ export default async function PublicCandidateProfile({
 
   const passInitialParams: Record<string, string> = {}
   const keepPass = (k: string) => {
-    const v = first(q, k)
+    const v = getParam(q, k)
     if (v) passInitialParams[k] = v
   }
   ;['passSize', 'passSort', 'passOrder'].forEach(keepPass)
@@ -225,17 +225,17 @@ export default async function PublicCandidateProfile({
       .orderBy(asc(recruiterPipelines.name))
 
     /* --------------------- Pipeline entries listing ---------------------- */
-    const pipePage = Math.max(1, Number(first(q, 'pipePage') ?? '1'))
-    const pipeSizeRaw = Number(first(q, 'pipeSize') ?? '10')
+    const pipePage = Math.max(1, Number(getParam(q, 'pipePage') ?? '1'))
+    const pipeSizeRaw = Number(getParam(q, 'pipeSize') ?? '10')
     const pipePageSize = [10, 20, 50].includes(pipeSizeRaw) ? pipeSizeRaw : 10
     const allowedPipeSort = ['pipelineName', 'stage', 'addedAt'] as const
     type PipeSortKey = (typeof allowedPipeSort)[number]
-    const pipeSortRaw = (first(q, 'pipeSort') ?? 'addedAt') as string
+    const pipeSortRaw = (getParam(q, 'pipeSort') ?? 'addedAt') as string
     const pipeSort: PipeSortKey = allowedPipeSort.includes(pipeSortRaw as PipeSortKey)
       ? (pipeSortRaw as PipeSortKey)
       : 'addedAt'
-    const pipeOrder = first(q, 'pipeOrder') === 'asc' ? 'asc' : 'desc'
-    const pipeSearchTerm = (first(q, 'pipeQ') ?? '').trim()
+    const pipeOrder = getParam(q, 'pipeOrder') === 'asc' ? 'asc' : 'desc'
+    const pipeSearchTerm = (getParam(q, 'pipeQ') ?? '').trim()
 
     const { entries, hasNext: pipeHasNext } = await getCandidatePipelineEntriesPage(
       candidateId,
@@ -249,7 +249,7 @@ export default async function PublicCandidateProfile({
 
     const pipeInitialParams: Record<string, string> = {}
     const keepPipe = (k: string) => {
-      const v = first(q, k)
+      const v = getParam(q, k)
       if (v) pipeInitialParams[k] = v
     }
     keepPipe('pipeSize')

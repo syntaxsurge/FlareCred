@@ -9,19 +9,9 @@ import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getUser } from '@/lib/db/queries/queries'
 import { getTalentSearchPage } from '@/lib/db/queries/recruiter-talent'
 import type { TalentRow } from '@/lib/types/tables'
+import { getParam, resolveSearchParams, type Query } from '@/lib/utils/query'
 
 export const revalidate = 0
-
-/* -------------------------------------------------------------------------- */
-/*                                   Helpers                                  */
-/* -------------------------------------------------------------------------- */
-
-type Query = Record<string, string | string[] | undefined>
-
-function getParam(params: Query, key: string): string | undefined {
-  const v = params[key]
-  return Array.isArray(v) ? v[0] : v
-}
 
 /* -------------------------------------------------------------------------- */
 /*                                    Page                                    */
@@ -32,7 +22,7 @@ export default async function TalentSearchPage({
 }: {
   searchParams: Promise<Query> | Query
 }) {
-  const params = (await searchParams) as Query
+  const params = await resolveSearchParams(searchParams)
 
   const user = await getUser()
   if (!user) redirect('/connect-wallet')

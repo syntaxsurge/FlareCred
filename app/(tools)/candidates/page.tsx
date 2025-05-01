@@ -5,6 +5,7 @@ import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getCandidateListingPage } from '@/lib/db/queries/candidates-core'
 import type { CandidateDirectoryRow } from '@/lib/types/tables'
+import { getParam, resolveSearchParams, type Query } from '@/lib/utils/query'
 
 export const revalidate = 0
 
@@ -12,14 +13,8 @@ export const revalidate = 0
 /*                               P A R A M S                                  */
 /* -------------------------------------------------------------------------- */
 
-type Query = Record<string, string | string[] | undefined>
-
 const ALLOWED_SORT_KEYS = ['name', 'email', 'verified'] as const
 type SortKey = (typeof ALLOWED_SORT_KEYS)[number]
-
-function first(p: Query, k: string) {
-  return Array.isArray(p[k]) ? p[k]?.[0] : p[k]
-}
 
 /* -------------------------------------------------------------------------- */
 /*                                   PAGE                                     */
@@ -31,18 +26,19 @@ export default async function CandidateDirectoryPage({
   searchParams: Query | Promise<Query>
 }) {
   /* ----------------------------- Read params ---------------------------- */
-  const params = (await searchParams) as Query
-  const page = Math.max(1, Number(first(params, 'page') ?? '1'))
-  const sizeRaw = Number(first(params, 'size') ?? '10')
+  const params = await resolveSearchParams(searchParams)
+
+  const page = Math.max(1, Number(getParam(params, 'page') ?? '1'))
+  const sizeRaw = Number(getParam(params, 'size') ?? '10')
   const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
 
-  const sortRaw = first(params, 'sort') ?? 'name'
+  const sortRaw = getParam(params, 'sort') ?? 'name'
   const sort: SortKey = ALLOWED_SORT_KEYS.includes(sortRaw as SortKey)
     ? (sortRaw as SortKey)
     : 'name'
 
-  const order = first(params, 'order') === 'desc' ? 'desc' : 'asc'
-  const searchTerm = (first(params, 'q') ?? '').trim().toLowerCase()
+  const order = getParam(params, 'order') === 'desc' ? 'desc' : 'asc'
+  const searchTerm = (getParam(params, 'q') ?? '').trim().toLowerCase()
 
   /* ------------------------------ Data fetch ---------------------------- */
   const { candidates, hasNext } = await getCandidateListingPage(
@@ -63,7 +59,7 @@ export default async function CandidateDirectoryPage({
   /* ---------------------------- initialParams --------------------------- */
   const initialParams: Record<string, string> = {}
   const keep = (k: string) => {
-    const v = first(params, k)
+    const v = getParam(params, k)
     if (v) initialParams[k] = v
   }
   keep('size')
