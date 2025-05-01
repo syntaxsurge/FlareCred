@@ -10,7 +10,12 @@ import { getUser } from '@/lib/db/queries/queries'
 import { candidates as candidatesTable } from '@/lib/db/schema/candidate'
 import { pipelineCandidates } from '@/lib/db/schema/recruiter'
 import type { JobRow } from '@/lib/types/tables'
-import { getParam, resolveSearchParams, type Query } from '@/lib/utils/query'
+import {
+  getParam,
+  resolveSearchParams,
+  pickParams,
+  type Query,
+} from '@/lib/utils/query'
 
 export const revalidate = 0
 
@@ -83,15 +88,7 @@ export default async function JobsDirectoryPage({
   }))
 
   /* --------------------------- initialParams ----------------------------- */
-  const initialParams: Record<string, string> = {}
-  const add = (k: string) => {
-    const v = getParam(params, k)
-    if (v) initialParams[k] = v
-  }
-  add('size')
-  add('sort')
-  add('order')
-  if (searchTerm) initialParams['q'] = searchTerm
+  const initialParams = pickParams(params, ['size', 'sort', 'order', 'q'])
 
   /* ------------------------------- View ---------------------------------- */
   return (

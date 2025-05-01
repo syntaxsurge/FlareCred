@@ -5,7 +5,12 @@ import PageCard from '@/components/ui/page-card'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getCandidateListingPage } from '@/lib/db/queries/candidates-core'
 import type { CandidateDirectoryRow } from '@/lib/types/tables'
-import { getParam, resolveSearchParams, type Query } from '@/lib/utils/query'
+import {
+  getParam,
+  resolveSearchParams,
+  pickParams,
+  type Query,
+} from '@/lib/utils/query'
 
 export const revalidate = 0
 
@@ -57,15 +62,7 @@ export default async function CandidateDirectoryPage({
   }))
 
   /* ---------------------------- initialParams --------------------------- */
-  const initialParams: Record<string, string> = {}
-  const keep = (k: string) => {
-    const v = getParam(params, k)
-    if (v) initialParams[k] = v
-  }
-  keep('size')
-  keep('sort')
-  keep('order')
-  if (searchTerm) initialParams['q'] = searchTerm
+  const initialParams = pickParams(params, ['size', 'sort', 'order', 'q'])
 
   /* ------------------------------- View --------------------------------- */
   return (

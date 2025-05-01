@@ -8,7 +8,12 @@ import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { db } from '@/lib/db/drizzle'
 import { issuers, IssuerStatus, IssuerCategory, IssuerIndustry } from '@/lib/db/schema/issuer'
 import type { IssuerDirectoryRow } from '@/lib/types/tables'
-import { getParam, resolveSearchParams, type Query } from '@/lib/utils/query'
+import {
+  getParam,
+  resolveSearchParams,
+  pickParams,
+  type Query,
+} from '@/lib/utils/query'
 
 export const revalidate = 0
 
@@ -117,17 +122,14 @@ export default async function IssuerDirectoryPage({
   /* ---------------------------------------------------------------------- */
   /*                                initialParams                           */
   /* ---------------------------------------------------------------------- */
-  const initialParams: Record<string, string> = {}
-  const add = (k: string) => {
-    const val = getParam(params, k)
-    if (val) initialParams[k] = val
-  }
-  add('size')
-  add('sort')
-  add('order')
-  if (searchTerm) initialParams['q'] = searchTerm
-  if (validCategory) initialParams['category'] = validCategory
-  if (validIndustry) initialParams['industry'] = validIndustry
+  const initialParams = pickParams(params, [
+    'size',
+    'sort',
+    'order',
+    'q',
+    'category',
+    'industry',
+  ])
 
   /* ---------------------------------------------------------------------- */
   /*                                View                                    */
