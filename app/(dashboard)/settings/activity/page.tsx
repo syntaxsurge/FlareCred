@@ -8,7 +8,7 @@ import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getActivityLogsPage } from '@/lib/db/queries/activity'
 import { getUser } from '@/lib/db/queries/queries'
 import type { ActivityLogRow } from '@/lib/types/tables'
-import { getParam, resolveSearchParams, type Query } from '@/lib/utils/query'
+import { getParam, resolveSearchParams, pickParams, type Query } from '@/lib/utils/query'
 
 export const revalidate = 0
 
@@ -50,14 +50,7 @@ export default async function ActivityPage({
   const rows: ActivityLogRow[] = logs
 
   /* -------------------- Preserve query state -------------------- */
-  const initialParams: Record<string, string> = {}
-  const add = (k: string) => {
-    const val = getParam(params, k)
-    if (val) initialParams[k] = val
-  }
-  add('size')
-  add('order')
-  if (searchTerm) initialParams.q = searchTerm
+  const initialParams = pickParams(params, ['size', 'order', 'q'])
 
   /* ---------------------------- View ---------------------------- */
   return (
