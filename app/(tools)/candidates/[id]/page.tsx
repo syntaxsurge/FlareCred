@@ -23,7 +23,7 @@ import type {
   RecruiterCredentialRow,
   SkillPassRow,
 } from '@/lib/types/tables'
-import { getParam, resolveSearchParams, type Query } from '@/lib/utils/query'
+import { getParam, pickParams, resolveSearchParams, type Query } from '@/lib/utils/query'
 
 export const revalidate = 0
 
@@ -41,7 +41,7 @@ export default async function PublicCandidateProfile({
   params,
   searchParams,
 }: {
-  params: Params | Promise<Params>
+  params: Promise<Params>
   searchParams?: Promise<Query>
 }) {
   /* ------------------------ Dynamic route param ------------------------- */
@@ -160,15 +160,7 @@ export default async function PublicCandidateProfile({
     vcJson: c.vcJson ?? null,
   }))
 
-  const credInitialParams: Record<string, string> = {}
-  const keep = (k: string) => {
-    const v = getParam(q, k)
-    if (v) credInitialParams[k] = v
-  }
-  keep('size')
-  keep('sort')
-  keep('order')
-  if (searchTerm) credInitialParams.q = searchTerm
+  const credInitialParams = pickParams(q, ['size', 'sort', 'order', 'q'])
 
   /* ---------------------------------------------------------------------- */
   /*                     Skill Passes (shared helper)                       */
@@ -194,13 +186,7 @@ export default async function PublicCandidateProfile({
     passSearch,
   )
 
-  const passInitialParams: Record<string, string> = {}
-  const keepPass = (k: string) => {
-    const v = getParam(q, k)
-    if (v) passInitialParams[k] = v
-  }
-  ;['passSize', 'passSort', 'passOrder'].forEach(keepPass)
-  if (passSearch) passInitialParams.passQ = passSearch
+  const passInitialParams = pickParams(q, ['passSize', 'passSort', 'passOrder', 'passQ'])
 
   /* ---------------------------------------------------------------------- */
   /*                   Recruiter-only Pipeline Entries                      */
@@ -253,15 +239,7 @@ export default async function PublicCandidateProfile({
       pipeSearchTerm,
     )
 
-    const pipeInitialParams: Record<string, string> = {}
-    const keepPipe = (k: string) => {
-      const v = getParam(q, k)
-      if (v) pipeInitialParams[k] = v
-    }
-    keepPipe('pipeSize')
-    keepPipe('pipeSort')
-    keepPipe('pipeOrder')
-    if (pipeSearchTerm) pipeInitialParams.pipeQ = pipeSearchTerm
+    const pipeInitialParams = pickParams(q, ['pipeSize', 'pipeSort', 'pipeOrder', 'pipeQ'])
 
     /* Build summary (e.g. "In X Pipelines”) */
     const uniquePipelines = new Set(entries.map((e) => e.pipelineName))
