@@ -52,11 +52,6 @@ export interface GeneralFormProps {
   defaultEmail: string
 }
 
-/** Route params for the résumé PDF API endpoint. */
-export interface ResumeRouteParams {
-  params: { candidateId: string }
-}
-
 /** Props for the pricing page subscription submit button. */
 export interface SubmitButtonProps {
   /** 1 = Base, 2 = Plus (matches on-chain enum) */
