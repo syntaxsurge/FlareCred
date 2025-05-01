@@ -19,7 +19,7 @@ export const revalidate = 0
 export default async function AdminCredentialsPage({
   searchParams,
 }: {
-  searchParams: Query | Promise<Query>
+  searchParams?: Promise<Query>
 }) {
   /* Resolve synchronous or async `searchParams` supplied by Next.js 15 */
   const params = await resolveSearchParams(searchParams)
