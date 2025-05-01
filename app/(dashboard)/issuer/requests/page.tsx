@@ -12,19 +12,9 @@ import { getIssuerRequestsPage } from '@/lib/db/queries/issuer-requests'
 import { getUser } from '@/lib/db/queries/queries'
 import { issuers } from '@/lib/db/schema/issuer'
 import type { IssuerRequestRow } from '@/lib/types/tables'
+import { getParam as first, type Query } from '@/lib/utils/query'
 
 export const revalidate = 0
-
-/* -------------------------------------------------------------------------- */
-/*                                   Helpers                                  */
-/* -------------------------------------------------------------------------- */
-
-type Query = Record<string, string | string[] | undefined>
-
-function first(params: Query, key: string): string | undefined {
-  const v = params[key]
-  return Array.isArray(v) ? v[0] : v
-}
 
 /* -------------------------------------------------------------------------- */
 /*                                    Page                                    */

@@ -6,21 +6,11 @@ import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
 import { getTeamMembersPage } from '@/lib/db/queries/team-members'
 import { teamMembers, teams } from '@/lib/db/schema/core'
+import { getParam, type Query } from '@/lib/utils/query'
 
 import { Settings } from './settings'
 
 export const revalidate = 0
-
-/* -------------------------------------------------------------------------- */
-/*                                   Helpers                                  */
-/* -------------------------------------------------------------------------- */
-
-type Query = Record<string, string | string[] | undefined>
-
-function getParam(params: Query, key: string): string | undefined {
-  const v = params[key]
-  return Array.isArray(v) ? v[0] : v
-}
 
 /* -------------------------------------------------------------------------- */
 /*                                    Page                                    */

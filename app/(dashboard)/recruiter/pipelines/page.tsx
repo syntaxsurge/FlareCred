@@ -8,21 +8,11 @@ import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getUser } from '@/lib/db/queries/queries'
 import { getRecruiterPipelinesPage } from '@/lib/db/queries/recruiter-pipelines'
 import type { PipelineRow } from '@/lib/types/tables'
+import { getParam, type Query } from '@/lib/utils/query'
 
 import NewPipelineDialog from './new-pipeline-dialog'
 
 export const revalidate = 0
-
-/* -------------------------------------------------------------------------- */
-/*                                   Helpers                                  */
-/* -------------------------------------------------------------------------- */
-
-type Query = Record<string, string | string[] | undefined>
-
-function getParam(params: Query, key: string): string | undefined {
-  const v = params[key]
-  return Array.isArray(v) ? v[0] : v
-}
 
 /* -------------------------------------------------------------------------- */
 /*                                    Page                                    */
