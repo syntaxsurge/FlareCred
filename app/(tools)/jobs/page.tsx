@@ -25,7 +25,7 @@ type SortKey = (typeof SORT_KEYS)[number]
 export default async function JobsDirectoryPage({
   searchParams,
 }: {
-  searchParams: Query | Promise<Query>
+  searchParams?: Promise<Query>
 }) {
   const params = await resolveSearchParams(searchParams)
 

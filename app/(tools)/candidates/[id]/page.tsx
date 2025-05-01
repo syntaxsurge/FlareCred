@@ -42,7 +42,7 @@ export default async function PublicCandidateProfile({
   searchParams,
 }: {
   params: Params | Promise<Params>
-  searchParams: Query | Promise<Query>
+  searchParams?: Promise<Query>
 }) {
   /* ------------------------ Dynamic route param ------------------------- */
   const { id } = await params

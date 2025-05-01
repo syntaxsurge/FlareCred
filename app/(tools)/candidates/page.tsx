@@ -23,7 +23,7 @@ type SortKey = (typeof ALLOWED_SORT_KEYS)[number]
 export default async function CandidateDirectoryPage({
   searchParams,
 }: {
-  searchParams: Query | Promise<Query>
+  searchParams?: Promise<Query>
 }) {
   /* ----------------------------- Read params ---------------------------- */
   const params = await resolveSearchParams(searchParams)

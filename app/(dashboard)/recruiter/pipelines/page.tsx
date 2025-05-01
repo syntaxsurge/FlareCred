@@ -21,7 +21,7 @@ export const revalidate = 0
 export default async function PipelinesPage({
   searchParams,
 }: {
-  searchParams: Query | Promise<Query>
+  searchParams?: Promise<Query>
 }) {
   /* Normalise Next.js searchParams (supports object or Promise) */
   const params = await resolveSearchParams(searchParams)
