@@ -81,7 +81,7 @@ export default async function TeamSettingsPage({
     email: m.email,
     walletAddress: (m as any).walletAddress ?? null,
     role: m.role,
-    joinedAt: m.joinedAt.toISOString(),
+    joinedAt: new Date(m.joinedAt).toISOString(),
   }))
 
   /* ------------------------ Build initialParams -------------------------- */
