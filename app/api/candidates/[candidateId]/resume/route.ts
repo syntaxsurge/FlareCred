@@ -9,9 +9,9 @@ import { buildResumeData, generateResumePdf } from '@/lib/resume/resume-builder'
  */
 export async function GET(
   _req: Request,
-  { params }: { params: { candidateId: string } },
+  context: { params: { candidateId: string } },
 ) {
-  const candidateId = Number(params.candidateId)
+  const candidateId = Number(context.params.candidateId)
   if (Number.isNaN(candidateId)) {
     return NextResponse.json({ error: 'Invalid candidate id.' }, { status: 400 })
   }
