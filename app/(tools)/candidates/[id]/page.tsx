@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 
-import { eq, asc } from 'drizzle-orm'
+import { eq, asc, and } from 'drizzle-orm'
 
 import CandidateDetailedProfileView from '@/components/dashboard/candidate/profile-detailed-view'
 import { db } from '@/lib/db/drizzle'
@@ -17,6 +17,7 @@ import {
 } from '@/lib/db/schema/candidate'
 import { issuers } from '@/lib/db/schema/issuer'
 import { recruiterPipelines } from '@/lib/db/schema/recruiter'
+import { recruiterCandidateFits } from '@/lib/db/schema/recruiter-fit'
 import AddToPipelineForm from '@/components/recruiter/add-to-pipeline-form'
 import type {
   PipelineEntryRow,
@@ -64,6 +65,24 @@ export default async function PublicCandidateProfile({
   /* -------------------------- Logged-in user ----------------------------- */
   const user = await getUser()
   const isRecruiter = user?.role === 'recruiter'
+
+  /* ---------------------------------------------------------------------- */
+  /*                     Recruiter-specific fit summary                     */
+  /* ---------------------------------------------------------------------- */
+  let fitSummary: string | undefined
+  if (isRecruiter) {
+    const [fit] = await db
+      .select({ summaryJson: recruiterCandidateFits.summaryJson })
+      .from(recruiterCandidateFits)
+      .where(
+        and(
+          eq(recruiterCandidateFits.recruiterId, user!.id),
+          eq(recruiterCandidateFits.candidateId, candidateId),
+        ),
+      )
+      .limit(1)
+    if (fit) fitSummary = fit.summaryJson
+  }
 
   /* ---------------------------------------------------------------------- */
   /*                    Experiences & Projects ( Highlights )               */
@@ -286,6 +305,7 @@ export default async function PublicCandidateProfile({
       bio={row.cand.bio ?? null}
       summary={row.cand.summary ?? null}
       pipelineSummary={pipelineSummary}
+      fitSummary={fitSummary}
       statusCounts={statusCounts as StatusCounts}
       passes={{
         rows: passRows as SkillPassRow[],
