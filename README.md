@@ -191,7 +191,7 @@ Return the JSON now:
 |-------------|-----------------|-------|
 | **Demo URL** | https://flarecred.com | Hosted deployment |
 | **Video Demo** | https://flarecred.com/demo-video | 3-min product walkthrough (public) |
-| **Pitch Deck** | https://flarecred.com/pitch-deck | Presentation slides covering problem, solution, architecture & traction |
+| **Pitch Deck** | https://flarecred.com/pitch-deck<br/>https://www.canva.com/design/DAGmLnAoe5E/P8mRrpPzBIVnAs_Ab4Myvg/view?utm_content=DAGmLnAoe5E&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=h602e50a224 | Presentation slides covering problem, solution, architecture & traction |
 | **Codebase** | https://github.com/syntaxsurge/FlareCred | Open-source repository (Next.js app + Hardhat contracts) |
 
 ---
