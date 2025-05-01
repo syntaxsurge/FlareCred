@@ -156,8 +156,12 @@ if (USE_FLARESCAN) {
     },
   ];
 
-  for (let i = 0; i < FLARESCAN_DATA.length; i++) {
-    config.etherscan.customChains[i].urls = FLARESCAN_DATA[i];
+  if (config.etherscan?.customChains) {
+    for (let i = 0; i < FLARESCAN_DATA.length; i++) {
+      if (config.etherscan.customChains[i]) {
+        config.etherscan.customChains[i].urls = FLARESCAN_DATA[i];
+      }
+    }
   }
 }
 
