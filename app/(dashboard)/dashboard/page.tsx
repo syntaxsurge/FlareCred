@@ -18,6 +18,7 @@ import CandidateCharts from '@/components/dashboard/candidate/charts'
 import IssuerCharts from '@/components/dashboard/issuer/charts'
 import RecruiterCharts from '@/components/dashboard/recruiter/charts'
 import { RoleBadge } from '@/components/dashboard/role-badge'
+import type { Role } from '@/lib/types'
 import { Card, CardContent } from '@/components/ui/card'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
@@ -249,7 +250,7 @@ export default async function DashboardPage() {
               </p>
             </div>
 
-            <RoleBadge role={user.role} />
+            <RoleBadge role={user.role as Role} />
           </div>
         </CardContent>
       </Card>
