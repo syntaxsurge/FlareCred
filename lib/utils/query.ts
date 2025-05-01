@@ -1,5 +1,5 @@
 /**
- * Shared helpers for pages that read Next.js <code>searchParams</code>.
+ * Shared helpers for pages that read Next.js searchParams.
  * Keeps all tiny utilities in one place to avoid repetition.
  */
 export type Query = Record<string, string | string[] | undefined>
@@ -55,8 +55,8 @@ export interface Pagination {
 }
 
 /**
- * Parse <code>page</code> and <code>size</code> query-string values into a
- * validated <code>Pagination</code> object with sensible fall-backs.
+ * Parse page and size query-string values into a validated Pagination object
+ * with sensible fall-backs.
  */
 export function parsePagination(params: Query, defaultSize: PageSize = 10): Pagination {
   const page = Math.max(1, Number(getParam(params, 'page') ?? '1'))
@@ -75,8 +75,8 @@ export interface Sort {
 }
 
 /**
- * Clamp <code>sort</code> to <code>allowed</code> keys and normalise
- * <code>order</code> to the canonical <code>'asc' | 'desc'</code> strings.
+ * Clamp sort to allowed keys and normalise order to the canonical
+ * 'asc' | 'desc' strings.
  */
 export function parseSort(params: Query, allowed: readonly string[], fallback: string): Sort {
   const sortRaw = getParam(params, 'sort') ?? fallback
@@ -85,33 +85,24 @@ export function parseSort(params: Query, allowed: readonly string[], fallback: s
   return { sort, order }
 }
 
-/** Extract and trim the <code>q</code> search term. */
+/** Extract and trim the q search term. */
 export function getSearchTerm(params: Query): string {
   return (getParam(params, 'q') ?? '').trim()
 }
 
 /* -------------------------------------------------------------------------- */
-/*                 Compound helper – table parameter bundle                  */
+/*                            Table-param bundle                              */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Consolidated table parameters returned by {@link getTableParams}, combining
- * pagination, sort, search-term and pre-filtered initial query-string params.
- */
 export interface TableParams extends Pagination, Sort {
   searchTerm: string
   initialParams: Record<string, string>
 }
 
 /**
- * Convenience helper that reduces boilerplate in page components that render
- * data tables. It applies the common trio of <em>pagination → sort → search</em>
- * parsing steps and also prepares the <code>initialParams</code> object used to
- * persist state across navigation.
- *
- * @param params       Raw (or already-resolved) <code>searchParams</code> object
- * @param allowedSort  Whitelisted column keys accepted by <code>sort</code>
- * @param defaultSort  Fallback column when <code>sort</code> is missing/invalid
+ * Reduces boilerplate in page components that render data tables by applying
+ * the common trio of pagination → sort → search parsing steps and preparing
+ * the initialParams object used to persist state across navigation.
  */
 export function getTableParams(
   params: Query,
@@ -123,4 +114,60 @@ export function getTableParams(
   const searchTerm = getSearchTerm(params)
   const initialParams = pickParams(params, ['size', 'sort', 'order', 'q'])
   return { page, pageSize, sort, order, searchTerm, initialParams }
+}
+
+/* -------------------------------------------------------------------------- */
+/*                       Prefixed section-param helper                        */
+/* -------------------------------------------------------------------------- */
+
+export interface SectionParams extends Pagination, Sort {
+  searchTerm: string
+  initialParams: Record<string, string>
+}
+
+/**
+ * Generic parser for paginated sections that prefix their query keys
+ * (e.g. passPage, passSize, passSort, passOrder, passQ).
+ *
+ * @param params       Raw query-object
+ * @param prefix       Prefix string (e.g. 'pass', 'pipe')
+ * @param allowedSort  Whitelisted sort keys
+ * @param defaultSort  Fallback sort column
+ */
+export function getSectionParams(
+  params: Query,
+  prefix: string,
+  allowedSort: readonly string[],
+  defaultSort: string,
+): SectionParams {
+  const page = Math.max(1, Number(getParam(params, `${prefix}Page`) ?? '1'))
+
+  const sizeRaw = Number(getParam(params, `${prefix}Size`) ?? '10')
+  const pageSize = (PAGE_SIZES as readonly number[]).includes(sizeRaw)
+    ? (sizeRaw as PageSize)
+    : 10
+
+  const sortRaw = getParam(params, `${prefix}Sort`) ?? defaultSort
+  const sort = allowedSort.includes(sortRaw) ? sortRaw : defaultSort
+
+  const order = getParam(params, `${prefix}Order`) === 'asc' ? 'asc' : 'desc'
+  const searchTerm = (getParam(params, `${prefix}Q`) ?? '').trim()
+
+  const initialParams = pickParams(params, [
+    `${prefix}Size`,
+    `${prefix}Sort`,
+    `${prefix}Order`,
+    `${prefix}Q`,
+  ])
+
+  return { page, pageSize, sort, order, searchTerm, initialParams }
+}
+
+/* -------------------------------------------------------------------------- */
+/*                             Misc convenience                               */
+/* -------------------------------------------------------------------------- */
+
+/** Lower-case variant of {@link getSearchTerm}. */
+export function getSearchTermLower(params: Query): string {
+  return getSearchTerm(params).toLowerCase()
 }

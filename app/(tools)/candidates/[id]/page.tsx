@@ -17,12 +17,13 @@ import {
 import { issuers } from '@/lib/db/schema/issuer'
 import { recruiterPipelines } from '@/lib/db/schema/recruiter'
 import { recruiterCandidateFits } from '@/lib/db/schema/recruiter-fit'
+import { STAGES } from '@/lib/constants/recruiter'
 import type { StatusCounts } from '@/lib/types/candidate'
 import type { PipelineEntryRow, RecruiterCredentialRow, SkillPassRow } from '@/lib/types/tables'
+import { Stage } from '@/lib/types/recruiter'
 import {
   getTableParams,
-  getParam,
-  pickParams,
+  getSectionParams,
   resolveSearchParams,
   type Query,
 } from '@/lib/utils/query'
@@ -30,14 +31,10 @@ import {
 export const revalidate = 0
 
 /* -------------------------------------------------------------------------- */
-/*                                   Helpers                                  */
+/*                                    Page                                    */
 /* -------------------------------------------------------------------------- */
 
 type Params = { id: string }
-
-/* -------------------------------------------------------------------------- */
-/*                                   Page                                     */
-/* -------------------------------------------------------------------------- */
 
 export default async function PublicCandidateProfile({
   params,
@@ -164,33 +161,26 @@ export default async function PublicCandidateProfile({
     vcJson: c.vcJson ?? null,
   }))
 
-  /* credInitialParams provided by getTableParams */
-
   /* ---------------------------------------------------------------------- */
-  /*                     Skill Passes (shared helper)                       */
+  /*                     Skill Passes (prefixed helper)                     */
   /* ---------------------------------------------------------------------- */
-  const passPage = Math.max(1, Number(getParam(q, 'passPage') ?? '1'))
-  const passSizeRaw = Number(getParam(q, 'passSize') ?? '10')
-  const passPageSize = [10, 20, 50].includes(passSizeRaw) ? passSizeRaw : 10
-  const passAllowedSort = ['quizTitle', 'score', 'createdAt'] as const
-  type PassSortKey = (typeof passAllowedSort)[number]
-  const passSortRaw = (getParam(q, 'passSort') ?? 'createdAt') as string
-  const passSort: PassSortKey = passAllowedSort.includes(passSortRaw as PassSortKey)
-    ? (passSortRaw as PassSortKey)
-    : 'createdAt'
-  const passOrder = getParam(q, 'passOrder') === 'asc' ? 'asc' : 'desc'
-  const passSearch = (getParam(q, 'passQ') ?? '').trim()
+  const {
+    page: passPage,
+    pageSize: passPageSize,
+    sort: passSort,
+    order: passOrder,
+    searchTerm: passSearch,
+    initialParams: passInitialParams,
+  } = getSectionParams(q, 'pass', ['quizTitle', 'score', 'createdAt'] as const, 'createdAt')
 
   const { rows: passRows, hasNext: passHasNext } = await getCandidateSkillPassesSection(
     candidateId,
     passPage,
     passPageSize,
-    passSort,
+    passSort as 'quizTitle' | 'score' | 'createdAt',
     passOrder,
     passSearch,
   )
-
-  const passInitialParams = pickParams(q, ['passSize', 'passSort', 'passOrder', 'passQ'])
 
   /* ---------------------------------------------------------------------- */
   /*                   Recruiter-only Pipeline Entries                      */
@@ -213,39 +203,35 @@ export default async function PublicCandidateProfile({
     | undefined
 
   if (isRecruiter) {
-    /* ------------------ Recruiter pipelines for dropdown ------------------ */
+    /* Pipelines for dropdown ------------------------------------------------ */
     const pipelines = await db
       .select({ id: recruiterPipelines.id, name: recruiterPipelines.name })
       .from(recruiterPipelines)
       .where(eq(recruiterPipelines.recruiterId, user!.id))
       .orderBy(asc(recruiterPipelines.name))
 
-    /* --------------------- Pipeline entries listing ---------------------- */
-    const pipePage = Math.max(1, Number(getParam(q, 'pipePage') ?? '1'))
-    const pipeSizeRaw = Number(getParam(q, 'pipeSize') ?? '10')
-    const pipePageSize = [10, 20, 50].includes(pipeSizeRaw) ? pipeSizeRaw : 10
-    const allowedPipeSort = ['pipelineName', 'stage', 'addedAt'] as const
-    type PipeSortKey = (typeof allowedPipeSort)[number]
-    const pipeSortRaw = (getParam(q, 'pipeSort') ?? 'addedAt') as string
-    const pipeSort: PipeSortKey = allowedPipeSort.includes(pipeSortRaw as PipeSortKey)
-      ? (pipeSortRaw as PipeSortKey)
-      : 'addedAt'
-    const pipeOrder = getParam(q, 'pipeOrder') === 'asc' ? 'asc' : 'desc'
-    const pipeSearchTerm = (getParam(q, 'pipeQ') ?? '').trim()
+    /* Pipeline entries params ---------------------------------------------- */
+    const {
+      page: pipePage,
+      pageSize: pipePageSize,
+      sort: pipeSort,
+      order: pipeOrder,
+      searchTerm: pipeSearch,
+      initialParams: pipeInitialParams,
+    } = getSectionParams(q, 'pipe', ['pipelineName', 'stage', 'addedAt'] as const, 'addedAt')
 
+    /* Entries listing ------------------------------------------------------- */
     const { entries, hasNext: pipeHasNext } = await getCandidatePipelineEntriesPage(
       candidateId,
       user!.id,
       pipePage,
       pipePageSize,
-      pipeSort,
+      pipeSort as 'pipelineName' | 'stage' | 'addedAt',
       pipeOrder,
-      pipeSearchTerm,
+      pipeSearch,
     )
 
-    const pipeInitialParams = pickParams(q, ['pipeSize', 'pipeSort', 'pipeOrder', 'pipeQ'])
-
-    /* Build summary (e.g. "In X Pipelines”) */
+    /* Summary label */
     const uniquePipelines = new Set(entries.map((e) => e.pipelineName))
     if (entries.length > 0) {
       pipelineSummary =
