@@ -3,10 +3,9 @@
 import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Clipboard, Loader2, Sparkles } from 'lucide-react'
+import { Loader2, Sparkles } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import { copyToClipboard } from '@/lib/utils'
 import { generateCandidateFit } from '@/app/(tools)/recruiter/actions'
 
 interface GenerateFitButtonProps {
@@ -16,27 +15,22 @@ interface GenerateFitButtonProps {
 
 /**
  * Async button that generates an AI "Why Hire" fit summary for the specified
- * candidate, copies it to the clipboard and refreshes the page to surface
- * cached data for subsequent renders.
+ * candidate and refreshes the page to surface cached data for subsequent renders.
  */
 export default function GenerateFitButton({
   candidateId,
   onGenerated,
 }: GenerateFitButtonProps) {
   const router = useRouter()
-  const [pending, start] = useTransition()
+  const [pending, startTransition] = useTransition()
 
   function handleClick() {
     const toastId = toast.loading('Analysing fit…')
-    start(async () => {
+    startTransition(async () => {
       try {
         const result = await generateCandidateFit(candidateId)
-        copyToClipboard(result)
         onGenerated?.(result)
-        toast.success('Fit summary copied to clipboard.', {
-          id: toastId,
-          icon: <Clipboard />,
-        })
+        toast.success('Fit summary generated.', { id: toastId, icon: <Sparkles /> })
         router.refresh()
       } catch (err: any) {
         toast.error(err?.message ?? 'Failed to generate fit summary.', { id: toastId })
