@@ -4,6 +4,7 @@ import eslintConfigPrettier from 'eslint-config-prettier'
 import eslintPluginImport from 'eslint-plugin-import'
 import eslintPluginPrettier from 'eslint-plugin-prettier'
 import unusedImports from 'eslint-plugin-unused-imports'
+import eslintPluginNext from '@next/eslint-plugin-next'
 
 export default [
   /* ---------------------------------------------------------------------- */
@@ -34,6 +35,19 @@ export default [
   },
 
   /* ---------------------------------------------------------------------- */
+  /*                       N E X T . J S  P L U G I N                       */
+  /* ---------------------------------------------------------------------- */
+  {
+    plugins: {
+      '@next/next': eslintPluginNext,
+    },
+    /* Merge Core Web Vitals recommended rules */
+    rules: {
+      ...eslintPluginNext.configs['core-web-vitals'].rules,
+    },
+  },
+
+  /* ---------------------------------------------------------------------- */
   /*                         P R E T T I E R   O V E R R I D E               */
   /* ---------------------------------------------------------------------- */
   eslintConfigPrettier,
@@ -42,7 +56,7 @@ export default [
   /*                            T S   P R O J E C T                          */
   /* ---------------------------------------------------------------------- */
   {
-    files: ['**/*.{ts,tsx}'],
+    files: ['**/*.{ts,tsx,js,jsx}'],
     languageOptions: {
       parser: typescriptParser,
       parserOptions: {
@@ -55,6 +69,7 @@ export default [
       'unused-imports': unusedImports,
       import: eslintPluginImport,
       prettier: eslintPluginPrettier,
+      '@next/next': eslintPluginNext,
     },
     rules: {
       /* ---------- Unused imports / vars ---------- */
