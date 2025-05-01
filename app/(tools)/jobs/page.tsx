@@ -11,7 +11,9 @@ import { candidates as candidatesTable } from '@/lib/db/schema/candidate'
 import { pipelineCandidates } from '@/lib/db/schema/recruiter'
 import type { JobRow } from '@/lib/types/tables'
 import {
-  getParam,
+  parsePagination,
+  parseSort,
+  getSearchTerm,
   resolveSearchParams,
   pickParams,
   type Query,
@@ -35,14 +37,10 @@ export default async function JobsDirectoryPage({
   const params = await resolveSearchParams(searchParams)
 
   /* ----------------------------- Query params ---------------------------- */
-  const page = Math.max(1, Number(getParam(params, 'page') ?? '1'))
-  const sizeRaw = Number(getParam(params, 'size') ?? '10')
-  const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
-
-  const sortRaw = getParam(params, 'sort') ?? 'createdAt'
-  const sort: SortKey = SORT_KEYS.includes(sortRaw as SortKey) ? (sortRaw as SortKey) : 'createdAt'
-  const order = getParam(params, 'order') === 'asc' ? 'asc' : 'desc'
-  const searchTerm = (getParam(params, 'q') ?? '').trim().toLowerCase()
+  const { page, pageSize } = parsePagination(params)
+  const { sort: sortParam, order } = parseSort(params, SORT_KEYS, 'createdAt')
+  const sort: SortKey = sortParam as SortKey
+  const searchTerm = getSearchTerm(params).toLowerCase()
 
   /* ------------------------------ Data fetch ----------------------------- */
   const { jobs, hasNext } = await getJobOpeningsPage(

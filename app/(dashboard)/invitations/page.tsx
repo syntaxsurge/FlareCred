@@ -8,7 +8,14 @@ import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getInvitationsPage } from '@/lib/db/queries/invitations'
 import { getUser } from '@/lib/db/queries/queries'
 import type { InvitationRow } from '@/lib/types/tables'
-import { getParam, pickParams, resolveSearchParams, type Query } from '@/lib/utils/query'
+import {
+  parsePagination,
+  parseSort,
+  getSearchTerm,
+  pickParams,
+  resolveSearchParams,
+  type Query,
+} from '@/lib/utils/query'
 
 export const revalidate = 0
 
@@ -27,12 +34,13 @@ export default async function InvitationsPage({
   if (!user) redirect('/connect-wallet')
 
   /* --------------------------- Query params ------------------------------ */
-  const page = Math.max(1, Number(getParam(params, 'page') ?? '1'))
-  const sizeRaw = Number(getParam(params, 'size') ?? '10')
-  const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
-  const sort = getParam(params, 'sort') ?? 'invitedAt'
-  const order = getParam(params, 'order') === 'asc' ? 'asc' : 'desc'
-  const searchTerm = (getParam(params, 'q') ?? '').trim()
+  const { page, pageSize } = parsePagination(params)
+  const { sort, order } = parseSort(
+    params,
+    ['team', 'role', 'inviter', 'status', 'invitedAt'] as const,
+    'invitedAt',
+  )
+  const searchTerm = getSearchTerm(params)
 
   /* -------------------------- Data fetching ------------------------------ */
   const { invitations, hasNext } = await getInvitationsPage(

@@ -13,7 +13,9 @@ import { getUser } from '@/lib/db/queries/queries'
 import { issuers } from '@/lib/db/schema/issuer'
 import type { IssuerRequestRow } from '@/lib/types/tables'
 import {
-  getParam,
+  parsePagination,
+  parseSort,
+  getSearchTerm,
   pickParams,
   resolveSearchParams,
   type Query,
@@ -37,13 +39,13 @@ export default async function RequestsPage({
   if (!issuer) redirect('/issuer/onboard')
 
   /* --------------------------- Query params --------------------------- */
-  const page = Math.max(1, Number(getParam(params, 'page') ?? '1'))
-  const sizeRaw = Number(getParam(params, 'size') ?? '10')
-  const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
-
-  const sort = getParam(params, 'sort') ?? 'status'
-  const order = getParam(params, 'order') === 'desc' ? 'desc' : 'asc'
-  const searchTerm = (getParam(params, 'q') ?? '').trim()
+  const { page, pageSize } = parsePagination(params)
+  const { sort, order } = parseSort(
+    params,
+    ['title', 'type', 'status', 'candidate'] as const,
+    'status',
+  )
+  const searchTerm = getSearchTerm(params)
 
   /* ------------------------------ Data -------------------------------- */
   const { requests, hasNext } = await getIssuerRequestsPage(
