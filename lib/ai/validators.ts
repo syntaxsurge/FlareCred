@@ -12,18 +12,35 @@ export type CandidateFitJson = {
   cons: string[]
 }
 
+/* -------------------------------------------------------------------------- */
+/*             R E C R U I T E R   F I T   S U M M A R Y   J S O N            */
+/* -------------------------------------------------------------------------- */
+
 /**
- * Validate the JSON object returned by OpenAI for the "Why Hire” prompt.
+ * Validate a raw assistant response (string or already-parsed object) for the
+ * "Why Hire” prompt. When the payload is a string we first attempt to
+ * <code>JSON.parse</code>; any parse failure is surfaced as a validation error.
  *
- * @param payload Parsed JSON value
- * @returns       <code>null</code> when valid, otherwise a human-readable error string.
+ * @param input Raw assistant content **or** a previously parsed object.
+ * @returns     <code>null</code> when valid, otherwise a descriptive error.
  */
-export function validateCandidateFitJson(payload: any): string | null {
+export function validateCandidateFitJson(input: unknown): string | null {
+  /* ------------------------- String → JSON parse ------------------------ */
+  let payload: any = input
+  if (typeof input === 'string') {
+    try {
+      payload = JSON.parse(input)
+    } catch (err: any) {
+      return `Unable to parse JSON (${err?.message ?? 'unknown parse error'}).`
+    }
+  }
+
+  /* ------------------------------ Shape checks --------------------------- */
   if (typeof payload !== 'object' || payload === null) {
     return 'Response is not a JSON object.'
   }
 
-  /* ----------------------------- bullets -------------------------------- */
+  /* bullets */
   if (!Array.isArray(payload.bullets) || payload.bullets.length !== 5) {
     return '"bullets" must be an array containing exactly 5 items.'
   }
@@ -31,12 +48,12 @@ export function validateCandidateFitJson(payload: any): string | null {
     return 'Every "bullets" item must be a non-empty string.'
   }
 
-  /* -------------------------- bestPipeline ------------------------------ */
+  /* bestPipeline */
   if (typeof payload.bestPipeline !== 'string' || payload.bestPipeline.trim().length === 0) {
     return '"bestPipeline" must be a non-empty string (or "NONE").'
   }
 
-  /* ------------------------------ pros ---------------------------------- */
+  /* pros */
   if (!Array.isArray(payload.pros) || payload.pros.length === 0) {
     return '"pros" must be a non-empty string array.'
   }
@@ -44,7 +61,7 @@ export function validateCandidateFitJson(payload: any): string | null {
     return 'Every "pros" item must be a non-empty string.'
   }
 
-  /* ------------------------------ cons ---------------------------------- */
+  /* cons */
   if (!Array.isArray(payload.cons) || payload.cons.length === 0) {
     return '"cons" must be a non-empty string array.'
   }
@@ -55,10 +72,14 @@ export function validateCandidateFitJson(payload: any): string | null {
   return null
 }
 
+/* -------------------------------------------------------------------------- */
+/*                       S T R I C T   Q U I Z   G R A D E R                  */
+/* -------------------------------------------------------------------------- */
+
 /**
- * Validate a strict-grader response ensuring it contains a single 0-100 integer.
+ * Ensure the assistant reply contains exactly one integer in the 0-100 range.
  *
- * @param raw Raw assistant content returned by OpenAI.
+ * @param raw Raw assistant content
  * @returns   <code>null</code> when valid, otherwise descriptive error string.
  */
 export function validateQuizScoreResponse(raw: string): string | null {

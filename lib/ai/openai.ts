@@ -131,14 +131,6 @@ export async function generateCandidateFitSummary(
 ): Promise<string> {
   return await chatCompletion(candidateFitMessages(pipelinesStr, profileStr), {
     maxRetries: 3,
-    validate: (raw) => {
-      let parsed: any
-      try {
-        parsed = JSON.parse(raw)
-      } catch (err: any) {
-        return `Unable to parse JSON (${err?.message ?? 'unknown parse error'}).`
-      }
-      return validateCandidateFitJson(parsed)
-    },
+    validate: validateCandidateFitJson,
   })
 }
