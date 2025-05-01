@@ -1,4 +1,5 @@
 import { eq } from 'drizzle-orm'
+
 import type { AdminCredentialRow } from '@/lib/types/tables'
 
 import { db } from '../drizzle'

@@ -1,12 +1,13 @@
 'use client'
 
-import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { toast } from 'sonner'
-import { Loader2, Sparkles } from 'lucide-react'
+import { useTransition } from 'react'
 
-import { Button } from '@/components/ui/button'
+import { Loader2, Sparkles } from 'lucide-react'
+import { toast } from 'sonner'
+
 import { generateCandidateFit } from '@/app/(tools)/recruiter/actions'
+import { Button } from '@/components/ui/button'
 
 interface GenerateFitButtonProps {
   candidateId: number
@@ -17,10 +18,7 @@ interface GenerateFitButtonProps {
  * Async button that generates an AI "Why Hire" fit summary for the specified
  * candidate and refreshes the page to surface cached data for subsequent renders.
  */
-export default function GenerateFitButton({
-  candidateId,
-  onGenerated,
-}: GenerateFitButtonProps) {
+export default function GenerateFitButton({ candidateId, onGenerated }: GenerateFitButtonProps) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
 
@@ -39,18 +37,8 @@ export default function GenerateFitButton({
   }
 
   return (
-    <Button
-      onClick={handleClick}
-      disabled={pending}
-      variant="outline"
-      size="sm"
-      className="gap-2"
-    >
-      {pending ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
-      ) : (
-        <Sparkles className="h-4 w-4" />
-      )}
+    <Button onClick={handleClick} disabled={pending} variant='outline' size='sm' className='gap-2'>
+      {pending ? <Loader2 className='h-4 w-4 animate-spin' /> : <Sparkles className='h-4 w-4' />}
       Why Hire
     </Button>
   )

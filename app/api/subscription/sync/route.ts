@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { z } from 'zod'
-import { inArray, eq } from 'drizzle-orm'
 
-import { db } from '@/lib/db/drizzle'
-import { teams, teamMembers } from '@/lib/db/schema/core'
-import { getUser } from '@/lib/db/queries/queries'
+import { inArray, eq } from 'drizzle-orm'
+import { z } from 'zod'
+
 import { checkSubscription } from '@/lib/contracts/flare'
+import { db } from '@/lib/db/drizzle'
+import { getUser } from '@/lib/db/queries/queries'
+import { teams, teamMembers } from '@/lib/db/schema/core'
 
 /* -------------------------------------------------------------------------- */
 /*                               V A L I D A T I O N                          */

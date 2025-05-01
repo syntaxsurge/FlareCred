@@ -40,10 +40,7 @@ export function strictGraderMessages(quizTitle: string, answer: string): PromptM
  * @param profile Raw profile text.
  * @param words   Approximate word budget (default 120).
  */
-export function summariseProfileMessages(
-  profile: string,
-  words = 120,
-): PromptMessage[] {
+export function summariseProfileMessages(profile: string, words = 120): PromptMessage[] {
   return [
     {
       role: 'system',
@@ -73,10 +70,7 @@ export function summariseProfileMessages(
  * @param pipelines      Joined string of ≤20 pipeline name/description pairs.
  * @param candidateText  Raw candidate profile text (bio + credential highlights).
  */
-export function candidateFitMessages(
-  pipelines: string,
-  candidateText: string,
-): PromptMessage[] {
+export function candidateFitMessages(pipelines: string, candidateText: string): PromptMessage[] {
   const schema = `{
   "bullets":  [ "string (exactly 12 words)", 5 items ],
   "bestPipeline": "string | NONE",

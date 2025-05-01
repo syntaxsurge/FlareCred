@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
-import { relativeTime } from '@/lib/utils/time'
 import { Pencil, Trash2, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -24,6 +23,7 @@ import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { TableProps, MemberRow } from '@/lib/types/tables'
 import { truncateAddress } from '@/lib/utils/address'
+import { relativeTime } from '@/lib/utils/time'
 
 const ROLES = ['member', 'owner'] as const
 

@@ -1,6 +1,6 @@
 import { PricingGrid } from '@/components/pricing/pricing-grid'
-import { fetchPlanMeta } from '@/lib/payments/pricing'
 import { getUser, getTeamForUser } from '@/lib/db/queries/queries'
+import { fetchPlanMeta } from '@/lib/payments/pricing'
 
 export default async function PricingPage() {
   const [planMeta, user] = await Promise.all([fetchPlanMeta(), getUser()])

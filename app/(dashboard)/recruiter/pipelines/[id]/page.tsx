@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation'
 
-import { formatDateTime } from '@/lib/utils/time'
 import { eq } from 'drizzle-orm'
 import { KanbanSquare } from 'lucide-react'
 
@@ -13,6 +12,7 @@ import { candidates } from '@/lib/db/schema/candidate'
 import { users } from '@/lib/db/schema/core'
 import { recruiterPipelines, pipelineCandidates } from '@/lib/db/schema/recruiter'
 import { Stage } from '@/lib/types/recruiter'
+import { formatDateTime } from '@/lib/utils/time'
 
 export const revalidate = 0
 

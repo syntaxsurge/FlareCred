@@ -2,10 +2,12 @@
 
 import * as React from 'react'
 import { startTransition } from 'react'
+
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
+
 import { updatePlanFeaturesAction } from './actions'
 
 interface Props {
@@ -24,10 +26,7 @@ export default function UpdatePlanFeaturesForm({ defaultFeatures }: Props) {
   const [base, setBase] = React.useState(defaultFeatures.base.join('\n'))
   const [plus, setPlus] = React.useState(defaultFeatures.plus.join('\n'))
 
-  const [state, action, pending] = React.useActionState<any, FormData>(
-    updatePlanFeaturesAction,
-    {},
-  )
+  const [state, action, pending] = React.useActionState<any, FormData>(updatePlanFeaturesAction, {})
 
   React.useEffect(() => {
     if (state?.error) toast.error(state.error)
@@ -57,7 +56,7 @@ export default function UpdatePlanFeaturesForm({ defaultFeatures }: Props) {
           id='free'
           rows={5}
           value={free}
-          onChange={e => setFree(e.target.value)}
+          onChange={(e) => setFree(e.target.value)}
           className={textareaCls}
         />
       </div>
@@ -71,7 +70,7 @@ export default function UpdatePlanFeaturesForm({ defaultFeatures }: Props) {
           id='base'
           rows={5}
           value={base}
-          onChange={e => setBase(e.target.value)}
+          onChange={(e) => setBase(e.target.value)}
           className={textareaCls}
         />
       </div>
@@ -85,7 +84,7 @@ export default function UpdatePlanFeaturesForm({ defaultFeatures }: Props) {
           id='plus'
           rows={5}
           value={plus}
-          onChange={e => setPlus(e.target.value)}
+          onChange={(e) => setPlus(e.target.value)}
           className={textareaCls}
         />
       </div>

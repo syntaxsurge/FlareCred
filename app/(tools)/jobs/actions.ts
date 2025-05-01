@@ -3,9 +3,9 @@
 import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
 
-import { getUser } from '@/lib/db/queries/queries'
 import { STAGES } from '@/lib/constants/recruiter'
 import { db } from '@/lib/db/drizzle'
+import { getUser } from '@/lib/db/queries/queries'
 import { candidates } from '@/lib/db/schema/candidate'
 import { recruiterPipelines, pipelineCandidates } from '@/lib/db/schema/recruiter'
 
@@ -63,7 +63,10 @@ export async function applyToJobAction(
     .select()
     .from(pipelineCandidates)
     .where(
-      and(eq(pipelineCandidates.pipelineId, pipelineId), eq(pipelineCandidates.candidateId, cand.id)),
+      and(
+        eq(pipelineCandidates.pipelineId, pipelineId),
+        eq(pipelineCandidates.candidateId, cand.id),
+      ),
     )
     .limit(1)
 

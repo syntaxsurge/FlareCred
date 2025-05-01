@@ -18,10 +18,7 @@ import * as React from 'react'
  * @param initialParams Initial query params derived from the first render.
  * @returns             <code>updateParam(key, value)</code> – call this per change.
  */
-export function useFilterNavigation(
-  basePath: string,
-  initialParams: Record<string, string> = {},
-) {
+export function useFilterNavigation(basePath: string, initialParams: Record<string, string> = {}) {
   const router = useRouter()
 
   /** Mutable copy of the current search params. */

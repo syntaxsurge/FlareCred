@@ -155,8 +155,16 @@ export async function seedUserTeam() {
       category: CredentialCategory.CERTIFICATION,
       type: 'certification',
     },
-    { title: 'AWS Solutions Architect Associate', category: CredentialCategory.CERTIFICATION, type: 'certification' },
-    { title: 'Docker Certified Associate', category: CredentialCategory.CERTIFICATION, type: 'certification' },
+    {
+      title: 'AWS Solutions Architect Associate',
+      category: CredentialCategory.CERTIFICATION,
+      type: 'certification',
+    },
+    {
+      title: 'Docker Certified Associate',
+      category: CredentialCategory.CERTIFICATION,
+      type: 'certification',
+    },
     {
       title: '3 Years Experience as Backend Developer',
       category: CredentialCategory.EXPERIENCE,

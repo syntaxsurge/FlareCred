@@ -187,7 +187,7 @@ export function Settings({
             {team.did ? (
               <>
                 <p className='text-sm'>DID:</p>
-                <p className='break-all font-semibold'>{team.did}</p>
+                <p className='font-semibold break-all'>{team.did}</p>
               </>
             ) : (
               <p className='text-muted-foreground text-sm'>

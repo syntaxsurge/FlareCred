@@ -1,15 +1,16 @@
 import { redirect } from 'next/navigation'
+
 import { asc, eq } from 'drizzle-orm'
 import { Tag } from 'lucide-react'
 
-import PageCard          from '@/components/ui/page-card'
+import PageCard from '@/components/ui/page-card'
 import { subscriptionManager } from '@/lib/contracts'
-import { getUser }       from '@/lib/db/queries/queries'
-import { db }            from '@/lib/db/drizzle'
-import { planFeatures }  from '@/lib/db/schema/pricing'
+import { db } from '@/lib/db/drizzle'
+import { getUser } from '@/lib/db/queries/queries'
+import { planFeatures } from '@/lib/db/schema/pricing'
 
-import UpdatePlanPricesForm   from './update-plan-prices-form'
 import UpdatePlanFeaturesForm from './update-plan-features-form'
+import UpdatePlanPricesForm from './update-plan-prices-form'
 
 export const revalidate = 0
 
@@ -46,9 +47,9 @@ export default async function AdminPlanPricesPage() {
   ])
 
   const defaultFeatures = {
-    free: freeRows.map(r => r.feature),
-    base: baseRows.map(r => r.feature),
-    plus: plusRows.map(r => r.feature),
+    free: freeRows.map((r) => r.feature),
+    base: baseRows.map((r) => r.feature),
+    plus: plusRows.map((r) => r.feature),
   }
 
   /* ------------------------------- View --------------------------------- */

@@ -2,6 +2,7 @@
 
 import { eq } from 'drizzle-orm'
 
+import { openAIAssess } from '@/lib/ai/openai' /* ← centralised helper */
 import { PLATFORM_ISSUER_DID } from '@/lib/config'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
@@ -9,8 +10,6 @@ import { candidates, skillQuizzes } from '@/lib/db/schema/candidate'
 import { teams, teamMembers } from '@/lib/db/schema/core'
 import { extractAddressFromDid, toBytes32 } from '@/lib/utils/address'
 import { signCredentialMint } from '@/lib/utils/signature'
-
-import { openAIAssess } from '@/lib/ai/openai'          /* ← centralised helper */
 
 export async function startQuizAction(formData: FormData) {
   const user = await getUser()

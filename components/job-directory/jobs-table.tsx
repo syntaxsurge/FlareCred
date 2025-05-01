@@ -1,21 +1,17 @@
 'use client'
 
-import React from 'react'
 import { useRouter } from 'next/navigation'
-import { formatDateTime } from '@/lib/utils/time'
+import React from 'react'
+
 import { Briefcase } from 'lucide-react'
 
 import { applyToJobAction } from '@/app/(tools)/jobs/actions'
 import { ActionButton } from '@/components/ui/action-button'
 import { DataTable, type Column } from '@/components/ui/tables/data-table'
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { TableProps, JobRow } from '@/lib/types/tables'
-import {
-  TooltipProvider,
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from '@/components/ui/tooltip'
+import { formatDateTime } from '@/lib/utils/time'
 
 /* -------------------------------------------------------------------------- */
 /*                              T Y P E S                                     */
@@ -134,8 +130,8 @@ function ApplyButton({
   const disabledReason = isApplied
     ? 'You have already applied to this job.'
     : !isCandidate
-    ? 'Only candidates may apply to job openings.'
-    : ''
+      ? 'Only candidates may apply to job openings.'
+      : ''
 
   if (disabled) {
     return (

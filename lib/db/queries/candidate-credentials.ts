@@ -2,12 +2,10 @@ import { eq } from 'drizzle-orm'
 
 import { db } from '@/lib/db/drizzle'
 import { candidates } from '@/lib/db/schema/candidate'
-import type { CandidateCredentialRow, PageResult } from '@/lib/types/tables'
 import type { StatusCounts } from '@/lib/types/candidate'
+import type { CandidateCredentialRow, PageResult } from '@/lib/types/tables'
 
-import {
-  getCandidateCredentialsSection,
-} from './candidate-credentials-core'
+import { getCandidateCredentialsSection } from './candidate-credentials-core'
 
 /* -------------------------------------------------------------------------- */
 /*               P U B L I C   W R A P P E R   F O R   U S E R                */

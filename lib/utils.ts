@@ -30,7 +30,7 @@ export function buildLink(
 /**
  * Parses vcJson and returns proofTx if it exists.
  */
-export function getProofTx(vcJson: string | null | undefined): string |null {
+export function getProofTx(vcJson: string | null | undefined): string | null {
   if (!vcJson) return null
   try {
     const obj = JSON.parse(vcJson)

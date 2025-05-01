@@ -1,12 +1,13 @@
 'use server'
 
-import { revalidatePath }         from 'next/cache'
-import { z }                      from 'zod'
-import { eq }                     from 'drizzle-orm'
+import { revalidatePath } from 'next/cache'
+
+import { eq } from 'drizzle-orm'
+import { z } from 'zod'
 
 import { validatedActionWithUser } from '@/lib/auth/middleware'
-import { db }                     from '@/lib/db/drizzle'
-import { planFeatures }           from '@/lib/db/schema/pricing'
+import { db } from '@/lib/db/drizzle'
+import { planFeatures } from '@/lib/db/schema/pricing'
 
 /* -------------------------------------------------------------------------- */
 /*                              V A L I D A T I O N                           */
@@ -30,7 +31,7 @@ const _updatePlanFeatures = validatedActionWithUser(
     const parse = (txt: string) =>
       txt
         .split('\n')
-        .map(l => l.trim())
+        .map((l) => l.trim())
         .filter(Boolean)
 
     const plans: Record<'free' | 'base' | 'plus', string[]> = {
@@ -39,7 +40,7 @@ const _updatePlanFeatures = validatedActionWithUser(
       plus: parse(plus),
     }
 
-    await db.transaction(async tx => {
+    await db.transaction(async (tx) => {
       for (const [key, list] of Object.entries(plans) as [keyof typeof plans, string[]][]) {
         await tx.delete(planFeatures).where(eq(planFeatures.planKey, key))
         if (list.length) {

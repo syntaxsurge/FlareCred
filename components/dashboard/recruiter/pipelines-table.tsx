@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
-import { relativeTime } from '@/lib/utils/time'
 import { Trash2, FolderKanban } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -13,6 +12,7 @@ import { TableRowActions, type TableRowAction } from '@/components/ui/tables/row
 import { useBulkActions } from '@/lib/hooks/use-bulk-actions'
 import { useTableNavigation } from '@/lib/hooks/use-table-navigation'
 import type { TableProps, PipelineRow } from '@/lib/types/tables'
+import { relativeTime } from '@/lib/utils/time'
 
 /* -------------------------------------------------------------------------- */
 /*                         Row-level actions component                        */

@@ -1,6 +1,15 @@
-import { pgTable, serial, integer, varchar, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core'
-import { users } from './core'
+import {
+  pgTable,
+  serial,
+  integer,
+  varchar,
+  text,
+  timestamp,
+  uniqueIndex,
+} from 'drizzle-orm/pg-core'
+
 import { candidates } from './candidate'
+import { users } from './core'
 
 /**
  * Cached "Why Hire” summaries keyed by (recruiter × candidate).
@@ -26,7 +35,7 @@ export const recruiterCandidateFits = pgTable(
     generatedAt: timestamp('generated_at').notNull().defaultNow(),
   },
   /* One row per recruiter × candidate */
-  t => [uniqueIndex('recruiter_candidate_unique_idx').on(t.recruiterId, t.candidateId)],
+  (t) => [uniqueIndex('recruiter_candidate_unique_idx').on(t.recruiterId, t.candidateId)],
 )
 
 export type RecruiterCandidateFit = typeof recruiterCandidateFits.$inferSelect

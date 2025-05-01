@@ -4,13 +4,10 @@ import { createHash } from 'crypto'
 
 import { eq } from 'drizzle-orm'
 
-import { db } from '@/lib/db/drizzle'
-import {
-  candidates,
-  candidateCredentials,
-} from '@/lib/db/schema/candidate'
-import { issuers } from '@/lib/db/schema/issuer'
 import { summariseCandidateProfile } from '@/lib/ai/openai'
+import { db } from '@/lib/db/drizzle'
+import { candidates, candidateCredentials } from '@/lib/db/schema/candidate'
+import { issuers } from '@/lib/db/schema/issuer'
 
 /**
  * Generate an AI summary for the specified candidate.
@@ -46,7 +43,7 @@ export async function generateCandidateSummary(candidateId: number): Promise<voi
     cand.summaryGeneratedAt &&
     new Date(cand.summaryGeneratedAt).toDateString() === now.toDateString()
 
-  const dailyCount = sameDay ? cand.summaryDailyCount ?? 0 : 0
+  const dailyCount = sameDay ? (cand.summaryDailyCount ?? 0) : 0
   if (dailyCount >= 2) {
     throw new Error('AI summary limit reached – please try again tomorrow.')
   }

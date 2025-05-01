@@ -4,8 +4,8 @@ import type { PipelineListingRow } from '@/lib/types/tables'
 
 import { db } from '../drizzle'
 import { buildOrderExpr, buildSearchCondition, paginate } from './query-helpers'
-import { recruiterPipelines } from '../schema/recruiter'
 import { users } from '../schema/core'
+import { recruiterPipelines } from '../schema/recruiter'
 
 /* -------------------------------------------------------------------------- */
 /*                         Generic Pipelines Listing                          */
@@ -59,10 +59,7 @@ export async function getPipelinesPage(
   /* ---------------------- Normalise createdAt --------------------------- */
   const pipelines = rows.map((r) => ({
     ...r,
-    createdAt:
-      typeof r.createdAt === 'string'
-        ? r.createdAt
-        : (r.createdAt as Date).toISOString(),
+    createdAt: typeof r.createdAt === 'string' ? r.createdAt : (r.createdAt as Date).toISOString(),
   })) as PipelineListingRow[]
 
   return { pipelines, hasNext }

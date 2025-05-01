@@ -1,10 +1,11 @@
 import { eq } from 'drizzle-orm'
+
 import type { AdminIssuerRow } from '@/lib/types/tables'
 
 import { db } from '../drizzle'
 import { getPaginatedList } from './query-helpers'
-import { issuers } from '../schema/issuer'
 import { users } from '../schema/core'
+import { issuers } from '../schema/issuer'
 
 /* -------------------------------------------------------------------------- */
 /*                         A D M I N   I S S U E R S                          */

@@ -1,9 +1,10 @@
 'use client'
 
 import * as React from 'react'
+
 import { ethers } from 'ethers'
-import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { useAccount, useWalletClient } from 'wagmi'
 
 import { Button } from '@/components/ui/button'

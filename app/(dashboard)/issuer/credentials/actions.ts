@@ -41,8 +41,7 @@ export const approveCredentialAction = validatedActionWithUser(
       )
       .limit(1)
     if (!cred) return { error: 'Credential not found for this issuer.' }
-    if (cred.status === CredentialStatus.VERIFIED)
-      return { error: 'Credential already verified.' }
+    if (cred.status === CredentialStatus.VERIFIED) return { error: 'Credential already verified.' }
 
     let parsedProof: unknown = cred.proofData
     try {

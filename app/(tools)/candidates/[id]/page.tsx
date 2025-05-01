@@ -1,13 +1,12 @@
-import { redirect } from 'next/navigation'
-
 import { eq, asc, and } from 'drizzle-orm'
 
 import CandidateDetailedProfileView from '@/components/dashboard/candidate/profile-detailed-view'
+import AddToPipelineForm from '@/components/recruiter/add-to-pipeline-form'
 import { db } from '@/lib/db/drizzle'
+import { getCandidateCredentialsSection } from '@/lib/db/queries/candidate-credentials-core'
+import { getCandidateSkillPassesSection } from '@/lib/db/queries/candidate-skill-passes'
 import { getUser } from '@/lib/db/queries/queries'
 import { getCandidatePipelineEntriesPage } from '@/lib/db/queries/recruiter-pipeline-entries'
-import { getCandidateSkillPassesSection } from '@/lib/db/queries/candidate-skill-passes'
-import { getCandidateCredentialsSection } from '@/lib/db/queries/candidate-credentials-core'
 import { candidates, users } from '@/lib/db/schema'
 import {
   candidateHighlights,
@@ -18,14 +17,8 @@ import {
 import { issuers } from '@/lib/db/schema/issuer'
 import { recruiterPipelines } from '@/lib/db/schema/recruiter'
 import { recruiterCandidateFits } from '@/lib/db/schema/recruiter-fit'
-import AddToPipelineForm from '@/components/recruiter/add-to-pipeline-form'
-import type {
-  PipelineEntryRow,
-  RecruiterCredentialRow,
-  SkillPassRow,
-} from '@/lib/types/tables'
 import type { StatusCounts } from '@/lib/types/candidate'
-import { Stage } from '@/lib/types/recruiter'
+import type { PipelineEntryRow, RecruiterCredentialRow, SkillPassRow } from '@/lib/types/tables'
 
 export const revalidate = 0
 
@@ -100,10 +93,7 @@ export default async function PublicCandidateProfile({
       sortOrder: candidateHighlights.sortOrder,
     })
     .from(candidateHighlights)
-    .innerJoin(
-      candidateCredentials,
-      eq(candidateHighlights.credentialId, candidateCredentials.id),
-    )
+    .innerJoin(candidateCredentials, eq(candidateHighlights.credentialId, candidateCredentials.id))
     .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
     .where(eq(candidateHighlights.candidateId, candidateId))
 
@@ -287,9 +277,7 @@ export default async function PublicCandidateProfile({
         basePath: `/candidates/${candidateId}`,
         initialParams: pipeInitialParams,
       },
-      addToPipelineForm: (
-        <AddToPipelineForm candidateId={candidateId} pipelines={pipelines} />
-      ),
+      addToPipelineForm: <AddToPipelineForm candidateId={candidateId} pipelines={pipelines} />,
     }
   }
 

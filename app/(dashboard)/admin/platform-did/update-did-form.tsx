@@ -19,8 +19,8 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { copyToClipboard } from '@/lib/utils'
 import type { DidActionState, UpdateDidFormProps } from '@/lib/types/forms'
+import { copyToClipboard } from '@/lib/utils'
 
 import { upsertPlatformDidAction } from './actions'
 
@@ -58,7 +58,6 @@ export default function UpdateDidForm({ defaultDid }: UpdateDidFormProps) {
       }
       setEditing(false)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state])
 
   /* Clear "generating” flag as soon as the ActionState finishes */
@@ -185,7 +184,7 @@ export default function UpdateDidForm({ defaultDid }: UpdateDidFormProps) {
       {/* Divider ---------------------------------------------------------- */}
       <div className='relative'>
         <span className='absolute inset-x-0 top-1/2 -translate-y-1/2 border-t' />
-        <span className='bg-background relative mx-auto px-3 text-xs uppercase text-muted-foreground'>
+        <span className='bg-background text-muted-foreground relative mx-auto px-3 text-xs uppercase'>
           or
         </span>
       </div>

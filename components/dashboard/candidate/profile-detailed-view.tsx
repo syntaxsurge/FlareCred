@@ -17,15 +17,15 @@ import {
 import { FaTwitter } from 'react-icons/fa'
 import { SiGithub, SiLinkedin } from 'react-icons/si'
 
+import GenerateSummaryButton from '@/components/dashboard/candidate/generate-summary-button'
 import SkillPassesTable from '@/components/dashboard/candidate/skill-passes-table'
 import CredentialsTable from '@/components/dashboard/recruiter/credentials-table'
+import GenerateFitButton from '@/components/dashboard/recruiter/generate-fit-button'
 import PipelineEntriesTable from '@/components/dashboard/recruiter/pipeline-entries-table'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import StatusBadge from '@/components/ui/status-badge'
-import GenerateSummaryButton from '@/components/dashboard/candidate/generate-summary-button'
-import GenerateFitButton from '@/components/dashboard/recruiter/generate-fit-button'
 import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { SnapshotMetrics } from '@/lib/types/candidate'
@@ -267,21 +267,18 @@ export default function CandidateDetailedProfileView({
               {fitParsed ? (
                 <div className='space-y-4'>
                   <h4 className='font-semibold'>Why Hire</h4>
-                  <ul className='list-disc pl-5 space-y-1'>
-                    {fitParsed.bullets?.map((b: string, i: number) => (
-                      <li key={i}>{b}</li>
-                    ))}
+                  <ul className='list-disc space-y-1 pl-5'>
+                    {fitParsed.bullets?.map((b: string, i: number) => <li key={i}>{b}</li>)}
                   </ul>
 
                   <p>
-                    <span className='font-semibold'>Best Pipeline:</span>{' '}
-                    {fitParsed.bestPipeline}
+                    <span className='font-semibold'>Best Pipeline:</span> {fitParsed.bestPipeline}
                   </p>
 
                   {fitParsed.pros?.length > 0 && (
                     <div>
                       <p className='font-semibold'>Pros</p>
-                      <ul className='list-disc pl-5 space-y-1'>
+                      <ul className='list-disc space-y-1 pl-5'>
                         {fitParsed.pros.map((p: string, i: number) => (
                           <li key={i}>{p}</li>
                         ))}
@@ -292,7 +289,7 @@ export default function CandidateDetailedProfileView({
                   {fitParsed.cons?.length > 0 && (
                     <div>
                       <p className='font-semibold'>Cons</p>
-                      <ul className='list-disc pl-5 space-y-1'>
+                      <ul className='list-disc space-y-1 pl-5'>
                         {fitParsed.cons.map((c: string, i: number) => (
                           <li key={i}>{c}</li>
                         ))}

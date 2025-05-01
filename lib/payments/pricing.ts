@@ -1,9 +1,10 @@
+import { eq, asc } from 'drizzle-orm'
+
+import { PLAN_META } from '@/lib/constants/pricing'
 import { subscriptionManager } from '@/lib/contracts'
-import { PLAN_META }           from '@/lib/constants/pricing'
-import { db }                  from '@/lib/db/drizzle'
-import { planFeatures }        from '@/lib/db/schema/pricing'
-import { eq, asc }             from 'drizzle-orm'
-import type { PlanMeta }       from '@/lib/types/pricing'
+import { db } from '@/lib/db/drizzle'
+import { planFeatures } from '@/lib/db/schema/pricing'
+import type { PlanMeta } from '@/lib/types/pricing'
 
 /* -------------------------------------------------------------------------- */
 /*                         Runtime plan-metadata helper                       */
@@ -23,10 +24,10 @@ async function getFeatures(planKey: 'free' | 'base' | 'plus'): Promise<string[]>
     .where(eq(planFeatures.planKey, planKey))
     .orderBy(asc(planFeatures.sortOrder))
 
-  if (rows.length) return rows.map(r => r.feature)
+  if (rows.length) return rows.map((r) => r.feature)
 
   /* Fallback – bootstrap with PLAN_META definitions */
-  const constant = PLAN_META.find(p => p.key === planKey)
+  const constant = PLAN_META.find((p) => p.key === planKey)
   return constant ? [...constant.features] : []
 }
 

@@ -74,17 +74,8 @@ export default function TalentTable({
         enableHiding: false,
         sortable: false,
         render: (_v, row) => (
-          <Button
-            asChild
-            variant='link'
-            size='sm'
-            className='text-primary'
-          >
-            <Link
-              href={`/candidates/${row.id}`}
-              target='_blank'
-              rel='noopener noreferrer'
-            >
+          <Button asChild variant='link' size='sm' className='text-primary'>
+            <Link href={`/candidates/${row.id}`} target='_blank' rel='noopener noreferrer'>
               View Profile
             </Link>
           </Button>

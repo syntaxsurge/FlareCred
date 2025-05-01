@@ -1,20 +1,16 @@
 'use server'
 
 import { createHash } from 'crypto'
+
 import { and, eq } from 'drizzle-orm'
 
+import { generateCandidateFitSummary } from '@/lib/ai/openai'
+import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
 import { getRecruiterPipelinesPage } from '@/lib/db/queries/recruiter-pipelines'
-import { db } from '@/lib/db/drizzle'
-import {
-  candidates,
-  candidateCredentials,
-} from '@/lib/db/schema/candidate'
+import { candidates, candidateCredentials } from '@/lib/db/schema/candidate'
 import { issuers } from '@/lib/db/schema/issuer'
-import {
-  recruiterCandidateFits,
-} from '@/lib/db/schema/recruiter-fit'
-import { generateCandidateFitSummary } from '@/lib/ai/openai'
+import { recruiterCandidateFits } from '@/lib/db/schema/recruiter-fit'
 
 /* -------------------------------------------------------------------------- */
 /*          R E C R U I T E R   " W H Y   H I R E ”  A C T I O N             */
@@ -41,22 +37,13 @@ export async function generateCandidateFit(candidateId: number): Promise<string>
   }
 
   /* ------------------ Fetch up-to-20 recruiter pipelines ---------------- */
-  const { pipelines } = await getRecruiterPipelinesPage(
-    user.id,
-    1,
-    20,
-    'createdAt',
-    'desc',
-    '',
-  )
+  const { pipelines } = await getRecruiterPipelinesPage(user.id, 1, 20, 'createdAt', 'desc', '')
 
   const pipelineText =
     pipelines.length === 0
       ? 'NONE'
       : pipelines
-          .map(
-            (p, i) => `${i + 1}. ${p.name}${p.description ? ` – ${p.description}` : ''}`,
-          )
+          .map((p, i) => `${i + 1}. ${p.name}${p.description ? ` – ${p.description}` : ''}`)
           .join('\n')
 
   /* ---------------------- Build candidate profile text ------------------ */
@@ -74,16 +61,17 @@ export async function generateCandidateFit(candidateId: number): Promise<string>
     .leftJoin(issuers, eq(candidateCredentials.issuerId, issuers.id))
     .where(eq(candidateCredentials.candidateId, candidateId))
 
-  const profileStr =
-    [
-      cand.bio ?? '',
-      '',
-      'Credentials:',
-      ...creds.map((c) => `• ${c.title}${c.issuer ? ` – ${c.issuer}` : ''}`),
-    ].join('\n').trim()
+  const profileStr = [
+    cand.bio ?? '',
+    '',
+    'Credentials:',
+    ...creds.map((c) => `• ${c.title}${c.issuer ? ` – ${c.issuer}` : ''}`),
+  ]
+    .join('\n')
+    .trim()
 
   /* -------------------------- Cache look-up ----------------------------- */
-  const profileHash   = createHash('sha256').update(profileStr).digest('hex')
+  const profileHash = createHash('sha256').update(profileStr).digest('hex')
   const pipelinesHash = createHash('sha256').update(pipelineText).digest('hex')
 
   const [cache] = await db

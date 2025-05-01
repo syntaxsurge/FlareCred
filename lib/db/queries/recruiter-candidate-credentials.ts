@@ -1,5 +1,6 @@
-import { getCandidateCredentialsSection } from './candidate-credentials-core'
 import type { RecruiterCredentialRow } from '@/lib/types/tables'
+
+import { getCandidateCredentialsSection } from './candidate-credentials-core'
 
 /* -------------------------------------------------------------------------- */
 /*                R E C R U I T E R   →   C A N D I D A T E   C R E D S       */
@@ -46,7 +47,9 @@ export async function getRecruiterCandidateCredentialsPage(
 
   /* ------------------------- Verified-first tweak ------------------------ */
   if (verifiedFirst) {
-    credentials = credentials.sort((a, b) => Number(b.status === 'verified') - Number(a.status === 'verified'))
+    credentials = credentials.sort(
+      (a, b) => Number(b.status === 'verified') - Number(a.status === 'verified'),
+    )
   }
 
   return { credentials, hasNext }

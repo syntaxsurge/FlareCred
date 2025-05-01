@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
+import { addCandidateToPipelineAction } from '@/app/(dashboard)/recruiter/pipelines/actions'
 import { ActionButton } from '@/components/ui/action-button'
 import {
   Select,
@@ -12,8 +13,6 @@ import {
   SelectItem,
 } from '@/components/ui/select'
 import type { AddToPipelineFormProps } from '@/lib/types/forms'
-
-import { addCandidateToPipelineAction } from '@/app/(dashboard)/recruiter/pipelines/actions'
 
 /**
  * Recruiter utility: add a candidate to one of the recruiter’s pipelines.
@@ -44,7 +43,7 @@ export default function AddToPipelineForm({ candidateId, pipelines }: AddToPipel
       {/* Pipeline selector – always interactive but shows placeholder when none exist */}
       <div className='flex flex-1'>
         <Select value={pipelineId} onValueChange={setPipelineId}>
-          <SelectTrigger id='pipelineId' className='w-full focus:ring-2 focus:ring-primary'>
+          <SelectTrigger id='pipelineId' className='focus:ring-primary w-full focus:ring-2'>
             <SelectValue placeholder='Add to Pipeline' />
           </SelectTrigger>
 
@@ -65,11 +64,7 @@ export default function AddToPipelineForm({ candidateId, pipelines }: AddToPipel
       </div>
 
       {/* Submit button – functional guard replaces disabled muting */}
-      <ActionButton
-        onAction={handleAdd}
-        pendingLabel='Adding…'
-        className='disabled:opacity-100'
-      >
+      <ActionButton onAction={handleAdd} pendingLabel='Adding…' className='disabled:opacity-100'>
         Add
       </ActionButton>
     </form>

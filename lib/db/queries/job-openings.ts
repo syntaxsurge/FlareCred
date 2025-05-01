@@ -35,10 +35,7 @@ export async function getJobOpeningsPage(
     name: p.name ?? '(Untitled)',
     recruiter: p.recruiterName ?? 'Unknown',
     description: p.description ?? '',
-    createdAt:
-      typeof p.createdAt === 'string'
-        ? p.createdAt
-        : (p.createdAt as Date).toISOString(),
+    createdAt: typeof p.createdAt === 'string' ? p.createdAt : (p.createdAt as Date).toISOString(),
   }))
 
   return { jobs, hasNext }

@@ -22,8 +22,8 @@ export const planFeatures = pgTable(
     feature: varchar('feature', { length: 255 }).notNull(),
     sortOrder: integer('sort_order').notNull().default(1),
   },
-  t => [uniqueIndex('plan_features_plan_sort_idx').on(t.planKey, t.sortOrder)],
+  (t) => [uniqueIndex('plan_features_plan_sort_idx').on(t.planKey, t.sortOrder)],
 )
 
-export type PlanFeature       = typeof planFeatures.$inferSelect
-export type NewPlanFeature    = typeof planFeatures.$inferInsert
+export type PlanFeature = typeof planFeatures.$inferSelect
+export type NewPlanFeature = typeof planFeatures.$inferInsert
