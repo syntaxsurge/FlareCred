@@ -12,7 +12,12 @@ import { getCandidateCredentialsPage } from '@/lib/db/queries/candidate-credenti
 import { getUser } from '@/lib/db/queries/queries'
 import { teams, teamMembers } from '@/lib/db/schema/core'
 import type { CandidateCredentialRow } from '@/lib/types/tables'
-import { getParam, resolveSearchParams, type Query } from '@/lib/utils/query'
+import {
+  getParam,
+  pickParams,
+  resolveSearchParams,
+  type Query,
+} from '@/lib/utils/query'
 
 export const revalidate = 0
 
@@ -80,15 +85,7 @@ export default async function CredentialsPage({
   /* ------------------------------------------------------------------ */
   /* Preserve current query-string state                                */
   /* ------------------------------------------------------------------ */
-  const initialParams: Record<string, string> = {}
-  const copy = (k: string) => {
-    const v = getParam(params, k)
-    if (v) initialParams[k] = v
-  }
-  copy('size')
-  copy('sort')
-  copy('order')
-  if (searchTerm) initialParams.q = searchTerm
+  const initialParams = pickParams(params, ['size', 'sort', 'order', 'q'])
 
   /* ------------------------------------------------------------------ */
   /* View                                                               */

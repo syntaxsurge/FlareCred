@@ -8,7 +8,12 @@ import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getAdminCredentialsPage } from '@/lib/db/queries/admin-credentials'
 import { getUser } from '@/lib/db/queries/queries'
 import type { AdminCredentialRow } from '@/lib/types/tables'
-import { getParam, resolveSearchParams, type Query } from '@/lib/utils/query'
+import {
+  getParam,
+  pickParams,
+  resolveSearchParams,
+  type Query,
+} from '@/lib/utils/query'
 
 export const revalidate = 0
 
@@ -58,15 +63,7 @@ export default async function AdminCredentialsPage({
   }))
 
   /* ------------------------ Build initialParams -------------------------- */
-  const initialParams: Record<string, string> = {}
-  const keep = (k: string) => {
-    const v = getParam(params, k)
-    if (v) initialParams[k] = v
-  }
-  keep('size')
-  keep('sort')
-  keep('order')
-  if (searchTerm) initialParams.q = searchTerm
+  const initialParams = pickParams(params, ['size', 'sort', 'order', 'q'])
 
   /* ------------------------------ View ----------------------------------- */
   return (
