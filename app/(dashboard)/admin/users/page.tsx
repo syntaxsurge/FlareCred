@@ -16,11 +16,7 @@ export const revalidate = 0
  * Admin → Users management listing.
  * Uniformly parses pagination, sort and search via `getTableParams`.
  */
-export default async function AdminUsersPage({
-  searchParams,
-}: {
-  searchParams?: Promise<Query>
-}) {
+export default async function AdminUsersPage({ searchParams }: { searchParams?: Promise<Query> }) {
   const params = await resolveSearchParams(searchParams)
 
   /* ------------------------------ Auth --------------------------------- */

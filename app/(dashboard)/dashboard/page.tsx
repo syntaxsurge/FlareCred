@@ -18,7 +18,6 @@ import CandidateCharts from '@/components/dashboard/candidate/charts'
 import IssuerCharts from '@/components/dashboard/issuer/charts'
 import RecruiterCharts from '@/components/dashboard/recruiter/charts'
 import { RoleBadge } from '@/components/dashboard/role-badge'
-import type { Role } from '@/lib/types'
 import { Card, CardContent } from '@/components/ui/card'
 import { db } from '@/lib/db/drizzle'
 import { getUser } from '@/lib/db/queries/queries'
@@ -31,6 +30,7 @@ import {
 import { users, teams } from '@/lib/db/schema/core'
 import { issuers, IssuerStatus } from '@/lib/db/schema/issuer'
 import { recruiterPipelines, pipelineCandidates } from '@/lib/db/schema/recruiter'
+import type { Role } from '@/lib/types'
 
 export const revalidate = 0
 

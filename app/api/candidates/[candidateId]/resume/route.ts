@@ -7,10 +7,7 @@ import { buildResumeData, generateResumePdf } from '@/lib/resume/resume-builder'
  *
  * Generates a résumé PDF for the specified candidate.
  */
-export async function GET(
-  _req: Request,
-  { params }: { params: Promise<{ candidateId: string }> },
-) {
+export async function GET(_req: Request, { params }: { params: Promise<{ candidateId: string }> }) {
   /* Await dynamic segment */
   const { candidateId: idStr } = await params
   const candidateId = Number(idStr)

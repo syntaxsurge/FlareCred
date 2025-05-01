@@ -12,11 +12,7 @@ import { getTableParams, resolveSearchParams, type Query } from '@/lib/utils/que
 
 export const revalidate = 0
 
-export default async function ActivityPage({
-  searchParams,
-}: {
-  searchParams?: Promise<Query>
-}) {
+export default async function ActivityPage({ searchParams }: { searchParams?: Promise<Query> }) {
   const params = await resolveSearchParams(searchParams)
 
   /* ------------------------------ Auth ----------------------------------- */

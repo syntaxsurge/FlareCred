@@ -8,13 +8,7 @@ import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { db } from '@/lib/db/drizzle'
 import { issuers, IssuerStatus, IssuerCategory, IssuerIndustry } from '@/lib/db/schema/issuer'
 import type { IssuerDirectoryRow } from '@/lib/types/tables'
-import {
-  getTableParams,
-  getParam,
-  resolveSearchParams,
-  pickParams,
-  type Query,
-} from '@/lib/utils/query'
+import { getTableParams, getParam, resolveSearchParams, type Query } from '@/lib/utils/query'
 
 export const revalidate = 0
 

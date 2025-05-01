@@ -18,9 +18,7 @@ export function getParam(params: Query, key: string): string | undefined {
  * Uniformly resolve the `searchParams` that Next.js can pass either as an
  * object or a `Promise` of that object (depending on framework version).
  */
-export async function resolveSearchParams(
-  searchParams?: Query | Promise<Query>,
-): Promise<Query> {
+export async function resolveSearchParams(searchParams?: Query | Promise<Query>): Promise<Query> {
   if (!searchParams) return {}
   return (searchParams as any).then
     ? await (searchParams as Promise<Query>)
@@ -80,11 +78,7 @@ export interface Sort {
  * Clamp <code>sort</code> to <code>allowed</code> keys and normalise
  * <code>order</code> to the canonical <code>'asc' | 'desc'</code> strings.
  */
-export function parseSort(
-  params: Query,
-  allowed: readonly string[],
-  fallback: string,
-): Sort {
+export function parseSort(params: Query, allowed: readonly string[], fallback: string): Sort {
   const sortRaw = getParam(params, 'sort') ?? fallback
   const sort = allowed.includes(sortRaw) ? sortRaw : fallback
   const order = getParam(params, 'order') === 'asc' ? 'asc' : 'desc'
