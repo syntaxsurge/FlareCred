@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { useRouter } from 'next/navigation'
-import { format } from 'date-fns'
+import { formatDateTime } from '@/lib/utils/time'
 import { Briefcase } from 'lucide-react'
 
 import { applyToJobAction } from '@/app/(tools)/jobs/actions'
@@ -69,7 +69,7 @@ export default function JobsTable({
         key: 'createdAt',
         header: sortableHeader('Posted', 'createdAt'),
         sortable: false,
-        render: (v) => format(new Date(v as string), 'PPP'),
+        render: (v) => formatDateTime(new Date(v as string)),
       },
       {
         key: 'description',

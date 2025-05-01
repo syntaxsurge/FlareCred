@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
-import { formatDistanceToNow } from 'date-fns'
+import { relativeTime } from '@/lib/utils/time'
 import { Pencil, Trash2, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -183,7 +183,7 @@ export default function MembersTable({
         key: 'joinedAt',
         header: sortableHeader('Joined', 'joinedAt'),
         sortable: false,
-        render: (v) => formatDistanceToNow(new Date(v as string), { addSuffix: true }),
+        render: (v) => relativeTime(new Date(v as string)),
       },
     ]
 

@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
-import { formatDistanceToNow } from 'date-fns'
+import { relativeTime } from '@/lib/utils/time'
 import { Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -195,7 +195,7 @@ export default function InvitationsTable({
         key: 'invitedAt',
         header: sortableHeader('Invited', 'invitedAt'),
         sortable: false,
-        render: (v) => <span>{formatDistanceToNow(new Date(v as Date), { addSuffix: true })}</span>,
+        render: (v) => <span>{relativeTime(new Date(v as Date))}</span>,
       },
       {
         key: 'id',

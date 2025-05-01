@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 
-import { format } from 'date-fns'
+import { formatDateTime } from '@/lib/utils/time'
 import { eq } from 'drizzle-orm'
 import { KanbanSquare } from 'lucide-react'
 
@@ -91,8 +91,8 @@ export default async function PipelineBoardPage({ params }: { params: Promise<{ 
             {totalCandidates} {totalCandidates === 1 ? 'Candidate' : 'Candidates'}
           </span>
           <span className='text-muted-foreground'>
-            Created {format(pipeline.createdAt, 'PPP')} • Updated{' '}
-            {format(pipeline.updatedAt, 'PPP')}
+            Created {formatDateTime(pipeline.createdAt)} • Updated{' '}
+            {formatDateTime(pipeline.updatedAt)}
           </span>
         </div>
 

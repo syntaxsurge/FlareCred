@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
-import { formatDistanceToNow } from 'date-fns'
+import { relativeTime } from '@/lib/utils/time'
 import { Trash2, FolderKanban } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -109,7 +109,7 @@ export default function PipelinesTable({
         key: 'createdAt',
         header: sortableHeader('Created', 'createdAt'),
         sortable: false,
-        render: (v) => formatDistanceToNow(new Date(v as string), { addSuffix: true }),
+        render: (v) => relativeTime(new Date(v as string)),
       },
       {
         key: 'id',
