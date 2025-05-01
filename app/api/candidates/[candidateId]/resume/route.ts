@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { buildResumeData, generateResumePdf } from '@/lib/resume/resume-builder'
+import { ResumeRouteParams } from '@/lib/types/forms'
 
 /**
  * GET /api/candidates/[candidateId]/resume
@@ -9,7 +10,7 @@ import { buildResumeData, generateResumePdf } from '@/lib/resume/resume-builder'
  */
 export async function GET(
   _req: Request,
-  context: { params: { candidateId: string } },
+  context: ResumeRouteParams,
 ) {
   const candidateId = Number(context.params.candidateId)
   if (Number.isNaN(candidateId)) {
