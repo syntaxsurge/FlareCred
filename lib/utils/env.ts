@@ -58,8 +58,8 @@ export async function upsertEnv(key: string, value: string): Promise<void> {
   }
 
   /* Dynamically import Node core modules so they are tree-shaken from client bundles */
-  const fs = await import('node:fs/promises')
-  const path = await import('node:path')
+  const fs = await import('fs/promises')
+  const path = await import('path')
 
   const ENV_PATH = path.resolve(process.cwd(), '.env')
 
