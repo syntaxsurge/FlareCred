@@ -8,11 +8,20 @@ import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getUser } from '@/lib/db/queries/queries'
 import { getRecruiterPipelinesPage } from '@/lib/db/queries/recruiter-pipelines'
 import type { PipelineRow } from '@/lib/types/tables'
-import { getParam, pickParams, resolveSearchParams, type Query } from '@/lib/utils/query'
+import {
+  parsePagination,
+  parseSort,
+  getSearchTerm,
+  pickParams,
+  resolveSearchParams,
+  type Query,
+} from '@/lib/utils/query'
 
 import NewPipelineDialog from './new-pipeline-dialog'
 
 export const revalidate = 0
+
+const ALLOWED_SORT_KEYS = ['name', 'createdAt'] as const
 
 /* -------------------------------------------------------------------------- */
 /*                                    Page                                    */
@@ -23,31 +32,22 @@ export default async function PipelinesPage({
 }: {
   searchParams?: Promise<Query>
 }) {
-  /* Normalise Next.js searchParams (supports object or Promise) */
   const params = await resolveSearchParams(searchParams)
 
-  /* ----------------------------- Auth guard ------------------------------ */
   const user = await getUser()
   if (!user) redirect('/connect-wallet')
   if (user.role !== 'recruiter') redirect('/')
 
-  /* --------------------------- Query params ------------------------------ */
-  const page = Math.max(1, Number(getParam(params, 'page') ?? '1'))
+  const { page, pageSize } = parsePagination(params)
+  const { sort, order } = parseSort(params, ALLOWED_SORT_KEYS, 'createdAt')
+  const searchTerm = getSearchTerm(params)
 
-  const sizeRaw = Number(getParam(params, 'size') ?? '10')
-  const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
-
-  const sort = getParam(params, 'sort') ?? 'createdAt'
-  const order = getParam(params, 'order') === 'asc' ? 'asc' : 'desc'
-  const searchTerm = (getParam(params, 'q') ?? '').trim()
-
-  /* ---------------------------- Data fetch ------------------------------- */
   const { pipelines, hasNext } = await getRecruiterPipelinesPage(
     user.id,
     page,
     pageSize,
     sort as 'name' | 'createdAt',
-    order as 'asc' | 'desc',
+    order,
     searchTerm,
   )
 
@@ -58,10 +58,8 @@ export default async function PipelinesPage({
     createdAt: p.createdAt,
   }))
 
-  /* ------------------------ Build initialParams -------------------------- */
   const initialParams = pickParams(params, ['size', 'sort', 'order', 'q'])
 
-  /* ------------------------------- View ---------------------------------- */
   return (
     <PageCard
       icon={KanbanSquare}
@@ -72,7 +70,7 @@ export default async function PipelinesPage({
       <PipelinesTable
         rows={rows}
         sort={sort}
-        order={order as 'asc' | 'desc'}
+        order={order}
         basePath='/recruiter/pipelines'
         initialParams={initialParams}
         searchQuery={searchTerm}

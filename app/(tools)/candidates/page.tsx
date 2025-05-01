@@ -6,23 +6,25 @@ import { TablePagination } from '@/components/ui/tables/table-pagination'
 import { getCandidateListingPage } from '@/lib/db/queries/candidates-core'
 import type { CandidateDirectoryRow } from '@/lib/types/tables'
 import {
-  getParam,
-  resolveSearchParams,
+  parsePagination,
+  parseSort,
+  getSearchTerm,
   pickParams,
+  resolveSearchParams,
   type Query,
 } from '@/lib/utils/query'
 
 export const revalidate = 0
 
 /* -------------------------------------------------------------------------- */
-/*                               P A R A M S                                  */
+/*                               Constants                                    */
 /* -------------------------------------------------------------------------- */
 
 const ALLOWED_SORT_KEYS = ['name', 'email', 'verified'] as const
 type SortKey = (typeof ALLOWED_SORT_KEYS)[number]
 
 /* -------------------------------------------------------------------------- */
-/*                                   PAGE                                     */
+/*                                   Page                                     */
 /* -------------------------------------------------------------------------- */
 
 export default async function CandidateDirectoryPage({
@@ -30,27 +32,17 @@ export default async function CandidateDirectoryPage({
 }: {
   searchParams?: Promise<Query>
 }) {
-  /* ----------------------------- Read params ---------------------------- */
   const params = await resolveSearchParams(searchParams)
 
-  const page = Math.max(1, Number(getParam(params, 'page') ?? '1'))
-  const sizeRaw = Number(getParam(params, 'size') ?? '10')
-  const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
+  const { page, pageSize } = parsePagination(params)
+  const { sort, order } = parseSort(params, ALLOWED_SORT_KEYS, 'name')
+  const searchTerm = getSearchTerm(params).toLowerCase()
 
-  const sortRaw = getParam(params, 'sort') ?? 'name'
-  const sort: SortKey = ALLOWED_SORT_KEYS.includes(sortRaw as SortKey)
-    ? (sortRaw as SortKey)
-    : 'name'
-
-  const order = getParam(params, 'order') === 'desc' ? 'desc' : 'asc'
-  const searchTerm = (getParam(params, 'q') ?? '').trim().toLowerCase()
-
-  /* ------------------------------ Data fetch ---------------------------- */
   const { candidates, hasNext } = await getCandidateListingPage(
     page,
     pageSize,
-    sort as any,
-    order as 'asc' | 'desc',
+    sort as SortKey,
+    order,
     searchTerm,
   )
 
@@ -61,10 +53,8 @@ export default async function CandidateDirectoryPage({
     verified: c.verified,
   }))
 
-  /* ---------------------------- initialParams --------------------------- */
   const initialParams = pickParams(params, ['size', 'sort', 'order', 'q'])
 
-  /* ------------------------------- View --------------------------------- */
   return (
     <PageCard
       icon={Users}
@@ -75,8 +65,8 @@ export default async function CandidateDirectoryPage({
         <CandidatesTable
           rows={rows}
           sort={sort}
-          order={order as 'asc' | 'desc'}
-          basePath={'/candidates'}
+          order={order}
+          basePath='/candidates'
           initialParams={initialParams}
           searchQuery={searchTerm}
         />
@@ -84,7 +74,7 @@ export default async function CandidateDirectoryPage({
         <TablePagination
           page={page}
           hasNext={hasNext}
-          basePath={'/candidates'}
+          basePath='/candidates'
           initialParams={initialParams}
           pageSize={pageSize}
         />

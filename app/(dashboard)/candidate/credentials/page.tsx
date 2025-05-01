@@ -13,7 +13,9 @@ import { getUser } from '@/lib/db/queries/queries'
 import { teams, teamMembers } from '@/lib/db/schema/core'
 import type { CandidateCredentialRow } from '@/lib/types/tables'
 import {
-  getParam,
+  parsePagination,
+  parseSort,
+  getSearchTerm,
   pickParams,
   resolveSearchParams,
   type Query,
@@ -21,20 +23,36 @@ import {
 
 export const revalidate = 0
 
+/* -------------------------------------------------------------------------- */
+/*                               Config                                       */
+/* -------------------------------------------------------------------------- */
+
+const ALLOWED_SORT_KEYS = [
+  'status',
+  'title',
+  'issuer',
+  'category',
+  'type',
+  'id',
+] as const
+
+/* -------------------------------------------------------------------------- */
+/*                                   Page                                     */
+/* -------------------------------------------------------------------------- */
+
 export default async function CredentialsPage({
   searchParams,
 }: {
   searchParams?: Promise<Query>
 }) {
-  /* Resolve sync/async searchParams uniformly */
+  /* Resolve Next.js `searchParams` (supports both object & Promise) */
   const params = await resolveSearchParams(searchParams)
 
-  /* ------------------------------------------------------------------ */
-  /* Auth & team DID lookup                                             */
-  /* ------------------------------------------------------------------ */
+  /* ------------------------------ Auth ----------------------------------- */
   const user = await getUser()
   if (!user) redirect('/connect-wallet')
 
+  /* Determine whether the user’s team already minted a DID */
   const [{ did } = {}] = await db
     .select({ did: teams.did })
     .from(teamMembers)
@@ -43,30 +61,24 @@ export default async function CredentialsPage({
     .limit(1)
   const hasDid = !!did
 
+  /* Server action wrapper injected into the client-side dialog */
   const addCredentialAction = async (formData: FormData): Promise<{ error?: string } | void> => {
     'use server'
     return await (await import('./actions')).addCredential({}, formData)
   }
 
-  /* ------------------------------------------------------------------ */
-  /* Query-param parsing                                                */
-  /* ------------------------------------------------------------------ */
-  const page = Math.max(1, Number(getParam(params, 'page') ?? '1'))
-  const sizeRaw = Number(getParam(params, 'size') ?? '10')
-  const pageSize = [10, 20, 50].includes(sizeRaw) ? sizeRaw : 10
-  const sort = getParam(params, 'sort') ?? 'status'
-  const order = getParam(params, 'order') === 'asc' ? 'asc' : 'desc'
-  const searchTerm = (getParam(params, 'q') ?? '').trim().toLowerCase()
+  /* ----------------------- Query-string parsing -------------------------- */
+  const { page, pageSize } = parsePagination(params)
+  const { sort, order } = parseSort(params, ALLOWED_SORT_KEYS, 'status')
+  const searchTerm = getSearchTerm(params).toLowerCase()
 
-  /* ------------------------------------------------------------------ */
-  /* Data fetch                                                         */
-  /* ------------------------------------------------------------------ */
+  /* ------------------------------ Data ----------------------------------- */
   const { rows: credentialRows, hasNext } = await getCandidateCredentialsPage(
     user.id,
     page,
     pageSize,
     sort as any,
-    order as any,
+    order,
     searchTerm,
   )
 
@@ -82,14 +94,9 @@ export default async function CredentialsPage({
     vcJson: c.vcJson ?? null,
   }))
 
-  /* ------------------------------------------------------------------ */
-  /* Preserve current query-string state                                */
-  /* ------------------------------------------------------------------ */
   const initialParams = pickParams(params, ['size', 'sort', 'order', 'q'])
 
-  /* ------------------------------------------------------------------ */
-  /* View                                                               */
-  /* ------------------------------------------------------------------ */
+  /* ------------------------------ View ----------------------------------- */
   return (
     <PageCard
       icon={FileText}
@@ -101,7 +108,7 @@ export default async function CredentialsPage({
         <CandidateCredentialsTable
           rows={rows}
           sort={sort}
-          order={order as 'asc' | 'desc'}
+          order={order}
           basePath='/candidate/credentials'
           initialParams={initialParams}
           searchQuery={searchTerm}
