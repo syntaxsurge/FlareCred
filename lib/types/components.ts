@@ -403,5 +403,7 @@ export interface CandidateDetailedProfileViewProps {
   projects: Project[]
   socials: Socials
   pipeline?: PipelineSection
+  /** Cached recruiter "Why Hire” JSON (optional). */
+  fitSummary?: string
   showShare?: boolean
 }

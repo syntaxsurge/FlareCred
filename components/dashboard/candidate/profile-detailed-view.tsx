@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 
 import {
   Award,
@@ -114,6 +114,7 @@ export default function CandidateDetailedProfileView({
   bio,
   summary,
   pipelineSummary,
+  fitSummary,
   statusCounts,
   passes,
   snapshot = defaultSnapshot,
@@ -130,6 +131,17 @@ export default function CandidateDetailedProfileView({
     Number(statusCounts.pending) +
     Number(statusCounts.rejected) +
     Number(statusCounts.unverified)
+
+  const [fitJson, setFitJson] = useState<string | null>(fitSummary ?? null)
+
+  const fitParsed = useMemo(() => {
+    if (!fitJson) return null
+    try {
+      return JSON.parse(fitJson)
+    } catch {
+      return null
+    }
+  }, [fitJson])
 
   const profilePath = `/candidates/${candidateId}`
 
@@ -238,7 +250,7 @@ export default function CandidateDetailedProfileView({
               </div>
               <div className='flex gap-2'>
                 <GenerateSummaryButton candidateId={candidateId} />
-                <GenerateFitButton candidateId={candidateId} />
+                <GenerateFitButton candidateId={candidateId} onGenerated={setFitJson} />
               </div>
             </CardHeader>
             <CardContent>
@@ -247,6 +259,50 @@ export default function CandidateDetailedProfileView({
               ) : (
                 <p className='text-muted-foreground italic'>
                   No AI summary generated yet — click the button above to create one.
+                </p>
+              )}
+
+              {/* ─────────────────── Recruiter fit summary ─────────────────── */}
+              <hr className='my-6' />
+              {fitParsed ? (
+                <div className='space-y-4'>
+                  <h4 className='font-semibold'>Why Hire</h4>
+                  <ul className='list-disc pl-5 space-y-1'>
+                    {fitParsed.bullets?.map((b: string, i: number) => (
+                      <li key={i}>{b}</li>
+                    ))}
+                  </ul>
+
+                  <p>
+                    <span className='font-semibold'>Best Pipeline:</span>{' '}
+                    {fitParsed.bestPipeline}
+                  </p>
+
+                  {fitParsed.pros?.length > 0 && (
+                    <div>
+                      <p className='font-semibold'>Pros</p>
+                      <ul className='list-disc pl-5 space-y-1'>
+                        {fitParsed.pros.map((p: string, i: number) => (
+                          <li key={i}>{p}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {fitParsed.cons?.length > 0 && (
+                    <div>
+                      <p className='font-semibold'>Cons</p>
+                      <ul className='list-disc pl-5 space-y-1'>
+                        {fitParsed.cons.map((c: string, i: number) => (
+                          <li key={i}>{c}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className='text-muted-foreground italic'>
+                  No recruiter fit summary yet — recruiters can click "Why Hire” to generate one.
                 </p>
               )}
             </CardContent>
