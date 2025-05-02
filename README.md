@@ -1,6 +1,6 @@
 # FlareCred – AI-Assisted Talent Verification on Flare
 
-![FlareCred Home Page](public/images/homepage.png)
+[![FlareCred Home Page](public/images/flarecred-demo.png)](https://youtu.be/HZaX3W2Xbgc)
 
 **FlareCred** unites _candidates_, _issuers_, _recruiters_ and an _admin super-role_ inside a single Next 14 application that mints deterministic Flare DIDs, anchors Verifiable Credentials as ERC-721 NFTs and settles Base or Plus subscriptions in FLR with live USD pricing from the FTSO oracle. Under the hood, issuer approvals replay EVM / JSON-API / payment proofs through the on-chain FlareCred Verifier (FDC) while candidate Skill-Check quizzes pull provable randomness from Flare’s RNG.
 
