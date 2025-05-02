@@ -47,16 +47,7 @@ function runDeploy(script: string): void {
 
   const { status } = spawnSync(
     'pnpm',
-    [
-      '--dir',
-      blockchainDir,
-      'exec',
-      'hardhat',
-      'run',
-      scriptPath,
-      '--network',
-      network,
-    ],
+    ['--dir', blockchainDir, 'exec', 'hardhat', 'run', scriptPath, '--network', network],
     { stdio: 'inherit' },
   )
 
