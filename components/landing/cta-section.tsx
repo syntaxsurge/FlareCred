@@ -21,12 +21,10 @@ export default function CTASection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
-          className='text-4xl font-extrabold tracking-tight text-balance text-white sm:text-5xl md:text-6xl'
+          className='text-3xl font-extrabold tracking-tight text-balance text-white sm:text-4xl md:text-5xl lg:text-6xl'
         >
-          <span className='text-flare-gradient animate-flare-gradient'>
-            Flare-Native&nbsp;Trust&nbsp;
-          </span>
-          For&nbsp;Every&nbsp;Hire
+          <span className='text-flare-gradient animate-flare-gradient'>Flare-Native Trust </span>
+          For Every Hire
         </motion.h2>
 
         <motion.p

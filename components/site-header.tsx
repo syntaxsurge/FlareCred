@@ -5,13 +5,14 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 
 import { ConnectButton } from '@rainbow-me/rainbowkit'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, Menu, X } from 'lucide-react'
 import { useAccount } from 'wagmi'
 
 import WalletOnboardModal from '@/components/auth/wallet-onboard-modal'
 import { ModeToggle } from '@/components/theme-toggle'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
 import { useUser } from '@/lib/auth'
+import { cn } from '@/lib/utils'
 
 /* -------------------------------------------------------------------------- */
 /*                               NAVIGATION DATA                              */
@@ -45,6 +46,19 @@ export default function SiteHeader() {
   /* Wallet connectivity */
   const { isConnected } = useAccount()
 
+  /* Mobile state */
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [learnMobileOpen, setLearnMobileOpen] = useState(false)
+  const [toolsMobileOpen, setToolsMobileOpen] = useState(false)
+
+  /* Reset sub-menus whenever the hamburger closes */
+  useEffect(() => {
+    if (!mobileOpen) {
+      setLearnMobileOpen(false)
+      setToolsMobileOpen(false)
+    }
+  }, [mobileOpen])
+
   /* Resolve the user promise exactly once per render cycle */
   useEffect(() => {
     let mounted = true
@@ -62,27 +76,33 @@ export default function SiteHeader() {
     }
   }, [userPromise])
 
+  /* Close hamburger after navigation */
+  function handleNav() {
+    setMobileOpen(false)
+  }
+
   return (
     <>
       <header className='border-border/60 bg-background/80 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40 w-full border-b shadow-sm backdrop-blur'>
         <div className='mx-auto grid h-16 max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-6 px-4 md:px-6'>
-          {/* Brand */}
+          {/* Brand ------------------------------------------------------------------ */}
           <Link
             href='/'
             className='text-primary flex items-center gap-2 text-lg font-extrabold tracking-tight whitespace-nowrap'
+            onClick={handleNav}
           >
             <Image
               src='/images/flarecred-logo.png'
               alt='FlareCred logo'
-              width={24}
-              height={24}
+              width={40}
+              height={40}
               priority
-              className='h-6 w-auto'
+              className='h-10 w-auto md:h-8'
             />
-            FlareCred
+            <span className='hidden md:inline'>FlareCred</span>
           </Link>
 
-          {/* Desktop nav */}
+          {/* Desktop nav ------------------------------------------------------------ */}
           <nav className='hidden justify-center gap-6 md:flex'>
             <Link
               href='/'
@@ -154,15 +174,106 @@ export default function SiteHeader() {
             </Link>
           </nav>
 
-          {/* Right-aligned controls */}
+          {/* Right-aligned controls -------------------------------------------------- */}
           <div className='flex items-center justify-end gap-3'>
-            <ModeToggle />
-            <ConnectButton accountStatus='avatar' chainStatus='icon' showBalance={false} />
+            {/* Connect button (mobile) */}
+            <div className='md:hidden'>
+              <ConnectButton accountStatus='avatar' chainStatus='icon' showBalance={false} />
+            </div>
+
+            {/* Mobile hamburger */}
+            <button
+              type='button'
+              aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+              className='flex items-center md:hidden'
+              onClick={() => setMobileOpen((o) => !o)}
+            >
+              {mobileOpen ? <X className='h-6 w-6' /> : <Menu className='h-6 w-6' />}
+            </button>
+
+            {/* Desktop controls */}
+            <div className='hidden items-center gap-3 md:flex'>
+              <ConnectButton accountStatus='avatar' chainStatus='icon' showBalance={false} />
+              <ModeToggle />
+            </div>
           </div>
         </div>
+
+        {/* Mobile slide-down menu --------------------------------------------------- */}
+        {mobileOpen && (
+          <div className='bg-background/95 absolute inset-x-0 top-16 z-40 shadow-lg backdrop-blur md:hidden'>
+            <nav className='flex flex-col gap-4 px-4 py-6'>
+              {/* Home */}
+              <Link href='/' onClick={handleNav} className='text-sm font-medium'>
+                Home
+              </Link>
+
+              {/* Learn (collapsible) */}
+              <div>
+                <button
+                  type='button'
+                  onClick={() => setLearnMobileOpen((o) => !o)}
+                  className='flex items-center gap-1 text-sm font-medium'
+                >
+                  Learn
+                  <ChevronDown
+                    className={cn('h-3 w-3 transition-transform', learnMobileOpen && 'rotate-180')}
+                  />
+                </button>
+                {learnMobileOpen && (
+                  <ul className='mt-2 flex flex-col gap-2 pl-4'>
+                    {LEARN_SECTIONS.map((s) => (
+                      <li key={s.id}>
+                        <Link href={`/#${s.id}`} onClick={handleNav} className='text-sm'>
+                          {s.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              {/* Tools (collapsible) */}
+              <div>
+                <button
+                  type='button'
+                  onClick={() => setToolsMobileOpen((o) => !o)}
+                  className='flex items-center gap-1 text-sm font-medium'
+                >
+                  Tools
+                  <ChevronDown
+                    className={cn('h-3 w-3 transition-transform', toolsMobileOpen && 'rotate-180')}
+                  />
+                </button>
+                {toolsMobileOpen && (
+                  <ul className='mt-2 flex flex-col gap-2 pl-4'>
+                    {TOOLS_MENU.map((t) => (
+                      <li key={t.href}>
+                        <Link href={t.href} onClick={handleNav} className='text-sm'>
+                          {t.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              {/* Static links */}
+              <Link href='/pricing' onClick={handleNav} className='text-sm font-medium'>
+                Pricing
+              </Link>
+              <Link href='/dashboard' onClick={handleNav} className='text-sm font-medium'>
+                Dashboard
+              </Link>
+
+              {/* Theme toggle at bottom */}
+              <ModeToggle />
+            </nav>
+          </div>
+        )}
       </header>
 
-      {/* Wallet onboarding modal – renders globally so it’s available on every page */}
+      {/* Global wallet modal */}
       <WalletOnboardModal isConnected={isConnected} user={currentUser} />
     </>
   )

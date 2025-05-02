@@ -35,11 +35,9 @@ export default function HeroSection() {
         </span>
 
         {/* Headline */}
-        <h1 className='text-5xl leading-tight font-extrabold tracking-tight text-balance sm:text-6xl md:text-7xl'>
-          <span className='text-flare-gradient animate-flare-gradient'>
-            Verifiable&nbsp;Talent&nbsp;
-          </span>
-          Meets&nbsp;On-Chain&nbsp;Data
+        <h1 className='text-4xl leading-tight font-extrabold tracking-tight text-balance sm:text-5xl md:text-6xl lg:text-7xl'>
+          <span className='text-flare-gradient animate-flare-gradient'>Verifiable Talent </span>
+          Meets On-Chain Data
         </h1>
 
         {/* Sub-headline */}

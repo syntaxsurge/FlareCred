@@ -88,7 +88,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
             <UserProvider userPromise={userPromise}>
               <SiteHeader />
-              <main className='mx-auto max-w-7xl px-4 py-4 md:px-6'>{children}</main>
+              <main className='px-4 md:px-6'>{children}</main>
             </UserProvider>
           </ThemeProvider>
         </Web3Provider>
