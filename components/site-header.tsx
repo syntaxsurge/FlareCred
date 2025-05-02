@@ -19,8 +19,9 @@ import { useUser } from '@/lib/auth'
 
 const LEARN_SECTIONS = [
   { id: 'overview', label: 'Overview' },
+  { id: 'demo', label: 'See FlareCred in Action' },
   { id: 'features', label: 'Features' },
-  { id: 'deep-dive', label: 'Deep Dive' },
+  { id: 'deep-dive', label: 'What You Get' },
   { id: 'workflow', label: 'Workflow' },
   { id: 'pricing', label: 'Pricing' },
 ] as const

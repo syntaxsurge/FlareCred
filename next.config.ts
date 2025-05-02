@@ -60,14 +60,44 @@ const nextConfig: NextConfig = {
    * allowing the popup bridge necessary for the Smart Wallet flow.
    */
   async headers() {
+    // Keep COOP everywhere for wallet pop-ups; apply COEP only where we control
+    // the response headers (internal chunks & API). Public pages stay COEP-free
+    // so that third-party iframes like YouTube and Canva can be embedded.
+    const common = [{ key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' }]
+
     return [
       {
-        source: '/:path*',
-        headers: [
-          { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },
-          { key: 'Cross-Origin-Embedder-Policy', value: 'require-corp' },
-        ],
+        // Internal Next.js assets (cross-origin isolation may be required)
+        source: '/_next/:path*',
+        headers: [...common, { key: 'Cross-Origin-Embedder-Policy', value: 'credentialless' }],
       },
+      {
+        // API routes – still safe to isolate
+        source: '/api/:path*',
+        headers: [...common, { key: 'Cross-Origin-Embedder-Policy', value: 'credentialless' }],
+      },
+      {
+        // Public pages – **NO COEP** so <iframe src="https://…"> works
+        source: '/:path*',
+        headers: common,
+      },
+    ]
+  },
+
+  async redirects() {
+    return [
+      {
+        source: '/demo-video', // <──  the local path
+        destination: 'https://youtu.be/HZaX3W2Xbgc', // where to send the user
+        permanent: false, // 307 at build-time / 308 in prod if true
+      },
+      {
+        source: '/pitch-deck',
+        destination:
+          'https://www.canva.com/design/DAGmLnAoe5E/P8mRrpPzBIVnAs_Ab4Myvg/view?utm_content=DAGmLnAoe5E&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=h602e50a224',
+        permanent: false,
+      },
+      // add any future redirects here
     ]
   },
 }
