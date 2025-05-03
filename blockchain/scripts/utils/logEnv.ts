@@ -23,7 +23,7 @@ export function updateEnvLog(key: string, value: string): void {
     }
   } else {
     /* File does not exist – add a friendly banner then first key */
-    const banner = "# Deployed contract addresses — copy these lines into your main .env\n";
+    const banner = "# Deployed contract addresses\n";
     content = `${banner}${key}=${value}`;
   }
 
